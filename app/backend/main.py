@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from config import PROJECT_NAME
+
+load_dotenv()
 
 app = FastAPI(title=PROJECT_NAME)
 
