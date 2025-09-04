@@ -7,13 +7,13 @@ app = FastAPI(title=PROJECT_NAME)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=['*'],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 
-@app.get("/")
+@app.get('/')
 async def root():
-    return {"message": f"Welcome to {PROJECT_NAME}!"}
+    return {'message': f'Welcome to {PROJECT_NAME}!'}
