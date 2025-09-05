@@ -124,23 +124,20 @@ const PitchDetail = () => {
 
         {pitch && (
           <div className='pitch-detail'>
-            <div className='pitch-detail-header'>
+            <div className='block'>
               <h1 className='pitch-detail-title'>{pitch.title}</h1>
               <span className='pitch-detail-date'>Создано: {formatDate(pitch.created_at)}</span>
-              {pitch.updated_at !== pitch.created_at && (
-                <span className='pitch-detail-date'>Обновлено: {formatDate(pitch.updated_at)}</span>
-              )}
             </div>
 
             {pitch.description && (
-              <div className='pitch-detail-description'>
+              <div className='block'>
                 <h3>Описание</h3>
                 <p>{pitch.description}</p>
               </div>
             )}
 
             {pitch.tags && pitch.tags.length > 0 && (
-              <div className='pitch-detail-tags'>
+              <div className='block'>
                 <h3>Теги</h3>
                 <div className='pitch-tags'>
                   {pitch.tags.map((tag, index) => (
@@ -152,7 +149,32 @@ const PitchDetail = () => {
               </div>
             )}
 
-            <div className='pitch-detail-content'>
+            {pitch.presentation_file_name && (
+              <div className='block'>
+                <div className='pitch-detail-presentation'>
+                  <h3>Презентация</h3>
+                  <div className='presentation-info'>
+                    <div className='presentation-file'>
+                      <span className='file-icon'>📄</span>
+                      <div className='file-details'>
+                        <span className='file-name'>{pitch.presentation_file_name}</span>
+                        <span className='file-type'>Презентационный файл</span>
+                      </div>
+                    </div>
+                    <div className='presentation-actions'>
+                      <Button
+                        variant='outline'
+                        onClick={() => window.open(`/api/v1/pitches/${id}/presentation`, '_blank')}
+                      >
+                        Скачать
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className='block'>
               <h3>Текст выступления</h3>
               <div className='pitch-content'>
                 {pitch.content.split('\n').map((paragraph, index) => (

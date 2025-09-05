@@ -8,6 +8,8 @@ class PitchBase(BaseModel):
     content: str
     description: Optional[str] = None
     tags: Optional[List[str]] = []
+    presentation_file_name: Optional[str] = None
+    presentation_file_path: Optional[str] = None
 
 
 class PitchCreate(PitchBase):
@@ -19,6 +21,8 @@ class PitchUpdate(BaseModel):
     content: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
+    presentation_file_name: Optional[str] = None
+    presentation_file_path: Optional[str] = None
 
 
 class Pitch(PitchBase):

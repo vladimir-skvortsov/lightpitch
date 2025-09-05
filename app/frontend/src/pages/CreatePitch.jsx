@@ -13,6 +13,7 @@ const CreatePitch = () => {
     tags: [],
   })
   const [tagInput, setTagInput] = useState('')
+  const [presentationFile, setPresentationFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -51,6 +52,34 @@ const CreatePitch = () => {
     [setFormData]
   )
 
+  const handlePresentationUpload = useCallback((e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ]
+      if (!allowedTypes.includes(file.type)) {
+        setError('Поддерживаются только файлы PDF, PPT и PPTX')
+        e.target.value = ''
+        return
+      }
+
+      // Check file size (50MB limit)
+      const maxSize = 50 * 1024 * 1024
+      if (file.size > maxSize) {
+        setError('Размер файла не должен превышать 50MB')
+        e.target.value = ''
+        return
+      }
+
+      setPresentationFile(file)
+      setError(null)
+    }
+  }, [])
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault()
@@ -84,6 +113,25 @@ const CreatePitch = () => {
         }
 
         const newPitch = await response.json()
+
+        if (presentationFile) {
+          try {
+            const formData = new FormData()
+            formData.append('file', presentationFile)
+
+            const uploadResponse = await fetch(`/api/v1/pitches/${newPitch.id}/presentation`, {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!uploadResponse.ok) {
+              console.warn('Failed to upload presentation file')
+            }
+          } catch (uploadErr) {
+            console.warn('Error uploading presentation:', uploadErr)
+          }
+        }
+
         navigate(`/pitch/${newPitch.id}`)
       } catch (err) {
         setError(err.message)
@@ -91,7 +139,7 @@ const CreatePitch = () => {
         setLoading(false)
       }
     },
-    [formData.title, formData.content, formData.description, formData.tags, navigate]
+    [formData.title, formData.content, formData.description, formData.tags, presentationFile, navigate]
   )
 
   return (
@@ -189,6 +237,33 @@ const CreatePitch = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className='form-group'>
+            <label htmlFor='presentation'>Презентация (необязательно)</label>
+            <input
+              type='file'
+              id='presentation'
+              name='presentation'
+              accept='.pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation'
+              onChange={handlePresentationUpload}
+              disabled={loading}
+              className='file-input'
+            />
+            {presentationFile && (
+              <div className='file-info'>
+                <span>📄 {presentationFile.name}</span>
+                <button
+                  type='button'
+                  onClick={() => setPresentationFile(null)}
+                  className='file-remove'
+                  disabled={loading}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            <p className='form-help'>Поддерживаются файлы PDF, PPT, PPTX (максимум 50MB)</p>
           </div>
 
           <div className='form-actions'>

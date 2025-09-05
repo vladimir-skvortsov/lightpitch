@@ -1,16 +1,16 @@
 // PitchDetail page styles
 .pitch-detail {
-  background: var(--alfa-white);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   margin-top: 20px;
-}
 
-.pitch-detail-header {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--alfa-light-gray);
+  h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--alfa-dark-gray);
+    margin-bottom: 16px;
+  }
 }
 
 .pitch-detail-title {
@@ -26,19 +26,6 @@
   font-size: 0.9rem;
   color: var(--alfa-gray);
   margin-bottom: 8px;
-}
-
-.pitch-detail-description,
-.pitch-detail-tags,
-.pitch-detail-content {
-  margin-bottom: 32px;
-
-  h3 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-    margin-bottom: 16px;
-  }
 }
 
 .pitch-content {
@@ -72,6 +59,50 @@
   gap: 12px;
 }
 
+// Стили для блока презентации
+.pitch-detail-presentation {
+  .presentation-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f8fafb;
+    border: 1px solid var(--alfa-light-gray);
+    border-radius: 12px;
+  }
+
+  .presentation-file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .file-icon {
+      font-size: 2rem;
+    }
+
+    .file-details {
+      display: flex;
+      flex-direction: column;
+
+      .file-name {
+        font-weight: 600;
+        color: var(--alfa-dark-gray);
+        margin-bottom: 2px;
+      }
+
+      .file-type {
+        font-size: 0.9rem;
+        color: var(--alfa-gray);
+      }
+    }
+  }
+
+  .presentation-actions {
+    display: flex;
+    gap: 12px;
+  }
+}
+
 // Responsive design for PitchDetail
 @media (max-width: 768px) {
   .pitch-detail {
@@ -91,6 +122,31 @@
       width: 100%;
     }
   }
+
+  .pitch-detail-presentation {
+    .presentation-info {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .presentation-actions {
+      justify-content: center;
+      flex-wrap: wrap;
+
+      button {
+        min-width: 120px;
+      }
+    }
+  }
+}
+
+.block {
+  background: var(--alfa-white);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 480px) {
