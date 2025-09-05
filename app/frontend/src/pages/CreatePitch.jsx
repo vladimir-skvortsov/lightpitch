@@ -66,30 +66,7 @@ const CreatePitch = () => {
 
         let description = formData.description.trim()
 
-        // Если описание не указано, генерируем его автоматически
-        if (!description && formData.content.trim()) {
-          try {
-            const descResponse = await fetch('http://localhost:8000/api/v1/generate/description', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                content: formData.content.trim(),
-              }),
-            })
-
-            if (descResponse.ok) {
-              const descData = await descResponse.json()
-              description = descData.description
-            }
-          } catch (descErr) {
-            // Если генерация описания не удалась, продолжаем без неё
-            console.warn('Не удалось сгенерировать описание:', descErr)
-          }
-        }
-
-        const response = await fetch('http://localhost:8000/api/v1/pitches/', {
+        const response = await fetch('/api/v1/pitches/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
