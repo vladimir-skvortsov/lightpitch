@@ -67,6 +67,28 @@ async def delete_pitch_endpoint(pitch_id: str):
 
 
 # AI endpoints
+@app.post('/api/v1/generate/description')
+async def generate_description(request: dict):
+    """Generate description for a pitch based on its content"""
+    content = request.get('content', '')
+
+    if not content.strip():
+        raise HTTPException(status_code=400, detail='Content is required')
+
+    # TODO: Интеграция с AI для генерации описания
+    # Пока возвращаем простое описание на основе длины текста
+    content_words = len(content.split())
+
+    if content_words < 50:
+        description = 'Краткое выступление с ключевыми идеями и основными тезисами.'
+    elif content_words < 200:
+        description = 'Содержательное выступление с детальным разбором темы и практическими примерами.'
+    else:
+        description = 'Развернутая презентация с глубоким анализом, множеством примеров и детальными выводами.'
+
+    return {'description': description}
+
+
 @app.post('/api/v1/score/pitch')
 async def score_pitch():
     return {}

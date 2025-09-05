@@ -89,7 +89,9 @@ const Home = () => {
                         <h3 className='pitch-title'>{pitch.title}</h3>
                         <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
                       </div>
-                      {pitch.description && <p className='pitch-description'>{pitch.description}</p>}
+                      <p className={`pitch-description ${!pitch.description ? 'pitch-description--placeholder' : ''}`}>
+                        {pitch.description}
+                      </p>
                       {pitch.tags && pitch.tags.length > 0 && (
                         <div className='pitch-tags'>
                           {pitch.tags.map((tag, index) => (
