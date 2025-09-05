@@ -1,0 +1,140 @@
+// Shared form styles for CreatePitch and EditPitch
+.pitch-form {
+  background: var(--alfa-white);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+
+  label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--alfa-dark-gray);
+    margin-bottom: 8px;
+  }
+
+  input[type='text'],
+  textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--alfa-light-gray);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--alfa-red);
+    }
+
+    &:disabled {
+      background-color: #f9f9f9;
+      cursor: not-allowed;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.6;
+  }
+}
+
+.tag-input-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  input {
+    flex: 1;
+  }
+
+  button {
+    white-space: nowrap;
+  }
+}
+
+.tag-removable {
+  position: relative;
+  padding-right: 32px;
+
+  .tag-remove {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--alfa-white);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid var(--alfa-light-gray);
+}
+
+// Responsive design for forms
+@media (max-width: 768px) {
+  .pitch-form {
+    padding: 24px;
+    margin-top: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    button,
+    a {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  .tag-input-group {
+    flex-direction: column;
+
+    button {
+      align-self: flex-start;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .pitch-form {
+    padding: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+
+    input[type='text'],
+    textarea {
+      padding: 10px 12px;
+      font-size: 0.9rem;
+    }
+  }
+}

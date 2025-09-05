@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import './Form.scss'
 
 const EditPitch = () => {
   const { id } = useParams()
