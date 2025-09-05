@@ -87,7 +87,7 @@ const App = () => {
 
           {/* Pitches List */}
           {!loading && !error && (
-            <div className='pitches-grid'>
+            <>
               {pitches.length === 0 ? (
                 <div className='empty-state'>
                   <div className='empty-icon'>🎤</div>
@@ -98,30 +98,32 @@ const App = () => {
                   </button>
                 </div>
               ) : (
-                pitches.map((pitch) => (
-                  <div key={pitch.id} className='pitch-card'>
-                    <div className='pitch-header'>
-                      <h3 className='pitch-title'>{pitch.title}</h3>
-                      <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
-                    </div>
-                    {pitch.description && <p className='pitch-description'>{pitch.description}</p>}
-                    {pitch.tags && pitch.tags.length > 0 && (
-                      <div className='pitch-tags'>
-                        {pitch.tags.map((tag, index) => (
-                          <span key={index} className='tag'>
-                            {tag}
-                          </span>
-                        ))}
+                <div className='pitches-grid'>
+                  {pitches.map((pitch) => (
+                    <div key={pitch.id} className='pitch-card'>
+                      <div className='pitch-header'>
+                        <h3 className='pitch-title'>{pitch.title}</h3>
+                        <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
                       </div>
-                    )}
-                    <div className='pitch-actions'>
-                      <button className='btn-outline'>Редактировать</button>
-                      <button className='btn-primary'>Начать тренировку</button>
+                      {pitch.description && <p className='pitch-description'>{pitch.description}</p>}
+                      {pitch.tags && pitch.tags.length > 0 && (
+                        <div className='pitch-tags'>
+                          {pitch.tags.map((tag, index) => (
+                            <span key={index} className='tag'>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className='pitch-actions'>
+                        <button className='btn-outline'>Редактировать</button>
+                        <button className='btn-primary'>Начать тренировку</button>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </main>
