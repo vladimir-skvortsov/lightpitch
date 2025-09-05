@@ -16,10 +16,6 @@ const EditPitch = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchPitch()
-  }, [fetchPitch, id])
-
   const fetchPitch = useCallback(async () => {
     try {
       setLoading(true)
@@ -42,6 +38,10 @@ const EditPitch = () => {
       setLoading(false)
     }
   }, [id])
+
+  useEffect(() => {
+    fetchPitch()
+  }, [fetchPitch, id])
 
   const handleChange = useCallback(
     (e) => {
