@@ -222,13 +222,7 @@ const EditPitch = () => {
                   }
                 }}
               />
-              <Button
-                type='button'
-                onClick={handleAddTag}
-                variant='outline'
-                size='small'
-                disabled={saving || !tagInput.trim()}
-              >
+              <Button type='button' onClick={handleAddTag} variant='outline' disabled={saving || !tagInput.trim()}>
                 Добавить
               </Button>
             </div>
