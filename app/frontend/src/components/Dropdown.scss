@@ -4,37 +4,6 @@
   display: inline-block;
 }
 
-.dropdown-trigger {
-  background: var(--alfa-white);
-  border: none;
-  padding: 0.6em 1.2em;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-
-  &:hover {
-    background: var(--alfa-light-gray);
-  }
-
-  &:focus {
-    outline: none;
-    background: var(--alfa-light-gray);
-  }
-}
-
-.dropdown-dots {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: var(--alfa-gray);
-  line-height: 1;
-  transform: rotate(90deg);
-}
-
 .dropdown-menu {
   position: absolute;
   top: 100%;

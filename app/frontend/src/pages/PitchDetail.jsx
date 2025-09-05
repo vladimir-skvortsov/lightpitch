@@ -98,7 +98,13 @@ const PitchDetail = () => {
           </Button>
           <div className='pitch-actions'>
             <Button variant='primary'>Начать тренировку</Button>
-            <Dropdown>
+            <Dropdown
+              trigger={
+                <Button className='w-[40px]'>
+                  <span className='more-dots'>⋯</span>
+                </Button>
+              }
+            >
               <Link to={`/pitch/${id}/edit`} className='dropdown-item'>
                 Редактировать
               </Link>

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, cloneElement, Children } from 'react'
 import './Dropdown.scss'
 
-const Dropdown = ({ children, className = '' }) => {
+const Dropdown = ({ trigger, children, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -45,15 +45,33 @@ const Dropdown = ({ children, className = '' }) => {
     setIsOpen(!isOpen)
   }
 
+  const handleItemClick = () => {
+    setIsOpen(false)
+  }
+
   return (
     <div className={`dropdown ${className}`} ref={dropdownRef}>
-      <button className='dropdown-trigger' onClick={toggleDropdown} aria-haspopup='true' aria-expanded={isOpen}>
-        <span className='dropdown-dots'>⋯</span>
-      </button>
+      {cloneElement(trigger, {
+        onClick: toggleDropdown,
+        'aria-haspopup': 'true',
+        'aria-expanded': isOpen,
+        className: `dropdown-trigger ${trigger.props.className || ''}`.trim(),
+      })}
 
       {isOpen && (
         <div className='dropdown-menu'>
-          <div className='dropdown-content'>{children}</div>
+          <div className='dropdown-content'>
+            {Children.map(children, (child) =>
+              cloneElement(child, {
+                onClick: (e) => {
+                  if (child.props.onClick) {
+                    child.props.onClick(e)
+                  }
+                  handleItemClick()
+                },
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
