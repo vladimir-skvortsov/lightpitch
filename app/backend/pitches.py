@@ -1,9 +1,19 @@
-from datetime import datetime
 import uuid
+import sys
+from pathlib import Path
+from datetime import datetime
 from typing import List
 
-from models import Pitch, PitchCreate, PitchUpdate
+project_root = str(Path(__file__).parent.parent.parent)
+sys.path.append(project_root)
+
+from db_models import Pitch, PitchCreate, PitchUpdate
+
 from db import get_pitch_by_id, get_all_pitches, store_pitch, delete_pitch_by_id, pitch_exists
+from models.description_generator.description_generator import DescriptionGenerator
+
+
+description_generator = DescriptionGenerator()
 
 
 def create_pitch(pitch_data: PitchCreate) -> Pitch:
@@ -11,10 +21,17 @@ def create_pitch(pitch_data: PitchCreate) -> Pitch:
     pitch_id = str(uuid.uuid4())
     now = datetime.now()
 
+    if not pitch_data.description:
+        pitch_data.description = description_generator.generate_description(
+            title=pitch_data.title,
+            speech_text=pitch_data.content,
+            presentation_text=None,
+        )
+
     new_pitch = Pitch(
         id=pitch_id,
         title=pitch_data.title,
-        content=pitch_data.content,
+        content=pitch_data.content or '',
         description=pitch_data.description,
         tags=pitch_data.tags or [],
         created_at=now,
