@@ -85,10 +85,8 @@ const Home = () => {
                 {pitches.map((pitch) => (
                   <Link to={`/pitch/${pitch.id}`} key={pitch.id}>
                     <div className='pitch-card'>
-                      <div className='pitch-header'>
-                        <h3 className='pitch-title'>{pitch.title}</h3>
-                        <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
-                      </div>
+                      <h3 className='pitch-title'>{pitch.title}</h3>
+                      <div className='pitch-date'>{formatDate(pitch.created_at)}</div>
                       <p className={`pitch-description ${!pitch.description ? 'pitch-description--placeholder' : ''}`}>
                         {pitch.description}
                       </p>
