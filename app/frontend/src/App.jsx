@@ -4,6 +4,9 @@ import Home from './pages/Home'
 import PitchDetail from './pages/PitchDetail'
 import CreatePitch from './pages/CreatePitch'
 import EditPitch from './pages/EditPitch'
+import RecordVideo from './pages/RecordVideo'
+import UploadVideo from './pages/UploadVideo'
+import PitchResults from './pages/PitchResults'
 
 const App = () => {
   return (
@@ -27,6 +30,9 @@ const App = () => {
         <Route path='/create' element={<CreatePitch />} />
         <Route path='/pitch/:id' element={<PitchDetail />} />
         <Route path='/pitch/:id/edit' element={<EditPitch />} />
+        <Route path='/pitch/:id/record' element={<RecordVideo />} />
+        <Route path='/pitch/:id/upload' element={<UploadVideo />} />
+        <Route path='/pitch/:id/results' element={<PitchResults />} />
         <Route path='*' element={<NotFound />} />
       </Routes>
     </div>

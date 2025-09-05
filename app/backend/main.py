@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from typing import List
+from typing import Optional
 
 from config import PROJECT_NAME
 from models import Pitch, PitchCreate, PitchUpdate
@@ -33,7 +33,7 @@ async def create_pitch_endpoint(pitch: PitchCreate):
     return create_pitch_service(pitch)
 
 
-@app.get('/api/v1/pitches/', response_model=List[Pitch])
+@app.get('/api/v1/pitches/', response_model=list[Pitch])
 async def get_all_pitches():
     """Get all pitches"""
     return list_pitches_service()
@@ -90,8 +90,84 @@ async def generate_description(request: dict):
 
 
 @app.post('/api/v1/score/pitch')
-async def score_pitch():
-    return {}
+async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = Form(None)):
+    """Analyze pitch video and return hardcoded results"""
+
+    # Validate video file
+    content_type = video.content_type or ''
+    if not content_type.startswith('video/'):
+        raise HTTPException(status_code=400, detail='File must be a video')
+
+    # Check file size (100MB limit)
+    max_size = 100 * 1024 * 1024  # 100MB
+    video_content = await video.read()
+    if len(video_content) > max_size:
+        raise HTTPException(status_code=400, detail='File size must be less than 100MB')
+
+    # TODO: Интеграция с AI для анализа видео
+    # Пока возвращаем hardcoded результаты
+
+    import random
+    import time
+
+    time.sleep(1)
+
+    base_score = random.uniform(6.5, 9.0)
+
+    return {
+        'overall_score': round(base_score, 1),
+        'confidence': round(base_score + random.uniform(-0.5, 0.3), 1),
+        'clarity': round(base_score + random.uniform(-0.3, 0.5), 1),
+        'pace': round(base_score + random.uniform(-0.8, 0.2), 1),
+        'engagement': round(base_score + random.uniform(-0.2, 0.7), 1),
+        'body_language': round(base_score + random.uniform(-0.6, 0.4), 1),
+        'eye_contact': round(base_score + random.uniform(-0.4, 0.6), 1),
+        'voice_tone': round(base_score + random.uniform(-0.3, 0.4), 1),
+        'duration': f'{random.randint(1, 5)}:{random.randint(10, 59):02d}',
+        'word_count': random.randint(150, 450),
+        'feedback': [
+            {
+                'type': 'positive',
+                'message': random.choice(
+                    [
+                        'Отличная четкость речи и хорошая интонация',
+                        'Уверенная подача материала',
+                        'Хороший зрительный контакт с аудиторией',
+                        'Профессиональная манера речи',
+                    ]
+                ),
+            },
+            {
+                'type': 'improvement',
+                'message': random.choice(
+                    [
+                        'Рекомендуется немного замедлить темп речи для лучшего восприятия',
+                        'Добавьте больше жестов для усиления эмоциональной составляющей',
+                        'Используйте больше пауз для акцентирования важных моментов',
+                        'Увеличьте эмоциональную вовлеченность',
+                    ]
+                ),
+            },
+            {
+                'type': 'positive',
+                'message': random.choice(
+                    ['Хорошая структура выступления', 'Логичное изложение материала', 'Удачные примеры и аналогии']
+                ),
+            },
+        ],
+        'strengths': [
+            'Четкая артикуляция',
+            'Хорошая структура выступления',
+            'Уверенная подача материала',
+            'Профессиональная манера речи',
+        ],
+        'areas_for_improvement': [
+            'Темп речи',
+            'Язык тела и жестикуляция',
+            'Паузы для акцентирования',
+            'Эмоциональная вовлеченность',
+        ],
+    }
 
 
 @app.post('/api/v1/score/text')
