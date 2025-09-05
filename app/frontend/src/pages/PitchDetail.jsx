@@ -9,10 +9,6 @@ const PitchDetail = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchPitch()
-  }, [fetchPitch, id])
-
   const fetchPitch = useCallback(async () => {
     try {
       setLoading(true)
@@ -30,6 +26,10 @@ const PitchDetail = () => {
       setLoading(false)
     }
   }, [id])
+
+  useEffect(() => {
+    fetchPitch()
+  }, [fetchPitch, id])
 
   const handleDelete = useCallback(async () => {
     if (window.confirm('Вы уверены, что хотите удалить это выступление?')) {
