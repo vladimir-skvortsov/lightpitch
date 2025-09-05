@@ -14,6 +14,10 @@
   --alfa-black: #1a1a1a;
   --alfa-blue: #1b4394;
   --alfa-light-blue: #4a90e2;
+
+  --alfa-red-shadow: #ef312480;
+  --alfa-dark-red-shadow: #d1292080;
+  --alfa-light-red-shadow: #ff6b5b80;
 }
 
 :root {
@@ -81,7 +85,7 @@ button {
 
   &:hover {
     background-color: var(--alfa-light-red);
-    box-shadow: 0 6px 30px rgba(var(--alfa-light-red), 0.9);
+    box-shadow: 0 6px 30px var(--alfa-light-red-shadow);
   }
 
   &:active {
