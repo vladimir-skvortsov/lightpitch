@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import './Form.scss'
+import './CreatePitch.scss'
 
 const CreatePitch = () => {
   const navigate = useNavigate()
@@ -179,6 +180,7 @@ const CreatePitch = () => {
             <div className='tag-input-group'>
               <input
                 type='text'
+                name='tag'
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder='Добавить тег'
@@ -189,13 +191,7 @@ const CreatePitch = () => {
                   }
                 }}
               />
-              <Button
-                type='button'
-                onClick={handleAddTag}
-                variant='outline'
-                size='small'
-                disabled={loading || !tagInput.trim()}
-              >
+              <Button type='button' onClick={handleAddTag} variant='outline' disabled={loading || !tagInput.trim()}>
                 Добавить
               </Button>
             </div>
