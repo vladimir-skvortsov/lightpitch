@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import './Home.scss'
 
@@ -7,11 +7,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchPitches()
-  }, [])
-
-  const fetchPitches = async () => {
+  const fetchPitches = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -28,9 +24,13 @@ const Home = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const formatDate = (dateString) => {
+  useEffect(() => {
+    fetchPitches()
+  }, [fetchPitches])
+
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
       year: 'numeric',
       month: 'long',
@@ -38,7 +38,7 @@ const Home = () => {
       hour: '2-digit',
       minute: '2-digit',
     })
-  }
+  }, [])
 
   return (
     <main className='main'>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import './PitchDetail.scss'
 
@@ -11,9 +11,9 @@ const PitchDetail = () => {
 
   useEffect(() => {
     fetchPitch()
-  }, [id])
+  }, [fetchPitch, id])
 
-  const fetchPitch = async () => {
+  const fetchPitch = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`http://localhost:8000/api/v1/pitches/${id}`)
@@ -29,9 +29,9 @@ const PitchDetail = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (window.confirm('Вы уверены, что хотите удалить это выступление?')) {
       try {
         const response = await fetch(`http://localhost:8000/api/v1/pitches/${id}`, {
@@ -47,7 +47,7 @@ const PitchDetail = () => {
         setError(err.message)
       }
     }
-  }
+  }, [id, navigate])
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Form.scss'
 
@@ -14,69 +14,81 @@ const CreatePitch = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleAddTag = (e) => {
-    e.preventDefault()
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+  const handleChange = useCallback(
+    (e) => {
+      const { name, value } = e.target
       setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, tagInput.trim()],
+        [name]: value,
       }))
-      setTagInput('')
-    }
-  }
+    },
+    [setFormData]
+  )
 
-  const handleRemoveTag = (tagToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }))
-  }
+  const handleAddTag = useCallback(
+    (e) => {
+      e.preventDefault()
+      if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+        setFormData((prev) => ({
+          ...prev,
+          tags: [...prev.tags, tagInput.trim()],
+        }))
+        setTagInput('')
+      }
+    },
+    [setFormData, tagInput]
+  )
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleRemoveTag = useCallback(
+    (tagToRemove) => {
+      setFormData((prev) => ({
+        ...prev,
+        tags: prev.tags.filter((tag) => tag !== tagToRemove),
+      }))
+    },
+    [setFormData]
+  )
 
-    if (!formData.title.trim() || !formData.content.trim()) {
-      setError('Название и содержание выступления обязательны')
-      return
-    }
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault()
 
-    try {
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch('http://localhost:8000/api/v1/pitches/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-          content: formData.content.trim(),
-          tags: formData.tags.length > 0 ? formData.tags : null,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Ошибка при создании выступления')
+      if (!formData.title.trim() || !formData.content.trim()) {
+        setError('Название и содержание выступления обязательны')
+        return
       }
 
-      const newPitch = await response.json()
-      navigate(`/pitch/${newPitch.id}`)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetch('http://localhost:8000/api/v1/pitches/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title.trim(),
+            description: formData.description.trim() || null,
+            content: formData.content.trim(),
+            tags: formData.tags.length > 0 ? formData.tags : null,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Ошибка при создании выступления')
+        }
+
+        const newPitch = await response.json()
+        navigate(`/pitch/${newPitch.id}`)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [formData.title, formData.content, formData.description, formData.tags, navigate]
+  )
 
   return (
     <main className='main'>
