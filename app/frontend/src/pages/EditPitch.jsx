@@ -194,7 +194,7 @@ const EditPitch = () => {
           </div>
 
           <div className='form-group'>
-            <label htmlFor='content'>Содержание выступления *</label>
+            <label htmlFor='content'>Текст выступления *</label>
             <textarea
               id='content'
               name='content'

@@ -153,7 +153,7 @@ const PitchDetail = () => {
             )}
 
             <div className='pitch-detail-content'>
-              <h3>Содержание выступления</h3>
+              <h3>Текст выступления</h3>
               <div className='pitch-content'>
                 {pitch.content.split('\n').map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
