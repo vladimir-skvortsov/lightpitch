@@ -49,7 +49,7 @@ prompt = PromptTemplate(
 
 
 class DescriptionGenerator:
-    def __init__(self, model_name: str = 'openai/gpt-5-nano'):
+    def __init__(self, model_name: str = 'anthropic/claude-3.5-haiku'):
         self.model_name = model_name
         self.llm = OpenRouter(model=model_name, temperature=0.7, max_tokens=300)
         self.retry_parser = RetryOutputParser.from_llm(
