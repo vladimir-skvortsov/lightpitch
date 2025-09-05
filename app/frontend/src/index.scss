@@ -70,29 +70,6 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border: none;
-  transition: all 0.3s ease;
-  color: var(--alfa-white);
-  border-radius: 8px;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 600;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  background-color: var(--alfa-red);
-
-  &:hover {
-    background-color: var(--alfa-light-red);
-    box-shadow: 0 6px 30px var(--alfa-light-red-shadow);
-  }
-
-  &:active {
-    background-color: var(--alfa-dark-red);
-  }
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

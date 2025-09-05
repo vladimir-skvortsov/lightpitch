@@ -65,6 +65,13 @@
   border-top: 1px solid var(--alfa-light-gray);
 }
 
+// Стили для кнопок действий в заголовке
+.pitch-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 // Responsive design for PitchDetail
 @media (max-width: 768px) {
   .pitch-detail {

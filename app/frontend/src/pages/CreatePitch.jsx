@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Button from '../components/Button'
 import './Form.scss'
 
 const CreatePitch = () => {
@@ -120,9 +121,9 @@ const CreatePitch = () => {
       <div className='container'>
         <div className='content-header'>
           <h2>Создать выступление</h2>
-          <Link to='/' className='btn-outline'>
+          <Button variant='outline' as={Link} to='/'>
             ← Назад к списку
-          </Link>
+          </Button>
         </div>
 
         {error && (
@@ -188,14 +189,15 @@ const CreatePitch = () => {
                   }
                 }}
               />
-              <button
+              <Button
                 type='button'
                 onClick={handleAddTag}
-                className='btn-outline'
+                variant='outline'
+                size='small'
                 disabled={loading || !tagInput.trim()}
               >
                 Добавить
-              </button>
+              </Button>
             </div>
             {formData.tags.length > 0 && (
               <div className='pitch-tags'>
@@ -217,16 +219,16 @@ const CreatePitch = () => {
           </div>
 
           <div className='form-actions'>
-            <Link to='/' className='btn-secondary'>
+            <Button variant='secondary' as={Link} to='/'>
               Отмена
-            </Link>
-            <button
+            </Button>
+            <Button
               type='submit'
-              className='btn-primary'
+              variant='primary'
               disabled={loading || !formData.title.trim() || !formData.content.trim()}
             >
               {loading ? 'Создание...' : 'Создать выступление'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

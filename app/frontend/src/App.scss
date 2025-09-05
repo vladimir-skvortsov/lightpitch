@@ -68,64 +68,7 @@
   }
 }
 
-.btn-secondary {
-  background: var(--alfa-white);
-  color: var(--alfa-red);
-  border: 2px solid var(--alfa-red);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: var(--alfa-red);
-    color: var(--alfa-white);
-  }
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--alfa-gray);
-  border: 2px solid var(--alfa-gray);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: var(--alfa-gray);
-    color: var(--alfa-white);
-  }
-}
-
 // Общие компоненты, используемые на нескольких страницах
-
-// Кнопки, используемые на разных страницах
-.btn-danger {
-  background: var(--alfa-white);
-  color: #dc2626;
-  border: 2px solid #dc2626;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: #dc2626;
-    color: var(--alfa-white);
-  }
-}
-
-.btn-large {
-  padding: 16px 32px;
-  font-size: 1.1rem;
-}
 
 // Общие responsive стили
 @media (max-width: 768px) {

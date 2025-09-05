@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import Dropdown from '../components/Dropdown'
+import Button from '../components/Button'
 import './PitchDetail.scss'
 
 const PitchDetail = () => {
@@ -78,9 +80,9 @@ const PitchDetail = () => {
         <div className='container'>
           <div className='error'>
             <p>⚠️ {error}</p>
-            <Link to='/' className='btn-primary'>
+            <Button variant='primary' as={Link} to='/'>
               Вернуться на главную
-            </Link>
+            </Button>
           </div>
         </div>
       </main>
@@ -91,16 +93,19 @@ const PitchDetail = () => {
     <main className='main'>
       <div className='container'>
         <div className='content-header'>
-          <Link to='/' className='btn-outline'>
+          <Button variant='outline' as={Link} to='/'>
             ← Назад к списку
-          </Link>
+          </Button>
           <div className='pitch-actions'>
-            <Link to={`/pitch/${id}/edit`} className='btn-outline'>
-              Редактировать
-            </Link>
-            <button onClick={handleDelete} className='btn-danger'>
-              Удалить
-            </button>
+            <Button variant='primary'>Начать тренировку</Button>
+            <Dropdown>
+              <Link to={`/pitch/${id}/edit`} className='dropdown-item'>
+                Редактировать
+              </Link>
+              <button onClick={handleDelete} className='dropdown-item dropdown-item--danger'>
+                Удалить
+              </button>
+            </Dropdown>
           </div>
         </div>
 
@@ -141,11 +146,6 @@ const PitchDetail = () => {
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
-            </div>
-
-            <div className='pitch-detail-actions'>
-              <button className='btn-primary btn-large'>🎤 Начать тренировку</button>
-              <button className='btn-secondary'>📊 Анализ выступления</button>
             </div>
           </div>
         )}

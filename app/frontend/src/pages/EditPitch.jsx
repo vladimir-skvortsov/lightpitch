@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import Button from '../components/Button'
 import './Form.scss'
 
 const EditPitch = () => {
@@ -137,9 +138,9 @@ const EditPitch = () => {
         <div className='container'>
           <div className='error'>
             <p>⚠️ {error}</p>
-            <Link to='/' className='btn-primary'>
+            <Button variant='primary' as={Link} to='/'>
               Вернуться на главную
-            </Link>
+            </Button>
           </div>
         </div>
       </main>
@@ -152,9 +153,9 @@ const EditPitch = () => {
         <div className='content-header'>
           <h2>Редактировать выступление</h2>
           <div className='pitch-actions'>
-            <Link to={`/pitch/${id}`} className='btn-outline'>
+            <Button variant='outline' as={Link} to={`/pitch/${id}`}>
               ← Назад
-            </Link>
+            </Button>
           </div>
         </div>
 
@@ -221,14 +222,15 @@ const EditPitch = () => {
                   }
                 }}
               />
-              <button
+              <Button
                 type='button'
                 onClick={handleAddTag}
-                className='btn-outline'
+                variant='outline'
+                size='small'
                 disabled={saving || !tagInput.trim()}
               >
                 Добавить
-              </button>
+              </Button>
             </div>
             {formData.tags.length > 0 && (
               <div className='pitch-tags'>
@@ -245,16 +247,16 @@ const EditPitch = () => {
           </div>
 
           <div className='form-actions'>
-            <Link to={`/pitch/${id}`} className='btn-secondary'>
+            <Button variant='secondary' as={Link} to={`/pitch/${id}`}>
               Отмена
-            </Link>
-            <button
+            </Button>
+            <Button
               type='submit'
-              className='btn-primary'
+              variant='primary'
               disabled={saving || !formData.title.trim() || !formData.content.trim()}
             >
               {saving ? 'Сохранение...' : 'Сохранить изменения'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

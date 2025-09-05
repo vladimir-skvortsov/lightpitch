@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import Button from '../components/Button'
 import './Home.scss'
 
 const Home = () => {
@@ -45,9 +46,9 @@ const Home = () => {
       <div className='container'>
         <div className='content-header'>
           <h2>Ваши выступления</h2>
-          <Link to='/create' className='btn-primary'>
-            <button>Добавить</button>
-          </Link>
+          <Button variant='primary' as={Link} to='/create'>
+            Добавить
+          </Button>
         </div>
 
         {/* Loading State */}
@@ -62,9 +63,9 @@ const Home = () => {
         {error && (
           <div className='error'>
             <p>⚠️ {error}</p>
-            <button className='btn-secondary' onClick={fetchPitches}>
+            <Button variant='secondary' onClick={fetchPitches}>
               Попробовать снова
-            </button>
+            </Button>
           </div>
         )}
 
@@ -76,9 +77,9 @@ const Home = () => {
                 <div className='empty-icon'>🎤</div>
                 <h3>У вас пока нет выступлений</h3>
                 <p>Создайте своё первое выступление, чтобы начать тренировку с AI</p>
-                <Link to='/create'>
-                  <button>Создать первое выступление</button>
-                </Link>
+                <Button variant='primary' as={Link} to='/create'>
+                  Создать первое выступление
+                </Button>
               </div>
             ) : (
               <div className='pitches-grid'>
