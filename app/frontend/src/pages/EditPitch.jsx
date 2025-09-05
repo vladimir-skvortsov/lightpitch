@@ -13,6 +13,8 @@ const EditPitch = () => {
     tags: [],
   })
   const [tagInput, setTagInput] = useState('')
+  const [presentationFile, setPresentationFile] = useState(null)
+  const [currentPresentationName, setCurrentPresentationName] = useState('')
   const [extractingText, setExtractingText] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -34,6 +36,7 @@ const EditPitch = () => {
         content: pitch.content || '',
         tags: pitch.tags || [],
       })
+      setCurrentPresentationName(pitch.presentation_file_name || '')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -145,6 +148,53 @@ const EditPitch = () => {
     [setFormData]
   )
 
+  const handlePresentationUpload = useCallback((e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ]
+      if (!allowedTypes.includes(file.type)) {
+        setError('Поддерживаются только файлы PDF, PPT и PPTX')
+        e.target.value = ''
+        return
+      }
+
+      // Check file size (50MB limit)
+      const maxSize = 50 * 1024 * 1024
+      if (file.size > maxSize) {
+        setError('Размер файла не должен превышать 50MB')
+        e.target.value = ''
+        return
+      }
+
+      setPresentationFile(file)
+      setError(null)
+    }
+  }, [])
+
+  const handleRemovePresentation = useCallback(async () => {
+    if (currentPresentationName) {
+      try {
+        const response = await fetch(`/api/v1/pitches/${id}/presentation`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          setCurrentPresentationName('')
+        } else {
+          console.warn('Failed to delete presentation file')
+        }
+      } catch (err) {
+        console.warn('Error deleting presentation:', err)
+      }
+    }
+    setPresentationFile(null)
+  }, [id, currentPresentationName])
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault()
@@ -175,6 +225,25 @@ const EditPitch = () => {
           throw new Error('Ошибка при обновлении выступления')
         }
 
+        // Upload presentation file if provided
+        if (presentationFile) {
+          try {
+            const formData = new FormData()
+            formData.append('file', presentationFile)
+
+            const uploadResponse = await fetch(`/api/v1/pitches/${id}/presentation`, {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!uploadResponse.ok) {
+              console.warn('Failed to upload presentation file')
+            }
+          } catch (uploadErr) {
+            console.warn('Error uploading presentation:', uploadErr)
+          }
+        }
+
         navigate(`/pitch/${id}`)
       } catch (err) {
         setError(err.message)
@@ -182,7 +251,7 @@ const EditPitch = () => {
         setSaving(false)
       }
     },
-    [formData.title, formData.content, formData.description, formData.tags, id, navigate]
+    [formData.title, formData.content, formData.description, formData.tags, presentationFile, id, navigate]
   )
 
   if (loading) {
@@ -328,6 +397,52 @@ const EditPitch = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className='form-group'>
+            <label htmlFor='presentation'>Презентация (необязательно)</label>
+
+            {currentPresentationName && !presentationFile && (
+              <div className='current-file'>
+                <div className='file-info'>
+                  <span>📄 {currentPresentationName}</span>
+                  <button type='button' onClick={handleRemovePresentation} className='file-remove' disabled={saving}>
+                    ×
+                  </button>
+                </div>
+                <p className='form-help'>Текущая презентация</p>
+              </div>
+            )}
+
+            <input
+              type='file'
+              id='presentation'
+              name='presentation'
+              accept='.pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation'
+              onChange={handlePresentationUpload}
+              disabled={saving}
+              className='file-input'
+            />
+
+            {presentationFile && (
+              <div className='file-info'>
+                <span>📄 {presentationFile.name}</span>
+                <button
+                  type='button'
+                  onClick={() => setPresentationFile(null)}
+                  className='file-remove'
+                  disabled={saving}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            <p className='form-help'>
+              {presentationFile
+                ? 'Новый файл заменит текущую презентацию'
+                : 'Поддерживаются файлы PDF, PPT, PPTX (максимум 50MB)'}
+            </p>
           </div>
 
           <div className='form-actions'>
