@@ -97,7 +97,14 @@ const PitchDetail = () => {
             ← Назад к списку
           </Button>
           <div className='pitch-actions'>
-            <Button variant='primary'>Начать тренировку</Button>
+            <Dropdown trigger={<Button variant='primary'>Начать тренировку</Button>}>
+              <Link to={`/pitch/${id}/upload`} className='dropdown-item'>
+                Загрузить видео
+              </Link>
+              <Link to={`/pitch/${id}/record`} className='dropdown-item'>
+                Записать видео
+              </Link>
+            </Dropdown>
             <Dropdown
               trigger={
                 <Button className='w-[40px]'>
