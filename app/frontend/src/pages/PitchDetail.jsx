@@ -15,7 +15,7 @@ const PitchDetail = () => {
   const fetchPitch = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:8000/api/v1/pitches/${id}`)
+      const response = await fetch(`/api/v1/pitches/${id}`)
 
       if (!response.ok) {
         throw new Error('Выступление не найдено')
@@ -37,7 +37,7 @@ const PitchDetail = () => {
   const handleDelete = useCallback(async () => {
     if (window.confirm('Вы уверены, что хотите удалить это выступление?')) {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/pitches/${id}`, {
+        const response = await fetch(`/api/v1/pitches/${id}`, {
           method: 'DELETE',
         })
 

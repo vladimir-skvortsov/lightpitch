@@ -23,7 +23,7 @@ const EditPitch = () => {
   const fetchPitch = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:8000/api/v1/pitches/${id}`)
+      const response = await fetch(`/api/v1/pitches/${id}`)
 
       if (!response.ok) {
         throw new Error('Выступление не найдено')
@@ -208,7 +208,7 @@ const EditPitch = () => {
         setSaving(true)
         setError(null)
 
-        const response = await fetch(`http://localhost:8000/api/v1/pitches/${id}`, {
+        const response = await fetch(`/api/v1/pitches/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

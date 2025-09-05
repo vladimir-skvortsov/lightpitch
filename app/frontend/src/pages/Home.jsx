@@ -12,7 +12,7 @@ const Home = () => {
     try {
       setLoading(true)
 
-      const response = await fetch('http://localhost:8000/api/v1/pitches')
+      const response = await fetch('/api/v1/pitches')
 
       if (!response.ok) {
         throw new Error('Ошибка загрузки выступлений')
