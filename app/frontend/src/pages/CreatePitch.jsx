@@ -14,6 +14,7 @@ const CreatePitch = () => {
   })
   const [tagInput, setTagInput] = useState('')
   const [presentationFile, setPresentationFile] = useState(null)
+  const [extractingText, setExtractingText] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -79,6 +80,71 @@ const CreatePitch = () => {
       setError(null)
     }
   }, [])
+
+  const handleTextFileUpload = useCallback(
+    async (e) => {
+      const file = e.target.files[0]
+      if (file) {
+        // Check file type
+        const allowedTypes = [
+          'text/plain',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]
+        const allowedExtensions = ['.txt', '.doc', '.docx']
+        const fileExtension = file.name.toLowerCase().split('.').pop()
+
+        if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
+          setError('Поддерживаются только файлы TXT, DOC и DOCX')
+          e.target.value = ''
+          return
+        }
+
+        // Check file size (10MB limit)
+        const maxSize = 10 * 1024 * 1024
+        if (file.size > maxSize) {
+          setError('Размер файла не должен превышать 10MB')
+          e.target.value = ''
+          return
+        }
+
+        try {
+          setExtractingText(true)
+          setError(null)
+
+          const formData = new FormData()
+          formData.append('file', file)
+
+          const response = await fetch('/api/v1/extract-text', {
+            method: 'POST',
+            body: formData,
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.detail || 'Ошибка при обработке файла')
+          }
+
+          const data = await response.json()
+
+          // Заполняем textarea с текстом выступления
+          setFormData((prev) => ({
+            ...prev,
+            content: data.text,
+          }))
+
+          // Показываем информацию о файле
+          console.log(`Извлечено ${data.word_count} слов из файла ${data.filename}`)
+        } catch (err) {
+          setError(err.message)
+          e.target.value = ''
+        } finally {
+          setExtractingText(false)
+        }
+      }
+    },
+    [setFormData]
+  )
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -188,16 +254,40 @@ const CreatePitch = () => {
 
           <div className='form-group'>
             <label htmlFor='content'>Текст выступления *</label>
-            <textarea
-              id='content'
-              name='content'
-              value={formData.content}
-              onChange={handleChange}
-              placeholder='Введите полный текст вашего выступления...'
-              rows={12}
-              required
-              disabled={loading}
-            />
+
+            <div className='text-input-options'>
+              <div className='text-input-manual'>
+                <textarea
+                  id='content'
+                  name='content'
+                  value={formData.content}
+                  onChange={handleChange}
+                  placeholder='Введите полный текст вашего выступления или загрузите файл...'
+                  rows={12}
+                  required
+                  disabled={loading || extractingText}
+                />
+              </div>
+
+              <div className='text-input-file'>
+                <label htmlFor='textFile' className='text-file-label'>
+                  <span className='text-file-icon'>📄</span>
+                  <span className='text-file-text'>
+                    {extractingText ? 'Обрабатываем файл...' : 'Загрузить из файла'}
+                  </span>
+                </label>
+                <input
+                  type='file'
+                  id='textFile'
+                  name='textFile'
+                  accept='.txt,.doc,.docx,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                  onChange={handleTextFileUpload}
+                  disabled={loading || extractingText}
+                  className='file-input-hidden'
+                />
+                <p className='form-help'>TXT, DOC, DOCX (максимум 10MB)</p>
+              </div>
+            </div>
           </div>
 
           <div className='form-group'>

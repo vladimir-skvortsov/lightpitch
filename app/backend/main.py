@@ -6,6 +6,8 @@ from typing import Optional
 import os
 import uuid
 import shutil
+from docx import Document
+import tempfile
 
 load_dotenv()
 
@@ -164,6 +166,101 @@ async def delete_presentation(pitch_id: str):
     update_pitch_service(pitch_id, pitch_update)
 
     return {'message': 'Presentation deleted successfully'}
+
+
+# Text file processing endpoint
+@app.post('/api/v1/extract-text')
+async def extract_text_from_file(file: UploadFile = File(...)):
+    """Extract text content from uploaded text or Word document"""
+
+    # Validate file type
+    allowed_types = [
+        'text/plain',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]
+    content_type = file.content_type or ''
+
+    # Also check by file extension as fallback
+    filename = file.filename or ''
+    allowed_extensions = ['.txt', '.doc', '.docx']
+    file_extension = os.path.splitext(filename)[1].lower()
+
+    if not any(content_type.startswith(t) for t in allowed_types) and file_extension not in allowed_extensions:
+        raise HTTPException(status_code=400, detail='File must be a text file (.txt, .doc, .docx)')
+
+    # Check file size (10MB limit for text files)
+    max_size = 10 * 1024 * 1024  # 10MB
+    file_content = await file.read()
+    if len(file_content) > max_size:
+        raise HTTPException(status_code=400, detail='File size must be less than 10MB')
+
+    try:
+        # Process different file types
+        if content_type == 'text/plain' or file_extension == '.txt':
+            # Handle plain text files
+            try:
+                text = file_content.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    text = file_content.decode('cp1251')  # Windows Cyrillic
+                except UnicodeDecodeError:
+                    text = file_content.decode('latin1')  # Fallback
+
+        elif content_type in [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ] or file_extension in ['.doc', '.docx']:
+            # Handle Word documents
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
+
+            try:
+                if (
+                    file_extension == '.docx'
+                    or content_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ):
+                    # Handle .docx files
+                    doc = Document(temp_file_path)
+                    paragraphs = []
+                    for paragraph in doc.paragraphs:
+                        if paragraph.text.strip():
+                            paragraphs.append(paragraph.text.strip())
+                    text = '\n\n'.join(paragraphs)
+                else:
+                    # Handle .doc files (older format)
+                    # Note: python-docx doesn't support .doc files well
+                    # For production, consider using python-docx2txt or antiword
+                    raise HTTPException(
+                        status_code=400,
+                        detail='Legacy .doc format not fully supported. Please use .docx or .txt format.',
+                    )
+
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+
+        else:
+            raise HTTPException(status_code=400, detail='Unsupported file format')
+
+        # Clean and validate extracted text
+        text = text.strip()
+        if not text:
+            raise HTTPException(status_code=400, detail='No text content found in file')
+
+        # Limit text length (prevent abuse)
+        max_text_length = 50000  # ~50k characters
+        if len(text) > max_text_length:
+            text = text[:max_text_length] + '...\n\n[Текст обрезан из-за превышения лимита длины]'
+
+        return {'text': text, 'filename': filename, 'word_count': len(text.split()), 'char_count': len(text)}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f'Error processing file: {str(e)}')
 
 
 # AI endpoints
