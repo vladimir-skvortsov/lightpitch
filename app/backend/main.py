@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Optional
 
+load_dotenv()
+
 from config import PROJECT_NAME
-from models import Pitch, PitchCreate, PitchUpdate
+from db_models import Pitch, PitchCreate, PitchUpdate
 from pitches import (
     create_pitch as create_pitch_service,
     get_pitch as get_pitch_service,
@@ -13,7 +15,6 @@ from pitches import (
     delete_pitch as delete_pitch_service,
 )
 
-load_dotenv()
 
 app = FastAPI(title=PROJECT_NAME)
 
@@ -67,28 +68,6 @@ async def delete_pitch_endpoint(pitch_id: str):
 
 
 # AI endpoints
-@app.post('/api/v1/generate/description')
-async def generate_description(request: dict):
-    """Generate description for a pitch based on its content"""
-    content = request.get('content', '')
-
-    if not content.strip():
-        raise HTTPException(status_code=400, detail='Content is required')
-
-    # TODO: Интеграция с AI для генерации описания
-    # Пока возвращаем простое описание на основе длины текста
-    content_words = len(content.split())
-
-    if content_words < 50:
-        description = 'Краткое выступление с ключевыми идеями и основными тезисами.'
-    elif content_words < 200:
-        description = 'Содержательное выступление с детальным разбором темы и практическими примерами.'
-    else:
-        description = 'Развернутая презентация с глубоким анализом, множеством примеров и детальными выводами.'
-
-    return {'description': description}
-
-
 @app.post('/api/v1/score/pitch')
 async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = Form(None)):
     """Analyze pitch video and return hardcoded results"""
