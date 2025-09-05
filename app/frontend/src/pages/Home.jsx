@@ -88,9 +88,6 @@ const Home = () => {
                     <div className='pitch-card'>
                       <h3 className='pitch-title'>{pitch.title}</h3>
                       <div className='pitch-date'>{formatDate(pitch.created_at)}</div>
-                      <p className={`pitch-description ${!pitch.description ? 'pitch-description--placeholder' : ''}`}>
-                        {pitch.description}
-                      </p>
                       {pitch.tags && pitch.tags.length > 0 && (
                         <div className='pitch-tags'>
                           {pitch.tags.map((tag, index) => (
@@ -100,6 +97,9 @@ const Home = () => {
                           ))}
                         </div>
                       )}
+                      <p className={`pitch-description ${!pitch.description ? 'pitch-description--placeholder' : ''}`}>
+                        {pitch.description}
+                      </p>
                     </div>
                   </Link>
                 ))}

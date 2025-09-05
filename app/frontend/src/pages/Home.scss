@@ -162,10 +162,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 10px;
 }
 
 .tag {
-  background: linear-gradient(135deg, var(--alfa-red) 0%, var(--alfa-dark-red) 100%);
+  background: var(--alfa-red);
   color: var(--alfa-white);
   padding: 4px 12px;
   border-radius: 20px;
