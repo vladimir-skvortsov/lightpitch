@@ -77,10 +77,10 @@ const UploadVideo = () => {
       <div className='container'>
         <div className='upload-video-container'>
           <div className='upload-header'>
+            <h2>Загрузка видео</h2>
             <Button variant='outline' as={Link} to={`/pitch/${id}`}>
               ← Назад к выступлению
             </Button>
-            <h2>Загрузка видео</h2>
           </div>
 
           {error && (

@@ -153,10 +153,10 @@ const RecordVideo = () => {
       <div className='container'>
         <div className='record-video-container'>
           <div className='record-header'>
+            <h2>Запись выступления</h2>
             <Button variant='outline' as={Link} to={`/pitch/${id}`}>
               ← Назад к выступлению
             </Button>
-            <h2>Запись выступления</h2>
           </div>
 
           {error && (
