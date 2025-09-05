@@ -83,28 +83,24 @@ const Home = () => {
             ) : (
               <div className='pitches-grid'>
                 {pitches.map((pitch) => (
-                  <div key={pitch.id} className='pitch-card'>
-                    <div className='pitch-header'>
-                      <h3 className='pitch-title'>{pitch.title}</h3>
-                      <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
-                    </div>
-                    {pitch.description && <p className='pitch-description'>{pitch.description}</p>}
-                    {pitch.tags && pitch.tags.length > 0 && (
-                      <div className='pitch-tags'>
-                        {pitch.tags.map((tag, index) => (
-                          <span key={index} className='tag'>
-                            {tag}
-                          </span>
-                        ))}
+                  <Link to={`/pitch/${pitch.id}`} key={pitch.id}>
+                    <div className='pitch-card'>
+                      <div className='pitch-header'>
+                        <h3 className='pitch-title'>{pitch.title}</h3>
+                        <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
                       </div>
-                    )}
-                    <div className='pitch-actions'>
-                      <Link to={`/pitch/${pitch.id}/edit`} className='btn-outline'>
-                        Редактировать
-                      </Link>
-                      <Link to={`/pitch/${pitch.id}`}>Начать тренировку</Link>
+                      {pitch.description && <p className='pitch-description'>{pitch.description}</p>}
+                      {pitch.tags && pitch.tags.length > 0 && (
+                        <div className='pitch-tags'>
+                          {pitch.tags.map((tag, index) => (
+                            <span key={index} className='tag'>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
