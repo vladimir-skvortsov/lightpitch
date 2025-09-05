@@ -98,11 +98,11 @@ const PitchDetail = () => {
           </Button>
           <div className='pitch-actions'>
             <Dropdown trigger={<Button variant='primary'>Начать тренировку</Button>}>
-              <Link to={`/pitch/${id}/upload`} className='dropdown-item'>
-                Загрузить видео
-              </Link>
               <Link to={`/pitch/${id}/record`} className='dropdown-item'>
                 Записать видео
+              </Link>
+              <Link to={`/pitch/${id}/upload`} className='dropdown-item'>
+                Загрузить видео
               </Link>
             </Dropdown>
             <Dropdown
