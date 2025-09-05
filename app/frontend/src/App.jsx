@@ -11,17 +11,14 @@ import PitchResults from './pages/PitchResults'
 const App = () => {
   return (
     <div className='app'>
-      {/* Header */}
       <header className='header'>
-        <div className='container'>
-          <Link to='/' className='logo-link'>
-            <h1 className='logo'>
-              <span className='logo-light'>лайт</span>
-              <span className='logo-pitch'>питч</span>
-            </h1>
-          </Link>
-          <p className='subtitle'>AI-помощник для презентаций и питчей</p>
-        </div>
+        <Link to='/' className='logo-link'>
+          <h1 className='logo'>
+            <span className='logo-light'>лайт</span>
+            <span className='logo-pitch'>питч</span>
+          </h1>
+        </Link>
+        <p className='subtitle'>AI-помощник для презентаций и питчей</p>
       </header>
 
       {/* Routes */}
