@@ -107,7 +107,7 @@ const PitchDetail = () => {
             </Dropdown>
             <Dropdown
               trigger={
-                <Button className='w-[40px]'>
+                <Button className='w-[46px]'>
                   <span className='more-dots'>⋯</span>
                 </Button>
               }
