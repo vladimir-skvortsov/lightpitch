@@ -10,6 +10,7 @@ const PitchDetail = () => {
   const [pitch, setPitch] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isContentExpanded, setIsContentExpanded] = useState(false)
 
   const fetchPitch = useCallback(async () => {
     try {
@@ -176,11 +177,27 @@ const PitchDetail = () => {
 
             <div className='block'>
               <h3>Текст выступления</h3>
-              <div className='pitch-content'>
-                {pitch.content.split('\n').map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
+              <div
+                className={`pitch-content ${
+                  !isContentExpanded ? 'pitch-content--collapsed' : 'pitch-content--expanded'
+                }`}
+              >
+                <div className='pitch-content-text'>
+                  {pitch.content.split('\n').map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+                {!isContentExpanded && pitch.content.length > 500 && <div className='pitch-content-gradient'></div>}
               </div>
+              {pitch.content.length > 500 && (
+                <Button
+                  variant='outline'
+                  onClick={() => setIsContentExpanded(!isContentExpanded)}
+                  className='content-toggle-btn'
+                >
+                  {isContentExpanded ? '🔼 Свернуть' : '🔽 Показать полностью'}
+                </Button>
+              )}
             </div>
           </div>
         )}
