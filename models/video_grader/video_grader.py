@@ -55,6 +55,23 @@ class VideoGrader:
             "right_eye": eye_status(right_ear),
         }
 
+    def split_video(self, video_path: str, step_seconds: int = 1) -> list:
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_interval = int(fps * step_seconds)
+
+        frames = []
+        frame_id = 0
+        success, frame = cap.read()
+        while success:
+            if frame_id % frame_interval == 0:
+                frames.append(frame.copy())
+            success, frame = cap.read()
+            frame_id += 1
+
+        cap.release()
+        return frames
+
     def process_frame(self, frame) -> dict:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.pose.process(frame_rgb)
