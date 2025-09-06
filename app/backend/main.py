@@ -1,26 +1,24 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+import os
+import shutil
+import tempfile
+import uuid
+from typing import Optional
+
+from docx import Document
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from dotenv import load_dotenv
-from typing import Optional
-import os
-import uuid
-import shutil
-from docx import Document
-import tempfile
 
 load_dotenv()
 
 from config import PROJECT_NAME
 from db_models import Pitch, PitchCreate, PitchUpdate
-from pitches import (
-    create_pitch as create_pitch_service,
-    get_pitch as get_pitch_service,
-    list_pitches as list_pitches_service,
-    update_pitch as update_pitch_service,
-    delete_pitch as delete_pitch_service,
-)
-
+from pitches import create_pitch as create_pitch_service
+from pitches import delete_pitch as delete_pitch_service
+from pitches import get_pitch as get_pitch_service
+from pitches import list_pitches as list_pitches_service
+from pitches import update_pitch as update_pitch_service
 
 app = FastAPI(title=PROJECT_NAME)
 

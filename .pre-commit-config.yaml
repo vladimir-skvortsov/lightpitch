@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        name: isort (python)
+        files: \.py$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.4
+    hooks:
+      - id: ruff
+        name: ruff (lint + fix)
+        args: [--fix]
+        files: \.py$
+
+      - id: ruff-format
+        name: ruff (format)
+        files: \.py$

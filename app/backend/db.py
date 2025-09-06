@@ -1,4 +1,5 @@
 from typing import Dict
+
 from pitches import Pitch
 
 # In-memory storage for pitches (temporary until database is added)

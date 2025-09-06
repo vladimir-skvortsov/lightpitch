@@ -1,13 +1,13 @@
 from typing import Optional
-from pydantic import BaseModel, Field
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain.output_parsers import RetryOutputParser
-from langchain_core.runnables import RunnableLambda, RunnableParallel
 
-from ..utils.OpenRouter import OpenRouter
+from langchain.output_parsers import RetryOutputParser
+from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnableParallel
+from pydantic import BaseModel, Field
+
 from ..utils.JsonExtractor import JsonExtractor
+from ..utils.OpenRouter import OpenRouter
 
 
 class DocumentGradeSchema(BaseModel):

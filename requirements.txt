@@ -22,3 +22,4 @@ torchaudio>=2.2
 mediapipe>=0.10.21
 opencv-python>=4.12.0.88
 isort>=6.0.1
+pre-commit>=4.3.0

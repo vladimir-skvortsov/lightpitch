@@ -1,17 +1,16 @@
-import uuid
 import sys
-from pathlib import Path
+import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
 project_root = str(Path(__file__).parent.parent.parent)
 sys.path.append(project_root)
 
+from db import delete_pitch_by_id, get_all_pitches, get_pitch_by_id, pitch_exists, store_pitch
 from db_models import Pitch, PitchCreate, PitchUpdate
 
-from db import get_pitch_by_id, get_all_pitches, store_pitch, delete_pitch_by_id, pitch_exists
 from models.description_generator.description_generator import DescriptionGenerator
-
 
 description_generator = DescriptionGenerator()
 

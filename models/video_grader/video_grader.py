@@ -1,6 +1,7 @@
+import json
+
 import cv2
 import mediapipe as mp
-import json
 import numpy as np
 
 
@@ -10,10 +11,9 @@ class VideoGrader:
         self.pose = self.mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5)
 
         self.mp_face = mp.solutions.face_mesh
-        self.face = self.mp_face.FaceMesh(static_image_mode=True,
-                                          max_num_faces=1,
-                                          refine_landmarks=True,
-                                          min_detection_confidence=0.5)
+        self.face = self.mp_face.FaceMesh(
+            static_image_mode=True, max_num_faces=1, refine_landmarks=True, min_detection_confidence=0.5
+        )
 
     def _eye_aspect_ratio(self, landmarks, eye_indices) -> float:
         """
@@ -34,7 +34,7 @@ class VideoGrader:
         results = self.face.process(frame_rgb)
 
         if not results.multi_face_landmarks:
-            return {"left_eye": "not_visible", "right_eye": "not_visible"}
+            return {'left_eye': 'not_visible', 'right_eye': 'not_visible'}
 
         face_landmarks = results.multi_face_landmarks[0].landmark
 
@@ -46,13 +46,13 @@ class VideoGrader:
 
         def eye_status(ear: float) -> str:
             if ear < 0.18:
-                return "closed"
+                return 'closed'
             else:
-                return "open"
+                return 'open'
 
         return {
-            "left_eye": eye_status(left_ear),
-            "right_eye": eye_status(right_ear),
+            'left_eye': eye_status(left_ear),
+            'right_eye': eye_status(right_ear),
         }
 
     def split_video(self, video_path: str, step_seconds: int = 1) -> list:
@@ -76,7 +76,7 @@ class VideoGrader:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.pose.process(frame_rgb)
 
-        pose_data = {"pose_detected": False}
+        pose_data = {'pose_detected': False}
 
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
@@ -90,13 +90,10 @@ class VideoGrader:
             eye_contact = 0.4 < nose.x < 0.6
 
             pose_data = {
-                "pose_detected": True,
-                "open_pose": open_pose,
-                "eye_contact": eye_contact,
-                "landmarks": [
-                    {"id": i, "x": lm.x, "y": lm.y, "z": lm.z}
-                    for i, lm in enumerate(landmarks)
-                ]
+                'pose_detected': True,
+                'open_pose': open_pose,
+                'eye_contact': eye_contact,
+                'landmarks': [{'id': i, 'x': lm.x, 'y': lm.y, 'z': lm.z} for i, lm in enumerate(landmarks)],
             }
 
         eye_data = self._analyze_eyes(frame)
@@ -108,7 +105,7 @@ class VideoGrader:
         results = []
         for i, frame in enumerate(frames):
             frame_result = self.process_frame(frame)
-            frame_result["frame_id"] = i
+            frame_result['frame_id'] = i
             results.append(frame_result)
         return results
 
@@ -117,31 +114,31 @@ class VideoGrader:
 
     def final_score(self, analysis_results: list) -> dict:
         total_frames = len(analysis_results)
-        open_frames = sum(1 for r in analysis_results if r.get("open_pose"))
-        eye_frames = sum(1 for r in analysis_results if r.get("eye_contact"))
+        open_frames = sum(1 for r in analysis_results if r.get('open_pose'))
+        eye_frames = sum(1 for r in analysis_results if r.get('eye_contact'))
         open_eye_frames = sum(
-            1 for r in analysis_results if r.get("left_eye") == "open" and r.get("right_eye") == "open"
+            1 for r in analysis_results if r.get('left_eye') == 'open' and r.get('right_eye') == 'open'
         )
 
         return {
-            "open_pose_ratio": open_frames / total_frames if total_frames else 0,
-            "eye_contact_ratio": eye_frames / total_frames if total_frames else 0,
-            "open_eyes_ratio": open_eye_frames / total_frames if total_frames else 0,
-            "final_score": round(
-                (open_frames + eye_frames + open_eye_frames) / (3 * total_frames) * 100, 2
-            ) if total_frames else 0
+            'open_pose_ratio': open_frames / total_frames if total_frames else 0,
+            'eye_contact_ratio': eye_frames / total_frames if total_frames else 0,
+            'open_eyes_ratio': open_eye_frames / total_frames if total_frames else 0,
+            'final_score': round((open_frames + eye_frames + open_eye_frames) / (3 * total_frames) * 100, 2)
+            if total_frames
+            else 0,
         }
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     grader = VideoGrader()
 
-    frame_paths = ["frames/frame4.jpg"]
+    frame_paths = ['frames/frame4.jpg']
     frames = [cv2.imread(p) for p in frame_paths]
 
     results = grader.analyze_frames(frames)
 
-    print("JSON results:")
+    print('JSON results:')
     print(grader.to_json(results))
 
-    print("\nFinal score:", grader.final_score(results))
+    print('\nFinal score:', grader.final_score(results))
