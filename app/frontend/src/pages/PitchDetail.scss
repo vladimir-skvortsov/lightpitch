@@ -101,45 +101,149 @@
 
 // Стили для блока презентации
 .pitch-detail-presentation {
-  .presentation-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: #f8fafb;
-    border: 1px solid var(--alfa-light-gray);
+  .presentation-card {
+    border: 2px solid #e5e7eb;
     border-radius: 12px;
-  }
+    padding: 20px;
+    margin-bottom: 16px;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 
-  .presentation-file {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    &.clickable-card {
+      cursor: pointer;
 
-    .file-icon {
-      font-size: 2rem;
-    }
+      &:hover {
+        border-color: #ef394e;
+        box-shadow: 0 8px 25px rgba(239, 57, 78, 0.15);
+        transform: translateY(-2px);
 
-    .file-details {
-      display: flex;
-      flex-direction: column;
-
-      .file-name {
-        font-weight: 600;
-        color: var(--alfa-dark-gray);
-        margin-bottom: 2px;
+        .arrow-icon {
+          transform: translateX(4px);
+          color: #ef394e;
+        }
       }
 
-      .file-type {
-        font-size: 0.9rem;
-        color: var(--alfa-gray);
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(239, 57, 78, 0.1);
+      }
+    }
+  }
+
+  .presentation-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .presentation-file {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+
+      .file-icon {
+        font-size: 1.5rem;
+        color: #ef394e;
+      }
+
+      .file-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .file-name {
+          font-weight: 600;
+          color: #1a1a1a;
+          font-size: 1rem;
+        }
+
+        .file-type {
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+      }
+    }
+
+    .presentation-arrow {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+
+      .arrow-icon {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        transition: all 0.3s ease;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .presentation-counters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      min-width: 60px;
+      justify-content: center;
+
+      .counter-icon {
+        font-size: 0.875rem;
+        font-weight: bold;
+      }
+
+      .counter-number {
+        font-size: 0.875rem;
+        font-weight: 700;
+      }
+
+      &--success {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+
+        .counter-icon {
+          color: #16a34a;
+        }
+      }
+
+      &--warning {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+
+        .counter-icon {
+          color: #ea580c;
+        }
+      }
+
+      &--error {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+
+        .counter-icon {
+          color: #ef4444;
+        }
       }
     }
   }
 
   .presentation-actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-top: 8px;
   }
 }
 
@@ -164,11 +268,36 @@
   }
 
   .pitch-detail-presentation {
-    .presentation-info {
-      flex-direction: column;
-      gap: 16px;
-      text-align: center;
+    .presentation-card {
       padding: 16px;
+
+      .presentation-info {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        margin-bottom: 16px;
+
+        .presentation-arrow {
+          position: static;
+          margin-top: 8px;
+        }
+      }
+
+      .presentation-counters {
+        justify-content: center;
+        gap: 12px;
+
+        .counter {
+          min-width: 50px;
+          padding: 6px 10px;
+          font-size: 0.8rem;
+
+          .counter-icon,
+          .counter-number {
+            font-size: 0.8rem;
+          }
+        }
+      }
     }
 
     .presentation-actions {

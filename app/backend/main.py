@@ -261,6 +261,122 @@ async def extract_text_from_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f'Error processing file: {str(e)}')
 
 
+@app.get('/api/v1/pitches/{pitch_id}/presentation-analysis')
+async def get_presentation_analysis(pitch_id: str):
+    """Get presentation analysis for a pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+
+    if not pitch.presentation_file_name:
+        raise HTTPException(status_code=404, detail='No presentation found for this pitch')
+
+    # For now, return hardcoded analysis data
+    # TODO: Implement actual presentation analysis using AI/ML models
+    analysis = {
+        'overall_score': 85,
+        'good_practices': [
+            {
+                'title': 'Консистентный дизайн',
+                'description': 'Единообразное использование цветов, шрифтов и стилей на всех слайдах',
+                'category': 'Дизайн',
+            },
+            {
+                'title': 'Четкая структура',
+                'description': 'Логичная последовательность слайдов с ясной навигацией',
+                'category': 'Структура',
+            },
+            {
+                'title': 'Качественные изображения',
+                'description': 'Высокое разрешение и релевантность визуального контента',
+                'category': 'Контент',
+            },
+            {
+                'title': 'Читаемые шрифты',
+                'description': 'Подходящий размер и контрастность текста',
+                'category': 'Типографика',
+            },
+            {
+                'title': 'Логотип компании',
+                'description': 'Правильное размещение и использование брендинга',
+                'category': 'Брендинг',
+            },
+            {
+                'title': 'Контактная информация',
+                'description': 'Четко указаны контакты на финальном слайде',
+                'category': 'Контент',
+            },
+            {
+                'title': 'Соотношение 16:9',
+                'description': 'Правильный формат слайдов для современных экранов',
+                'category': 'Формат',
+            },
+            {
+                'title': 'Минимализм в дизайне',
+                'description': 'Отсутствие визуального беспорядка и лишних элементов',
+                'category': 'Дизайн',
+            },
+            {
+                'title': 'Заголовки слайдов',
+                'description': 'Каждый слайд имеет четкий и информативный заголовок',
+                'category': 'Структура',
+            },
+            {
+                'title': 'Корпоративные цвета',
+                'description': 'Использование цветовой палитры бренда',
+                'category': 'Брендинг',
+            },
+            {
+                'title': 'Нумерация слайдов',
+                'description': 'Присутствует нумерация для удобной навигации',
+                'category': 'Навигация',
+            },
+            {
+                'title': 'Качественная анимация',
+                'description': 'Плавные и уместные переходы между слайдами',
+                'category': 'Анимация',
+            },
+        ],
+        'warnings': [
+            {
+                'title': 'Слишком много текста',
+                'description': 'На слайдах 3, 7 и 12 превышен рекомендуемый объем текста (более 50 слов)',
+                'category': 'Контент',
+                'slides': [3, 7, 12],
+            },
+            {
+                'title': 'Мелкий шрифт',
+                'description': 'Размер шрифта на слайдах 5 и 9 может быть плохо читаемым с дальнего расстояния',
+                'category': 'Типографика',
+                'slides': [5, 9],
+            },
+            {
+                'title': 'Перегруженные диаграммы',
+                'description': 'Слайд 8 содержит слишком много данных в одной диаграмме',
+                'category': 'Визуализация',
+                'slides': [8],
+            },
+        ],
+        'errors': [
+            {
+                'title': 'Низкое качество изображения',
+                'description': 'Изображение на слайде 6 имеет разрешение ниже рекомендуемого (менее 150 DPI)',
+                'category': 'Качество',
+                'slides': [6],
+                'severity': 'high',
+            }
+        ],
+        'recommendations': [
+            'Сократите количество текста на перегруженных слайдах',
+            'Увеличьте размер шрифта до минимум 24pt для основного текста',
+            'Замените изображение низкого качества на слайде 6',
+            'Разделите сложную диаграмму на несколько более простых',
+        ],
+    }
+
+    return analysis
+
+
 # AI endpoints
 @app.post('/api/v1/score/pitch')
 async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = Form(None)):

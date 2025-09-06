@@ -154,22 +154,47 @@ const PitchDetail = () => {
               <div className='block'>
                 <div className='pitch-detail-presentation'>
                   <h3>Презентация</h3>
-                  <div className='presentation-info'>
-                    <div className='presentation-file'>
-                      <span className='file-icon'>📄</span>
-                      <div className='file-details'>
-                        <span className='file-name'>{pitch.presentation_file_name}</span>
-                        <span className='file-type'>Презентационный файл</span>
+                  <div
+                    className='presentation-card clickable-card'
+                    onClick={() => navigate(`/pitch/${id}/presentation-analysis`)}
+                  >
+                    <div className='presentation-info'>
+                      <div className='presentation-file'>
+                        <span className='file-icon'>📄</span>
+                        <div className='file-details'>
+                          <span className='file-name'>{pitch.presentation_file_name}</span>
+                          <span className='file-type'>Презентационный файл</span>
+                        </div>
+                      </div>
+                      <div className='presentation-arrow'>
+                        <span className='arrow-icon'>→</span>
                       </div>
                     </div>
-                    <div className='presentation-actions'>
-                      <Button
-                        variant='outline'
-                        onClick={() => window.open(`/api/v1/pitches/${id}/presentation`, '_blank')}
-                      >
-                        Скачать
-                      </Button>
+                    <div className='presentation-counters'>
+                      <div className='counter counter--success'>
+                        <span className='counter-icon'>✓</span>
+                        <span className='counter-number'>12</span>
+                      </div>
+                      <div className='counter counter--warning'>
+                        <span className='counter-icon'>⚠</span>
+                        <span className='counter-number'>3</span>
+                      </div>
+                      <div className='counter counter--error'>
+                        <span className='counter-icon'>✕</span>
+                        <span className='counter-number'>1</span>
+                      </div>
                     </div>
+                  </div>
+                  <div className='presentation-actions'>
+                    <Button
+                      variant='outline'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        window.open(`/api/v1/pitches/${id}/presentation`, '_blank')
+                      }}
+                    >
+                      Скачать
+                    </Button>
                   </div>
                 </div>
               </div>
