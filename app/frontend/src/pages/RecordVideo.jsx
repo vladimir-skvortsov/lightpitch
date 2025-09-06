@@ -8,6 +8,7 @@ const RecordVideo = () => {
   const navigate = useNavigate()
   const videoRef = useRef(null)
   const mediaRecorderRef = useRef(null)
+  const streamRef = useRef(null)
   const [isRecording, setIsRecording] = useState(false)
   const [isPreparingCamera, setIsPreparingCamera] = useState(true)
   const [error, setError] = useState(null)
@@ -23,8 +24,14 @@ const RecordVideo = () => {
         audio: true,
       })
 
+      streamRef.current = stream
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        // Wait for video to be ready
+        await new Promise((resolve) => {
+          videoRef.current.onloadedmetadata = resolve
+        })
       }
 
       setIsPreparingCamera(false)
@@ -36,9 +43,12 @@ const RecordVideo = () => {
   }, [])
 
   const stopCamera = useCallback(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks()
+    // Use streamRef as primary source, fallback to videoRef.current.srcObject
+    const stream = streamRef.current || (videoRef.current && videoRef.current.srcObject)
+    if (stream) {
+      const tracks = stream.getTracks()
       tracks.forEach((track) => track.stop())
+      streamRef.current = null
     }
   }, [])
 
@@ -54,7 +64,14 @@ const RecordVideo = () => {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = videoRef.current.srcObject
+      // Use streamRef as primary source, fallback to videoRef.current.srcObject
+      const stream = streamRef.current || (videoRef.current && videoRef.current.srcObject)
+
+      if (!stream) {
+        setError('Поток видео недоступен. Попробуйте перезагрузить страницу.')
+        return
+      }
+
       mediaRecorderRef.current = new MediaRecorder(stream)
 
       const chunks = []
