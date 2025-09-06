@@ -1,6 +1,6 @@
 from typing import Dict
 
-from pitches import Pitch
+from db_models import Pitch
 
 # In-memory storage for pitches (temporary until database is added)
 pitches_db: Dict[str, Pitch] = {}
