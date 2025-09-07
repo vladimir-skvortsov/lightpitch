@@ -21,14 +21,15 @@ from pitches import get_pitch as get_pitch_service
 from pitches import list_pitches as list_pitches_service
 from pitches import update_pitch as update_pitch_service
 from models.text_editor.text_analysis import (
-    TextAnalysisResponse, 
+    TextAnalysisResponse,
     TextAnalysisRequest,
-    TextRecommendationsResponse, 
+    TextRecommendationsResponse,
     TextRecommendationsRequest,
-    AnalysisState, 
-    AnalysisType, 
+    AnalysisState,
+    AnalysisType,
     TextAnalysisService,
-    app_graph)
+    app_graph,
+)
 
 app = FastAPI(title=PROJECT_NAME)
 
@@ -681,16 +682,13 @@ async def score_text(request: TextAnalysisRequest):
     Analyze and process text using specified analysis types and optional style transformation
     """
     start_time = datetime.now()
-    request_id = f"req_{int(start_time.timestamp())}_{str(uuid.uuid4())[:8]}"
+    request_id = f'req_{int(start_time.timestamp())}_{str(uuid.uuid4())[:8]}'
 
     try:
         analysis_types = list(dict.fromkeys(request.analysis_types))
 
         if AnalysisType.STYLE_TRANSFORM in analysis_types and not request.style:
-            raise HTTPException(
-                status_code=400,
-                detail="Style must be specified when style_transform is requested"
-            )
+            raise HTTPException(status_code=400, detail='Style must be specified when style_transform is requested')
 
         initial_state = AnalysisState(
             original_text=request.text,
@@ -700,23 +698,23 @@ async def score_text(request: TextAnalysisRequest):
             language=request.language,
             processing_steps=[],
             weak_spots=[],
-            metadata={"request_id": request_id}
+            metadata={'request_id': request_id},
         )
 
-        config = {"configurable": {"thread_id": request_id}}
+        config = {'configurable': {'thread_id': request_id}}
         result_state = await app_graph.ainvoke(initial_state, config)
 
         processing_time = (datetime.now() - start_time).total_seconds()
 
         if isinstance(result_state, dict):
-            final_text = result_state.get("current_text", request.text)
-            processing_steps = result_state.get("processing_steps", [])
-            weak_spots = result_state.get("weak_spots", [])
-            speech_time = result_state.get("speech_time_minutes")
-            final_speech_time = result_state.get("final_speech_time_minutes")
-            word_count = result_state.get("word_count", 0)
-            final_word_count = result_state.get("final_word_count", 0)
-            metadata = result_state.get("metadata", {})
+            final_text = result_state.get('current_text', request.text)
+            processing_steps = result_state.get('processing_steps', [])
+            weak_spots = result_state.get('weak_spots', [])
+            speech_time = result_state.get('speech_time_minutes')
+            final_speech_time = result_state.get('final_speech_time_minutes')
+            word_count = result_state.get('word_count', 0)
+            final_word_count = result_state.get('final_word_count', 0)
+            metadata = result_state.get('metadata', {})
         else:
             final_text = result_state.current_text
             processing_steps = result_state.processing_steps
@@ -728,22 +726,25 @@ async def score_text(request: TextAnalysisRequest):
             metadata = result_state.metadata
 
         analysis_summary = {
-            "total_steps_applied": len(processing_steps),
-            "weak_spots_found": len(weak_spots),
-            "original_speech_time_minutes": speech_time,
-            "original_word_count": word_count,
-            "final_speech_time_minutes": final_speech_time,
-            "final_word_count": final_word_count,
-            "weak_spots": [
+            'total_steps_applied': len(processing_steps),
+            'weak_spots_found': len(weak_spots),
+            'original_speech_time_minutes': speech_time,
+            'original_word_count': word_count,
+            'final_speech_time_minutes': final_speech_time,
+            'final_word_count': final_word_count,
+            'weak_spots': [
                 {
-                    "position": spot.position,
-                    "text": spot.original_text,
-                    "issue": spot.issue_type,
-                    "suggestion": spot.suggestion,
-                    "severity": spot.severity
-                } for spot in weak_spots
-            ] if weak_spots else [],
-            "recommendations": metadata.get("weak_spots_recommendations", [])
+                    'position': spot.position,
+                    'text': spot.original_text,
+                    'issue': spot.issue_type,
+                    'suggestion': spot.suggestion,
+                    'severity': spot.severity,
+                }
+                for spot in weak_spots
+            ]
+            if weak_spots
+            else [],
+            'recommendations': metadata.get('weak_spots_recommendations', []),
         }
 
         return TextAnalysisResponse(
@@ -753,11 +754,11 @@ async def score_text(request: TextAnalysisRequest):
             processing_steps=processing_steps,
             analysis_summary=analysis_summary,
             processing_time_seconds=processing_time,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f'Analysis failed: {str(e)}')
 
 
 @app.post('/api/v1/recommendations/text', response_model=TextRecommendationsResponse)
@@ -766,7 +767,7 @@ async def get_text_recommendations(request: TextRecommendationsRequest):
     Get recommendations and weak spots for text without modifying it
     """
     start_time = datetime.now()
-    request_id = f"rec_{int(start_time.timestamp())}_{str(uuid.uuid4())[:8]}"
+    request_id = f'rec_{int(start_time.timestamp())}_{str(uuid.uuid4())[:8]}'
 
     try:
         service = TextAnalysisService()
@@ -779,11 +780,12 @@ async def get_text_recommendations(request: TextRecommendationsRequest):
             weak_spots=weak_spots,
             global_recommendations=recommendations,
             processing_time_seconds=processing_time,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Recommendations failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f'Recommendations failed: {str(e)}')
+
 
 @app.post('/api/v1/score/presentation')
 async def score_presentation():
