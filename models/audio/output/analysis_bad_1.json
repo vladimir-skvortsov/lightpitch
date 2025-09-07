@@ -375,27 +375,5 @@
       "advice": "Фон тихий, всё хорошо.",
       "target": "SNR ≥ 20 dB"
     }
-  },
-  "mic_check": {
-    "mic_loudness": {
-      "label": "Громкость речи (dBFS)",
-      "speech_rms_dbfs": -25.1,
-      "speech_peak_dbfs": -2.8,
-      "clipping_ratio": 0.0,
-      "status": "warning",
-      "substatus": "too_quiet",
-      "advice": "Чуть тихо. Добавь усиление микрофона или приблизься.",
-      "target": "RMS −23…−14 dBFS, без клиппинга"
-    },
-    "mic_noise": {
-      "label": "Фоновый шум / SNR",
-      "snr_db": 28.2,
-      "speech_rms_dbfs": -25.1,
-      "noise_rms_dbfs": -53.3,
-      "status": "good",
-      "substatus": "clean",
-      "advice": "Фон тихий, всё хорошо.",
-      "target": "SNR ≥ 20 dB"
-    }
   }
 }

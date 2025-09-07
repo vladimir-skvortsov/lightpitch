@@ -640,7 +640,6 @@ def analyze(
         "hedge_count_total": hedges_total,
         "script_alignment": coverage,
         "audio_checklist": audio_checklist,
-        "mic_check": mic_quality,
     }
 
 
@@ -685,9 +684,6 @@ def main():
     print(f"Speech window vs planned: {result['speech_window_sec']}s / {result['meta']['planned_duration_sec']}s")
     if result["script_alignment"]:
         print(f"Coverage: {result['script_alignment']['coverage']}%")
-    print(f"Mic loudness: {result['mic_check']['mic_loudness']['speech_rms_dbfs']} dBFS "
-          f"(peak {result['mic_check']['mic_loudness']['speech_peak_dbfs']} dBFS)")
-    print(f"SNR (noise): {result['mic_check']['mic_noise']['snr_db']} dB")
 
 
 if __name__ == "__main__":
