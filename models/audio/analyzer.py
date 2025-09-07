@@ -28,6 +28,8 @@ from faster_whisper import WhisperModel
 from pyannote.audio import Pipeline
 from sentence_transformers import SentenceTransformer, util
 
+import librosa
+
 from .patterns_ru import FILLERS_PATTERNS, HEDGES_PATTERNS
 
 DEFAULT_LANGUAGE = 'ru'
@@ -51,6 +53,59 @@ def read_text_file(path: str) -> str:
 
 def word_count(s: str) -> int:
     return len(re.findall(r"[A-Za-zА-Яа-яЁё0-9]+(?:[-'][A-Za-zА-Яа-яЁё0-9]+)?", s))
+
+
+def load_audio_mono(audio_path: str, sr: int = 16000) -> Tuple[np.ndarray, int]:
+    y, sr = librosa.load(audio_path, sr=sr, mono=True)
+    if y.size == 0:
+        return np.zeros(0, dtype=np.float32), sr
+    y = np.clip(y.astype(np.float32), -1.0, 1.0)
+    return y, sr
+
+
+def rms_dbfs(x: np.ndarray) -> float:
+    if x.size == 0:
+        return None
+    rms = float(np.sqrt(np.mean(np.square(x))) + 1e-12)
+    return 20.0 * np.log10(rms)
+
+
+def peak_dbfs(x: np.ndarray) -> float:
+    if x.size == 0:
+        return None
+    peak = float(np.max(np.abs(x)) + 1e-12)
+    return 20.0 * np.log10(peak)
+
+
+def extract_segments_signal(x: np.ndarray, sr: int, segments: List[Tuple[float, float]]) -> np.ndarray:
+    parts = []
+    n = len(x)
+    for s, e in segments:
+        i = max(0, int(round(s * sr)))
+        j = min(n, int(round(e * sr)))
+        if j > i:
+            parts.append(x[i:j])
+    if parts:
+        return np.concatenate(parts)
+    return np.zeros(0, dtype=np.float32)
+
+
+def invert_segments(total_len: int, sr: int, segments: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    total_sec = total_len / float(sr)
+    segs = sorted(segments, key=lambda x: x[0])
+    inv = []
+    cur = 0.0
+    for s, e in segs:
+        s = max(0.0, s)
+        e = max(s, e)
+        if s > cur:
+            inv.append((cur, min(s, total_sec)))
+        cur = max(cur, e)
+    if cur < total_sec:
+        inv.append((cur, total_sec))
+    # drop tiny gaps (<0.15s) - they are not representative for noise
+    inv = [(s, e) for (s, e) in inv if (e - s) >= 0.15]
+    return inv
 
 
 def transcribe_whisper(audio_path: str, language: str, model_size: str):
@@ -196,6 +251,83 @@ def compute_coverage(script_text: str, seg_texts: list, threshold: float = COVER
     return {'coverage': coverage, 'missing': missing, 'matches': matches}
 
 
+def analyze_mic_quality(audio_path: str, speech_segs: List[Tuple[float, float]]) -> Dict:
+    x, sr = load_audio_mono(audio_path, sr=16000)
+
+    speech_sig = extract_segments_signal(x, sr, speech_segs)
+    nonspeech_segs = invert_segments(len(x), sr, speech_segs)
+    noise_sig = extract_segments_signal(x, sr, nonspeech_segs)
+
+    speech_rms = rms_dbfs(speech_sig)
+    noise_rms = rms_dbfs(noise_sig)
+    peak = peak_dbfs(speech_sig)
+    clip_ratio = float(np.mean(np.abs(speech_sig) >= 0.999)) if speech_sig.size else 0.0
+
+
+    def color(s: str) -> str:
+        return s
+
+    if speech_rms is None:
+        loud_status, loud_sub = None, None
+        loud_advice = "Не удалось измерить громкость (нет речевых сегментов)."
+    else:
+        if clip_ratio >= 0.005 or (peak is not None and peak > -1.0):
+            loud_status, loud_sub = color("error"), "clipping"
+            loud_advice = "Перегруз/клиппинг. Уменьши громкость микрофона или отодвинься."
+        elif speech_rms > -12.0:
+            loud_status, loud_sub = color("warning"), "too_loud"
+            loud_advice = "Слишком громко. Уменьши усиление/расстояние до микрофона."
+        elif -23.0 <= speech_rms <= -14.0:
+            loud_status, loud_sub = color("good"), "ok"
+            loud_advice = "Громкость комфортная. Так держать!"
+        elif -28.0 <= speech_rms < -23.0:
+            loud_status, loud_sub = color("warning"), "too_quiet"
+            loud_advice = "Чуть тихо. Добавь усиление микрофона или приблизься."
+        else:
+            loud_status, loud_sub = color("error"), "very_quiet"
+            loud_advice = "Очень тихо. Проверь настройки системы/микрофона и акустику."
+
+    loud_block = {
+        "label": "Громкость речи (dBFS)",
+        "speech_rms_dbfs": (None if speech_rms is None else round(speech_rms, 1)),
+        "speech_peak_dbfs": (None if peak is None else round(peak, 1)),
+        "clipping_ratio": round(clip_ratio, 4),
+        "status": loud_status,
+        "substatus": loud_sub,
+        "advice": loud_advice,
+        "target": "RMS −23…−14 dBFS, без клиппинга",
+    }
+
+    if (speech_rms is None) or (noise_rms is None):
+        snr_status, snr_sub = None, None
+        snr_db = None
+        snr_advice = None
+    else:
+        snr_db = float(speech_rms - noise_rms)
+        if snr_db >= 20.0:
+            snr_status, snr_sub = color("good"), "clean"
+            snr_advice = "Фон тихий, всё хорошо."
+        elif 12.0 <= snr_db < 20.0:
+            snr_status, snr_sub = color("warning"), "moderate_noise"
+            snr_advice = "Есть заметный фон. Закрой окна/увеличь расстояние до источников шума."
+        else:
+            snr_status, snr_sub = color("error"), "noisy"
+            snr_advice = "Сильный шум. Используй гарнитуру/шумодав и запиши в более тихом месте."
+
+    noise_block = {
+        "label": "Фоновый шум / SNR",
+        "snr_db": (None if snr_db is None else round(snr_db, 1)),
+        "speech_rms_dbfs": (None if speech_rms is None else round(speech_rms, 1)),
+        "noise_rms_dbfs": (None if noise_rms is None else round(noise_rms, 1)),
+        "status": snr_status,
+        "substatus": snr_sub,
+        "advice": snr_advice,
+        "target": "SNR ≥ 20 dB",
+    }
+
+    return {"mic_loudness": loud_block, "mic_noise": noise_block}
+
+
 def build_audio_checklist(*,
                           wpm_spoken: float,
                           long_pauses: List[Dict],
@@ -206,7 +338,8 @@ def build_audio_checklist(*,
                           hedge_count_total: int,
                           coverage: Optional[Dict],
                           planned_duration_sec: float,
-                          speech_window_sec: float) -> Dict[str, Dict]:
+                          speech_window_sec: float,
+                          mic_quality: Dict) -> Dict[str, Dict]:
 
     def color(s: str) -> str:
         return s
@@ -226,7 +359,7 @@ def build_audio_checklist(*,
                        "делай акценты замедлением.")
     elif pace < 90:
         pace_status = color("error"); pace_sub = "too_slow"
-        pace_advice = "Сильно медленно (<90 wpm). Дроби длинные фразы, убирай протяжные звуки"
+        pace_advice = "Сильно медленно (<90 wpm). Дроби длинные фразы, убирай протяжные звуки."
     else:
         pace_status = color("error"); pace_sub = "too_fast"
         pace_advice = "Сильно быстро (>160 wpm). Делай пометки-паузы в тексте и контролируй дыхание."
@@ -369,7 +502,7 @@ def build_audio_checklist(*,
         ratio_status, ratio_sub = color("error"), "too_high"
         ratio_advice = "Слишком плотно без дыхания. Вставляй осмысленные паузы после ключевых тезисов."
 
-    return {
+    checklist = {
         "pace": {
             "label": "Темп речи (слов/мин)",
             "value": round(pace, 1),
@@ -379,7 +512,7 @@ def build_audio_checklist(*,
             "target": "110–140 wpm",
         },
         "pauses": {
-            "label": "Паузы (длинные ≥ {}с)".format(LONG_PAUSE_SEC),
+            "label": f"Паузы (длинные ≥ {LONG_PAUSE_SEC}с)",
             "count": len(long_pauses),
             "per_min": round(per_min, 2),
             "max_sec": round(max_pause, 2),
@@ -425,7 +558,10 @@ def build_audio_checklist(*,
             "advice": ratio_advice,
             "target": "0.70–0.90",
         },
+        "mic_loudness": mic_quality["mic_loudness"],
+        "mic_noise": mic_quality["mic_noise"],
     }
+    return checklist
 
 
 def analyze(
@@ -462,6 +598,8 @@ def analyze(
     seg_texts = group_segment_texts(segments, max_seconds=12, max_words=60)
     coverage = compute_coverage(script_text, seg_texts, threshold=COVERAGE_THRESHOLD) if script_text else None
 
+    mic_quality = analyze_mic_quality(audio_path, speech_segs)
+
     audio_checklist = build_audio_checklist(
         wpm_spoken=spoken_wpm,
         long_pauses=pauses,
@@ -473,6 +611,7 @@ def analyze(
         coverage=coverage,
         planned_duration_sec=float(planned_duration_sec or 0.0),
         speech_window_sec=float(speech_window_sec),
+        mic_quality=mic_quality,
     )
 
     return {
@@ -501,6 +640,7 @@ def analyze(
         "hedge_count_total": hedges_total,
         "script_alignment": coverage,
         "audio_checklist": audio_checklist,
+        "mic_check": mic_quality,
     }
 
 
@@ -545,7 +685,9 @@ def main():
     print(f"Speech window vs planned: {result['speech_window_sec']}s / {result['meta']['planned_duration_sec']}s")
     if result["script_alignment"]:
         print(f"Coverage: {result['script_alignment']['coverage']}%")
-    print(f"Fillers: {result['filler_count_total']}, Hedges: {result['hedge_count_total']}")
+    print(f"Mic loudness: {result['mic_check']['mic_loudness']['speech_rms_dbfs']} dBFS "
+          f"(peak {result['mic_check']['mic_loudness']['speech_peak_dbfs']} dBFS)")
+    print(f"SNR (noise): {result['mic_check']['mic_noise']['snr_db']} dB")
 
 
 if __name__ == "__main__":
