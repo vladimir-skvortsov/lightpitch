@@ -7,7 +7,7 @@ start_backend() {
     if [ -f "requirements.txt" ]; then
         pip install -r requirements.txt
     fi
-    uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+    uvicorn main:app --reload --host 0.0.0.0 --port 8088 &
     BACKEND_PID=$!
     cd ../..
     echo "Backend service started with PID: $BACKEND_PID"
