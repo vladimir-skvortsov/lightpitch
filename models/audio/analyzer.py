@@ -4,6 +4,7 @@ CLI usage:
 python -m models.audio.analyzer \
   --audio data/audio/audio/test_good_1.wav \
   --script data/audio/scripts/test_good_1.txt \
+  --planned_duration_sec 60 \
   --out models/audio/output/analysis_good_1.json
 
 # Token can be put in .env (HUGGINGFACE_TOKEN=hf_xxx) or transferred to the flag:
@@ -195,7 +196,7 @@ def compute_coverage(script_text: str, seg_texts: list, threshold: float = COVER
     return {'coverage': coverage, 'missing': missing, 'matches': matches}
 
 
-def build_audio_checklist(*,  # все значения — уже посчитаны выше
+def build_audio_checklist(*,
                           wpm_spoken: float,
                           long_pauses: List[Dict],
                           duration_total: float,
@@ -203,8 +204,9 @@ def build_audio_checklist(*,  # все значения — уже посчит�
                           words_total: int,
                           filler_count_total: int,
                           hedge_count_total: int,
-                          coverage: Optional[Dict]) -> Dict[str, Dict]:
-
+                          coverage: Optional[Dict],
+                          planned_duration_sec: float,
+                          speech_window_sec: float) -> Dict[str, Dict]:
 
     def color(s: str) -> str:
         return s
@@ -213,20 +215,20 @@ def build_audio_checklist(*,  # все значения — уже посчит�
     pace = float(wpm_spoken)
     pace_sub = "ok"
     if 110 <= pace <= 140:
-        pace_status = color("green")
+        pace_status = color("good")
         pace_advice = "Хороший темп: держи 110–140 слов/мин, ключевые тезисы выделяй короткими паузами."
     elif 90 <= pace < 110:
-        pace_status = color("yellow"); pace_sub = "too_slow"
-        pace_advice = "Чуть медленно. Укороти паузы до 0.3–0.6 с, избегай растягиваний"
+        pace_status = color("warning"); pace_sub = "too_slow"
+        pace_advice = "Чуть медленно. Укороти паузы до 0.3–0.6 с, избегай растягиваний."
     elif 140 < pace <= 160:
-        pace_status = color("yellow"); pace_sub = "too_fast"
+        pace_status = color("warning"); pace_sub = "too_fast"
         pace_advice = ("Чуть быстро. Добавляй «дыхательные» паузы 0.5–1.0 с после смысловых блоков, "
                        "делай акценты замедлением.")
     elif pace < 90:
-        pace_status = color("red"); pace_sub = "too_slow"
+        pace_status = color("error"); pace_sub = "too_slow"
         pace_advice = "Сильно медленно (<90 wpm). Дроби длинные фразы, убирай протяжные звуки"
     else:
-        pace_status = color("red"); pace_sub = "too_fast"
+        pace_status = color("error"); pace_sub = "too_fast"
         pace_advice = "Сильно быстро (>160 wpm). Делай пометки-паузы в тексте и контролируй дыхание."
 
     # Pauses
@@ -234,7 +236,7 @@ def build_audio_checklist(*,  # все значения — уже посчит�
     max_pause = max((p["dur"] for p in long_pauses), default=0.0)
 
     if per_min <= 0.5 and max_pause <= 3.0:
-        pauses_status, pauses_sub = color("green"), "ok"
+        pauses_status, pauses_sub = color("good"), "ok"
         pauses_advice = "Хороший баланс пауз. Оставляй 1–2 короткие остановки для акцентов."
     else:
         too_many = per_min > 1.5
@@ -243,88 +245,128 @@ def build_audio_checklist(*,  # все значения — уже посчит�
         mid_long = (3.0 < max_pause <= 4.0)
 
         if too_many and too_long:
-            pauses_status, pauses_sub = color("red"), "many_and_long"
+            pauses_status, pauses_sub = color("error"), "many_and_long"
             pauses_advice = "Много и очень длинные паузы. Отработай переходы и дыхание."
         elif too_many:
-            pauses_status, pauses_sub = color("red"), "too_many"
+            pauses_status, pauses_sub = color("error"), "too_many"
             pauses_advice = "Слишком часто прерываешься. Репетиция по абзацам, связки между блоками."
         elif too_long:
-            pauses_status, pauses_sub = color("red"), "too_long"
+            pauses_status, pauses_sub = color("error"), "too_long"
             pauses_advice = "Слишком длинные паузы. Держи ключевые остановки ≤3 c, расставь их заранее."
         elif mid_many and mid_long:
-            pauses_status, pauses_sub = color("yellow"), "many_and_long"
+            pauses_status, pauses_sub = color("warning"), "many_and_long"
             pauses_advice = "Паузы частые и длинноватые. Сократи частоту и укороти до ≤3 c."
         elif mid_many:
-            pauses_status, pauses_sub = color("yellow"), "too_many"
+            pauses_status, pauses_sub = color("warning"), "too_many"
             pauses_advice = "Паузы встречаются часто. Сформируй чёткие связки между тезисами."
         elif mid_long:
-            pauses_status, pauses_sub = color("yellow"), "too_long"
+            pauses_status, pauses_sub = color("warning"), "too_long"
             pauses_advice = "Паузы немного растянуты. Цель — ≤3 c на акцентах."
         else:
-            pauses_status, pauses_sub = color("green"), "ok"
+            pauses_status, pauses_sub = color("good"), "ok"
             pauses_advice = "Баланс пауз близок к целевому."
 
     # Fillers
     fillers_per_100 = (filler_count_total / max(words_total, 1)) * 100.0
     if fillers_per_100 <= 1.0:
-        fillers_status, fillers_sub = color("green"), "low"
+        fillers_status, fillers_sub = color("good"), "low"
         fillers_advice = "Паразитов нет — супер! Заменяй потенциальные «э-э» короткой паузой."
     elif fillers_per_100 <= 3.0:
-        fillers_status, fillers_sub = color("yellow"), "medium"
+        fillers_status, fillers_sub = color("warning"), "medium"
         fillers_advice = "Замечены паразиты. Отрабатывай «стоп-слова» и немые паузы вместо них."
     else:
-        fillers_status, fillers_sub = color("red"), "high"
+        fillers_status, fillers_sub = color("error"), "high"
         fillers_advice = "Много паразитов. Тренируй 1-мин. отрезки с самоконтролем, вырабатывай паузы."
 
     # Hedges
     hedges_per_100 = (hedge_count_total / max(words_total, 1)) * 100.0
     if hedges_per_100 <= 0.5:
-        hedges_status, hedges_sub = color("green"), "low"
+        hedges_status, hedges_sub = color("good"), "low"
         hedges_advice = "Речь уверенная. Сохраняй конкретные формулировки."
     elif hedges_per_100 <= 1.5:
-        hedges_status, hedges_sub = color("yellow"), "medium"
+        hedges_status, hedges_sub = color("warning"), "medium"
         hedges_advice = "Чуть неуверенности. Меняй «мне кажется/думаю» на «мы сделали/показываем/планируем»."
     else:
-        hedges_status, hedges_sub = color("red"), "high"
+        hedges_status, hedges_sub = color("error"), "high"
         hedges_advice = "Много неуверенности. Перепиши ключевые тезисы в утвердительной форме."
 
     # Coverage
     if coverage is None or coverage.get("coverage") is None:
-        cov_status, cov_sub = color("na"), "na"
+        cov_status, cov_sub = None, None
         cov_value = None
         missing_count = None
         missing_examples = []
-        cov_advice = "Загрузите текст скрипта, чтобы проверить покрытие по пунктам."
+        cov_advice = None
     else:
         cov_value = float(coverage["coverage"])
         missing_count = len(coverage.get("missing", []))
         missing_examples = [m["unit"] for m in coverage.get("missing", [])[:3]]
         if cov_value >= 90.0:
-            cov_status, cov_sub = color("green"), "ok"
+            cov_status, cov_sub = color("good"), "ok"
             cov_advice = "Все ключевые пункты покрыты. Сфокусируйся на подаче."
         elif cov_value >= 75.0:
-            cov_status, cov_sub = color("yellow"), "partial"
+            cov_status, cov_sub = color("warning"), "partial"
             cov_advice = "Покрытие неполное. Пройди раздел «missing» и добавь недостающие тезисы."
         else:
-            cov_status, cov_sub = color("red"), "low"
+            cov_status, cov_sub = color("error"), "low"
             cov_advice = "Низкое покрытие. Перестрой структуру по скрипту, начни с пропущенных пунктов."
+
+    # Time use
+    if planned_duration_sec and planned_duration_sec > 0 and speech_window_sec > 0:
+        ratio = speech_window_sec / planned_duration_sec
+        diff_sec = speech_window_sec - planned_duration_sec
+        if 0.95 <= ratio <= 1.05:
+            time_status, time_sub = color("good"), "on_time"
+            time_advice = "Отличный тайминг: укладываешься в план ±5%."
+        elif (0.90 <= ratio < 0.95) or (1.05 < ratio <= 1.10):
+            time_status, time_sub = color("warning"), ("under_time" if ratio < 1.0 else "over_time")
+            time_advice = "Чуть не попал в план (±5–10%). Подкорректируй длину примеров/пауз."
+        elif ratio < 0.90:
+            time_status, time_sub = color("error"), "under_time"
+            time_advice = "Существенно короче плана (>10% недобор). Добавь примеры/подробности."
+        else:
+            time_status, time_sub = color("error"), "over_time"
+            time_advice = "Существенно длиннее плана (>10% перебор). Сократи второстепенные детали."
+        time_block = {
+            "label": "Тайминг (план vs фактическое окно речи)",
+            "planned_sec": round(planned_duration_sec, 2),
+            "used_sec": round(speech_window_sec, 2),
+            "diff_sec": round(diff_sec, 2),
+            "ratio": round(ratio, 3),
+            "status": time_status,
+            "substatus": time_sub,
+            "advice": time_advice,
+            "target": "±5%",
+        }
+    else:
+        time_block = {
+            "label": "Тайминг (план vs фактическое окно речи)",
+            "planned_sec": (None if not planned_duration_sec else round(planned_duration_sec, 2)),
+            "used_sec": (None if not speech_window_sec else round(speech_window_sec, 2)),
+            "diff_sec": None,
+            "ratio": None,
+            "status": "na",
+            "substatus": "na",
+            "advice": "Передайте --planned_duration_sec (>0), чтобы оценить тайминг.",
+            "target": "±5%",
+        }
 
     # Spoken ratio
     spoken_ratio = (duration_spoken / max(duration_total, 1e-6)) if duration_total else 0.0
     if 0.70 <= spoken_ratio <= 0.90:
-        ratio_status, ratio_sub = color("green"), "ok"
+        ratio_status, ratio_sub = color("good"), "ok"
         ratio_advice = "Баланс речи и молчания ок: речь наполнена, но есть пространство для акцентов."
     elif 0.60 <= spoken_ratio < 0.70:
-        ratio_status, ratio_sub = color("yellow"), "too_low"
+        ratio_status, ratio_sub = color("warning"), "too_low"
         ratio_advice = "Много тишины. Сократи пустые паузы/заминки, делай связки между блоками."
     elif 0.90 < spoken_ratio <= 0.95:
-        ratio_status, ratio_sub = color("yellow"), "too_high"
+        ratio_status, ratio_sub = color("warning"), "too_high"
         ratio_advice = "Почти без передышки. Добавь короткие паузы 0.5–1.0 c для акцентов."
     elif spoken_ratio < 0.60:
-        ratio_status, ratio_sub = color("red"), "too_low"
+        ratio_status, ratio_sub = color("error"), "too_low"
         ratio_advice = "Слишком мало речи: много пауз/заминок. Отработай ритм и переходы."
     else:
-        ratio_status, ratio_sub = color("red"), "too_high"
+        ratio_status, ratio_sub = color("error"), "too_high"
         ratio_advice = "Слишком плотно без дыхания. Вставляй осмысленные паузы после ключевых тезисов."
 
     return {
@@ -353,7 +395,7 @@ def build_audio_checklist(*,  # все значения — уже посчит�
             "status": fillers_status,
             "substatus": fillers_sub,
             "advice": fillers_advice,
-            "target": "≤1/100",
+            "target": "≤1/100 слов",
         },
         "hedges": {
             "label": "Неуверенные фразы",
@@ -362,7 +404,7 @@ def build_audio_checklist(*,  # все значения — уже посчит�
             "status": hedges_status,
             "substatus": hedges_sub,
             "advice": hedges_advice,
-            "threshold": "≤0.5/100",
+            "target": "≤0.5/100 слов",
         },
         "coverage": {
             "label": "Покрытие скрипта (%)",
@@ -372,8 +414,9 @@ def build_audio_checklist(*,  # все значения — уже посчит�
             "missing_count": (None if coverage is None else missing_count),
             "missing_examples": (None if coverage is None else missing_examples),
             "advice": cov_advice,
-            "threshold": "≥90",
+            "target": "≥90",
         },
+        "time_use": time_block,
         "spoken_ratio": {
             "label": "Доля речи",
             "value": round(spoken_ratio, 3),
@@ -391,9 +434,19 @@ def analyze(
     language: str = DEFAULT_LANGUAGE,
     whisper_size: str = DEFAULT_WHISPER_SIZE,
     pause_threshold: float = LONG_PAUSE_SEC,
+    planned_duration_sec: float = 0.0,
     hf_token: Optional[str] = None,
 ) -> Dict:
     transcript, words, segments, total_dur = transcribe_whisper(audio_path, language, whisper_size)
+
+    if words:
+        first_word_start = min(w["start"] for w in words)
+        last_word_end = max(w["end"] for w in words)
+        speech_window_sec = max(0.0, float(last_word_end - first_word_start))
+    else:
+        first_word_start = None
+        last_word_end = None
+        speech_window_sec = 0.0
 
     vad = build_pyannote_vad(hf_token)
     speech_segs = compute_speech_segments(vad, audio_path)
@@ -418,6 +471,8 @@ def analyze(
         filler_count_total=fillers_total,
         hedge_count_total=hedges_total,
         coverage=coverage,
+        planned_duration_sec=float(planned_duration_sec or 0.0),
+        speech_window_sec=float(speech_window_sec),
     )
 
     return {
@@ -427,10 +482,14 @@ def analyze(
             "whisper_size": whisper_size,
             "pause_threshold_sec": pause_threshold,
             "coverage_threshold": COVERAGE_THRESHOLD,
+            "planned_duration_sec": float(planned_duration_sec),
         },
         "transcript_text": transcript,
         "duration_sec_total": round(float(overall_time or total_dur), 2),
         "duration_sec_spoken": round(float(spoken_time), 2),
+        "speech_window_start_sec": (None if first_word_start is None else round(float(first_word_start), 3)),
+        "speech_window_end_sec": (None if last_word_end is None else round(float(last_word_end), 3)),
+        "speech_window_sec": round(float(speech_window_sec), 2),
         "words_total": n_words,
         "wpm_overall": overall_wpm,
         "wpm_spoken": spoken_wpm,
@@ -457,6 +516,8 @@ def main():
     parser.add_argument("--language", default=DEFAULT_LANGUAGE, help="ASR language hint, e.g., ru or en")
     parser.add_argument("--whisper_size", default=DEFAULT_WHISPER_SIZE)
     parser.add_argument("--pause_threshold", type=float, default=LONG_PAUSE_SEC)
+    parser.add_argument("--planned_duration_sec", type=float, required=True,
+                        help="Плановая длительность выступления в секундах (обязательный параметр).")
     parser.add_argument("--hf_token", default=None, help="Hugging Face token (overrides .env)")
     parser.add_argument("--env", default=None, help="Path to .env (optional)")
     parser.add_argument("--out", default="analysis.json")
@@ -474,15 +535,17 @@ def main():
         language=args.language,
         whisper_size=args.whisper_size,
         pause_threshold=args.pause_threshold,
+        planned_duration_sec=args.planned_duration_sec,
         hf_token=hf_token,
     )
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     print(f"[OK] Saved results to {args.out}")
     print(f"WPM (spoken/overall): {result['wpm_spoken']} / {result['wpm_overall']}")
-    print(f"Fillers: {result['filler_count_total']}, Hedges: {result['hedge_count_total']}")
+    print(f"Speech window vs planned: {result['speech_window_sec']}s / {result['meta']['planned_duration_sec']}s")
     if result["script_alignment"]:
         print(f"Coverage: {result['script_alignment']['coverage']}%")
+    print(f"Fillers: {result['filler_count_total']}, Hedges: {result['hedge_count_total']}")
 
 
 if __name__ == "__main__":
