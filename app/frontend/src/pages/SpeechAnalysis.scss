@@ -1,0 +1,72 @@
+.speech-analysis {
+  .style-checkboxes {
+    input[type='checkbox'] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--alfa-red);
+    }
+
+    span {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--alfa-dark-gray);
+    }
+  }
+
+  .edit-controls {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    .edit-spinner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid var(--alfa-light-gray);
+        border-top: 3px solid var(--alfa-red);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0;
+      }
+    }
+  }
+
+  // Markdown rendering for edited text
+  .pitch-content-text {
+    h1,
+    h2,
+    h3 {
+      color: var(--alfa-dark-gray);
+      margin: 16px 0 8px;
+      font-weight: 700;
+    }
+
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.3rem; }
+    h3 { font-size: 1.15rem; }
+
+    p { margin: 8px 0; line-height: 1.7; }
+
+    .markdown-list {
+      margin: 8px 0 8px 20px;
+      list-style: disc;
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+

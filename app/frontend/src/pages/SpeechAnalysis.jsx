@@ -8,6 +8,10 @@ const SpeechAnalysis = () => {
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [sourceText, setSourceText] = useState('')
+  const [processing, setProcessing] = useState(false)
+  const [editedText, setEditedText] = useState('')
+  const [selectedStyle, setSelectedStyle] = useState(null) // 'casual' | 'professional' | 'scientific' | null
 
   const fetchData = useCallback(async () => {
     try {
@@ -19,6 +23,13 @@ const SpeechAnalysis = () => {
       }
       const analysisData = await analysisResponse.json()
       setAnalysis(analysisData)
+
+      // Fetch original pitch to get the source text for editing
+      const pitchResponse = await fetch(`/api/v1/pitches/${id}`)
+      if (pitchResponse.ok) {
+        const pitchData = await pitchResponse.json()
+        setSourceText(pitchData?.content || '')
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -40,6 +51,98 @@ const SpeechAnalysis = () => {
   const formatScore = useCallback((score) => {
     return Math.round(score * 100)
   }, [])
+
+  const handleToggleStyle = useCallback((styleValue) => {
+    setSelectedStyle((prev) => (prev === styleValue ? null : styleValue))
+  }, [])
+
+  const renderMarkdownContent = useCallback((md) => {
+    const lines = (md || '').split('\n')
+    const elements = []
+    let pendingList = []
+
+    const flushList = (keyBase) => {
+      if (pendingList.length > 0) {
+        elements.push(
+          <ul key={`${keyBase}-ul`} className='markdown-list'>
+            {pendingList.map((item, idx) => (
+              <li key={`${keyBase}-li-${idx}`}>{item}</li>
+            ))}
+          </ul>
+        )
+        pendingList = []
+      }
+    }
+
+    lines.forEach((line, idx) => {
+      const keyBase = `md-${idx}`
+      const trimmed = line.trim()
+
+      const listMatch = /^[-*]\s+(.+)/.exec(trimmed)
+      if (listMatch) {
+        pendingList.push(listMatch[1])
+        return
+      }
+
+      flushList(keyBase)
+
+      if (/^###\s+/.test(trimmed)) {
+        elements.push(<h3 key={`${keyBase}-h3`}>{trimmed.replace(/^###\s+/, '')}</h3>)
+      } else if (/^##\s+/.test(trimmed)) {
+        elements.push(<h2 key={`${keyBase}-h2`}>{trimmed.replace(/^##\s+/, '')}</h2>)
+      } else if (/^#\s+/.test(trimmed)) {
+        elements.push(<h1 key={`${keyBase}-h1`}>{trimmed.replace(/^#\s+/, '')}</h1>)
+      } else if (trimmed === '') {
+        elements.push(<br key={`${keyBase}-br`} />)
+      } else {
+        elements.push(<p key={`${keyBase}-p`}>{line}</p>)
+      }
+    })
+
+    flushList('end')
+    return elements
+  }, [])
+
+  const handleEditText = useCallback(async () => {
+    if (!sourceText || processing) return
+    try {
+      setProcessing(true)
+      setEditedText('')
+
+      const analysis_types = [
+        'remove_parasites',
+        'remove_bureaucracy',
+        'remove_passive',
+        'structure_blocks',
+      ]
+      if (selectedStyle) {
+        analysis_types.push('style_transform')
+      }
+
+      const resp = await fetch('/api/v1/score/text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: sourceText,
+          analysis_types,
+          style: selectedStyle,
+          language: 'ru',
+        }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to edit text')
+      }
+      const data = await resp.json()
+      setEditedText(data?.final_edited_text || '')
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setProcessing(false)
+    }
+  }, [sourceText, selectedStyle, processing])
 
   const getStatusIcon = useCallback((status) => {
     switch (status) {
@@ -232,6 +335,65 @@ const SpeechAnalysis = () => {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Text editing controls */}
+          <div className='block'>
+            <h2 className='section-title'>🛠 Редактирование текста</h2>
+            <div className='section-content'>
+              <div className='style-checkboxes' style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type='checkbox'
+                    checked={selectedStyle === 'casual'}
+                    onChange={() => handleToggleStyle('casual')}
+                  />
+                  <span>Неформальный</span>
+                </label>
+                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type='checkbox'
+                    checked={selectedStyle === 'professional'}
+                    onChange={() => handleToggleStyle('professional')}
+                  />
+                  <span>Профессиональный</span>
+                </label>
+                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type='checkbox'
+                    checked={selectedStyle === 'scientific'}
+                    onChange={() => handleToggleStyle('scientific')}
+                  />
+                  <span>Научный</span>
+                </label>
+              </div>
+
+              <div className='edit-controls'>
+                {processing && (
+                  <div className='loading edit-spinner'>
+                    <div className='spinner'></div>
+                    <span>Редактируем текст…</span>
+                  </div>
+                )}
+                <Button variant='primary' onClick={handleEditText} disabled={processing || !sourceText}>
+                  Отредактировать текст
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Edited text result */}
+          {editedText && (
+            <div className='block'>
+              <h2 className='section-title'>📝 Итоговый текст</h2>
+              <div className='section-content'>
+                <div className='pitch-content pitch-content--expanded'>
+                  <div className='pitch-content-text'>
+                    {renderMarkdownContent(editedText)}
+                  </div>
+                </div>
               </div>
             </div>
           )}

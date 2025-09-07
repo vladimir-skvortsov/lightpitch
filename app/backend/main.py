@@ -682,6 +682,46 @@ async def score_text(request: TextAnalysisRequest):
             final_word_count = result_state.final_word_count
             metadata = result_state.metadata
 
+        # If edited text did not change but we expected edits, try a stronger direct pass
+        expected_transforms = {
+            AnalysisType.REMOVE_PARASITES,
+            AnalysisType.REMOVE_BUREAUCRACY,
+            AnalysisType.REMOVE_PASSIVE,
+            AnalysisType.STRUCTURE_BLOCKS,
+            AnalysisType.STYLE_TRANSFORM,
+        }
+        if (
+            final_text.strip() == (request.text or '').strip()
+            and any(t in analysis_types for t in expected_transforms)
+        ):
+            try:
+                service = TextAnalysisService()
+                direct = await service.process_text_combined(
+                    request.text,
+                    [t for t in analysis_types if t in expected_transforms],
+                    request.style,
+                    request.language,
+                )
+                maybe_text = direct.get('processed_text')
+                if maybe_text and maybe_text.strip():
+                    final_text = maybe_text
+                    # fill some metrics if missing
+                    speech_time = direct.get('speech_time_original', speech_time)
+                    final_speech_time = direct.get('speech_time_final', final_speech_time)
+                    word_count = direct.get('word_count_original', word_count)
+                    final_word_count = direct.get('word_count_final', final_word_count)
+                    processing_steps = processing_steps or [
+                        {
+                            'step_name': 'Direct rewrite',
+                            'input_text': request.text,
+                            'output_text': final_text,
+                            'changes_made': direct.get('changes_summary', []),
+                            'metadata': direct.get('processing_details', {}),
+                        }
+                    ]
+            except Exception:
+                pass
+
         analysis_summary = {
             'total_steps_applied': len(processing_steps),
             'weak_spots_found': len(weak_spots),
@@ -715,7 +755,37 @@ async def score_text(request: TextAnalysisRequest):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f'Analysis failed: {str(e)}')
+        # Возвращаем валидный ответ вместо 500, чтобы фронтенд всегда получал результат
+        processing_time = (datetime.now() - start_time).total_seconds()
+        words = len(request.text.split()) if request.text else 0
+        speech_time = round(words / 150.0, 2) if words else 0.0
+
+        fallback_summary = {
+            'total_steps_applied': 0,
+            'weak_spots_found': 0,
+            'original_speech_time_minutes': speech_time,
+            'original_word_count': words,
+            'final_speech_time_minutes': speech_time,
+            'final_word_count': words,
+            'weak_spots': [],
+            'recommendations': [
+                'Повторите попытку позже — сервис анализа временно недоступен',
+                'Проверьте стабильность интернет-соединения',
+                'Сократите слишком длинный текст и попробуйте снова',
+            ],
+        }
+
+        logger.error(f"Analysis failed: {str(e)}")
+
+        return TextAnalysisResponse(
+            request_id=request_id,
+            original_text=request.text,
+            final_edited_text=request.text,
+            processing_steps=[],
+            analysis_summary=fallback_summary,
+            processing_time_seconds=processing_time,
+            timestamp=datetime.now(),
+        )
 
 
 @app.post('/api/v1/recommendations/text', response_model=TextRecommendationsResponse)

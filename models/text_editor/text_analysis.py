@@ -253,6 +253,43 @@ class TextAnalysisService:
                 - Указывай конкретные фрагменты текста, а не общие замечания.
                 - Если подходящих проблем нет, возвращай пустой массив.
                 """
+            ,
+            "combined_processing": """
+                Ты — эксперт-редактор текста. Язык входного текста: {language}.
+
+                Выполни комплексную обработку текста согласно заданным параметрам.
+
+                ПАРАМЕТРЫ ОБРАБОТКИ: {processing_params}
+                ЦЕЛЕВОЙ СТИЛЬ: {target_style}
+
+                ЗАДАЧИ:
+                {tasks}
+
+                Требования:
+                - Сохраняй смысл исходного текста, улучшай читаемость и логику
+                - Не искажай факты
+                - Избегай канцеляризмов и паразитов, там где нужно — используй активный залог
+                - Если указана цель преобразования стиля, приведи итоговый текст к этому стилю
+                - Строго верни ВАЛИДНЫЙ JSON без обрамляющих ``` и без преамбулы по следующей схеме:
+                {{
+                  "processed_text": "итоговый отредактированный текст",
+                  "speech_time_original": number,  
+                  "word_count_original": number,
+                  "speech_time_final": number,
+                  "word_count_final": number,
+                  "changes_summary": ["краткое описание внесённых изменений"],
+                  "processing_details": {{
+                    "parasites_removed": number,
+                    "bureaucracy_simplified": boolean,
+                    "passive_voice_changed": boolean,
+                    "structure_added": boolean,
+                    "style_transformed": "casual|professional|scientific|null"
+                  }}
+                }}
+                Пояснения:
+                - speech_time_* рассчитывай из слов в минуту: 150 слов/мин.
+                - Если какое‑то преобразование не применялось, укажи соответствующие значения по смыслу.
+            """
         }
 
     def _normalize_weak_spot(self, spot: Dict[str, Any]) -> Dict[str, Any]:
