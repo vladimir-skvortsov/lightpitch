@@ -5,7 +5,6 @@ import './SpeechAnalysis.scss'
 
 const SpeechAnalysis = () => {
   const { id } = useParams()
-  const [pitch, setPitch] = useState(null)
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -13,13 +12,6 @@ const SpeechAnalysis = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-
-      const pitchResponse = await fetch(`/api/v1/pitches/${id}`)
-      if (!pitchResponse.ok) {
-        throw new Error('Pitch not found')
-      }
-      const pitchData = await pitchResponse.json()
-      setPitch(pitchData)
 
       const analysisResponse = await fetch(`/api/v1/pitches/${id}/text`)
       if (!analysisResponse.ok) {
@@ -37,6 +29,41 @@ const SpeechAnalysis = () => {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  const getScoreColor = useCallback((score) => {
+    if (score >= 0.9) return 'var(--score-excellent)'
+    if (score >= 0.75) return 'var(--score-good)'
+    if (score >= 0.5) return 'var(--score-average)'
+    return 'var(--score-poor)'
+  }, [])
+
+  const formatScore = useCallback((score) => {
+    return Math.round(score * 100)
+  }, [])
+
+  const getStatusIcon = useCallback((status) => {
+    switch (status) {
+      case 'good':
+        return '✓'
+      case 'warning':
+        return '⚠'
+      case 'error':
+        return '✕'
+      default:
+        return '•'
+    }
+  }, [])
+
+  const scrollToSection = useCallback((groupIndex) => {
+    const element = document.getElementById(`group-section-${groupIndex}`)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest',
+      })
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -66,30 +93,6 @@ const SpeechAnalysis = () => {
     )
   }
 
-  const getScoreColor = (score) => {
-    if (score >= 0.9) return 'var(--score-excellent)'
-    if (score >= 0.75) return 'var(--score-good)'
-    if (score >= 0.5) return 'var(--score-average)'
-    return 'var(--score-poor)'
-  }
-
-  const formatScore = (score) => {
-    return Math.round(score * 100)
-  }
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'good':
-        return '✓'
-      case 'warning':
-        return '⚠'
-      case 'error':
-        return '✕'
-      default:
-        return '•'
-    }
-  }
-
   return (
     <main className='main'>
       <div className='container speech-analysis'>
@@ -103,7 +106,19 @@ const SpeechAnalysis = () => {
         <div className='content-container'>
           <div className='block group-scores'>
             {analysis.groups.map((group, index) => (
-              <div key={index} className='group-score-card'>
+              <div
+                key={index}
+                className='group-score-card'
+                onClick={() => scrollToSection(index)}
+                role='button'
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    scrollToSection(index)
+                  }
+                }}
+              >
                 <div className='group-header'>
                   <div className='group-score'>
                     <div className='score-circle' style={{ borderColor: getScoreColor(group.value) }}>
@@ -117,7 +132,7 @@ const SpeechAnalysis = () => {
           </div>
 
           {analysis.groups.map((group, groupIndex) => (
-            <div key={groupIndex} className='block'>
+            <div key={groupIndex} className='block' id={`group-section-${groupIndex}`}>
               <div className='group-section-header'>
                 <div className='group-header'>
                   <div className='score-circle' style={{ borderColor: getScoreColor(group.value) }}>
