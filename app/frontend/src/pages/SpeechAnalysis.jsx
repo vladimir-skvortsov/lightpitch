@@ -23,7 +23,7 @@ const SpeechAnalysis = () => {
       setPitch(pitchData)
 
       // Fetch speech analysis data
-      const analysisResponse = await fetch(`/api/v1/pitches/${id}/speech-analysis`)
+      const analysisResponse = await fetch(`/api/v1/pitches/${id}/text`)
       if (!analysisResponse.ok) {
         throw new Error('Analysis not available')
       }
