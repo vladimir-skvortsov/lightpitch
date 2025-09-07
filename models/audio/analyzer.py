@@ -5,7 +5,9 @@ python -m models.audio.analyzer \
   --audio data/audio/audio/test_good_1.wav \
   --script data/audio/scripts/test_good_1.txt \
   --planned_duration_sec 60 \
-  --out models/audio/output/analysis_good_1.json
+  --out models/audio/output/analysis_good_1_raw.json \
+  --out_front models/audio/output/analysis_good_1_frontend.json
+
 
 # Token can be put in .env (HUGGINGFACE_TOKEN=hf_xxx) or transferred to the flag:
   python -m models.audio.analyzer --audio data/audio/sample.wav --hf_token hf_xxx
@@ -648,6 +650,11 @@ def analyze_file(audio_path: str, script_path: Optional[str] = None, **kwargs) -
     return analyze(audio_path=audio_path, script_text=script_text, **kwargs)
 
 
+def analyze_file_frontend_format(audio_path: str, script_path: Optional[str] = None, **kwargs) -> Dict:
+    analysis_result = analyze_file(audio_path, script_path, **kwargs)
+    return convert_to_frontend_format(analysis_result)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--audio", required=True, help="Path to audio file (wav/mp3/m4a...)")
@@ -660,6 +667,8 @@ def main():
     parser.add_argument("--hf_token", default=None, help="Hugging Face token (overrides .env)")
     parser.add_argument("--env", default=None, help="Path to .env (optional)")
     parser.add_argument("--out", default="analysis.json")
+    parser.add_argument("--out_front", required=True,
+                        help="Путь для сохранения результата в формате фронтенда (groups/metrics/diagnostics)")
     args = parser.parse_args()
 
     if args.env:
@@ -677,13 +686,330 @@ def main():
         planned_duration_sec=args.planned_duration_sec,
         hf_token=hf_token,
     )
+    
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
-    print(f"[OK] Saved results to {args.out}")
+    print(f"[OK] Saved raw analysis to {args.out}")
+    
+    frontend_result = convert_to_frontend_format(result)
+    with open(args.out_front, "w", encoding="utf-8") as f:
+        json.dump(frontend_result, f, ensure_ascii=False, indent=2)
+    print(f"[OK] Saved frontend format to {args.out_front}")
+    
     print(f"WPM (spoken/overall): {result['wpm_spoken']} / {result['wpm_overall']}")
     print(f"Speech window vs planned: {result['speech_window_sec']}s / {result['meta']['planned_duration_sec']}s")
     if result["script_alignment"]:
         print(f"Coverage: {result['script_alignment']['coverage']}%")
+    print(f"Frontend groups: {len(frontend_result['groups'])}")
+    print(f"Frontend recommendations: {len(frontend_result['recommendations'])}")
+    print(f"Frontend feedback: {frontend_result['feedback'][:50]}...")
+
+
+def convert_to_frontend_format(analysis_result: Dict) -> Dict:
+    checklist = analysis_result.get("audio_checklist", {})
+    
+    def calculate_pace_score(pace_value: float) -> float:
+        # Точно по диапазонам из build_audio_checklist
+        if 110 <= pace_value <= 140:
+            return 1.0  # good
+        elif 90 <= pace_value < 110 or 140 < pace_value <= 160:
+            return 0.75  # warning
+        else:  # pace < 90 or pace > 160
+            return 0.40  # error
+    
+    def calculate_fillers_score(fillers_per_100: float) -> float:
+        # Точно по диапазонам из build_audio_checklist
+        if fillers_per_100 <= 1.0:
+            return 1.0  # good
+        elif fillers_per_100 <= 3.0:
+            return 0.75  # warning
+        else:  # fillers_per_100 > 3.0
+            return 0.40  # error
+    
+    def calculate_hedges_score(hedges_per_100: float) -> float:
+        # Точно по диапазонам из build_audio_checklist
+        if hedges_per_100 <= 0.5:
+            return 1.0  # good
+        elif hedges_per_100 <= 1.5:
+            return 0.75  # warning
+        else:  # hedges_per_100 > 1.5
+            return 0.40  # error
+    
+    def calculate_pauses_score(count: int, per_min: float, max_sec: float) -> float:
+        # Точно по логике из build_audio_checklist
+        if per_min <= 0.5 and max_sec <= 3.0:
+            return 1.0  # good
+        else:
+            # Все остальные случаи - warning или error
+            too_many = per_min > 1.5
+            too_long = max_sec > 4.0
+            if too_many or too_long:
+                return 0.40  # error
+            else:
+                return 0.75  # warning
+    
+    def calculate_coverage_score(coverage_value: float) -> float:
+        # Точно по диапазонам из build_audio_checklist
+        if coverage_value is None:
+            return None  # Нет данных
+        if coverage_value >= 90.0:
+            return 1.0  # good
+        elif coverage_value >= 75.0:
+            return 0.75  # warning
+        else:  # coverage_value < 75.0
+            return 0.40  # error
+    
+    def calculate_spoken_ratio_score(ratio: float) -> float:
+        # Точно по диапазонам из build_audio_checklist
+        if 0.70 <= ratio <= 0.90:
+            return 1.0  # good
+        elif 0.60 <= ratio < 0.70 or 0.90 < ratio <= 0.95:
+            return 0.75  # warning
+        else:  # ratio < 0.60 or ratio > 0.95
+            return 0.40  # error
+    
+    def calculate_timing_score(ratio: float) -> float:
+        # Точно по диапазонам из build_audio_checklist
+        if ratio is None:
+            return None  # Нет данных
+        if 0.95 <= ratio <= 1.05:
+            return 1.0  # good (±5%)
+        elif (0.90 <= ratio < 0.95) or (1.05 < ratio <= 1.10):
+            return 0.75  # warning (±5-10%)
+        else:  # ratio < 0.90 or ratio > 1.10
+            return 0.40  # error (>10%)
+    
+    def calculate_mic_score(rms_dbfs: float, snr_db: float) -> float:
+        # Точно по диапазонам из analyze_mic_quality
+        loudness_score = None
+        if rms_dbfs is not None:
+            if -23.0 <= rms_dbfs <= -14.0:
+                loudness_score = 1.0  # good
+            elif (-28.0 <= rms_dbfs < -23.0) or (-14.0 < rms_dbfs <= -12.0):
+                loudness_score = 0.75  # warning
+            else:  # rms_dbfs < -28.0 or rms_dbfs > -12.0 or clipping
+                loudness_score = 0.40  # error
+        
+        noise_score = None
+        if snr_db is not None:
+            if snr_db >= 20.0:
+                noise_score = 1.0  # good
+            elif 12.0 <= snr_db < 20.0:
+                noise_score = 0.75  # warning
+            else:  # snr_db < 12.0
+                noise_score = 0.40  # error
+        
+        # Возвращаем среднее, игнорируя None
+        scores = [s for s in [loudness_score, noise_score] if s is not None]
+        return sum(scores) / len(scores) if scores else None
+
+    pace_info = checklist.get("pace", {})
+    fillers_info = checklist.get("fillers", {})
+    hedges_info = checklist.get("hedges", {})
+    
+    # Рассчитываем оценки на основе метрик
+    pace_score = calculate_pace_score(pace_info.get("value", 0))
+    fillers_score = calculate_fillers_score(fillers_info.get("per_100_words", 0))
+    hedges_score = calculate_hedges_score(hedges_info.get("per_100_words", 0))
+    
+    speech_group = {
+        "name": "Речь и артикуляция",
+        "value": round((pace_score + fillers_score + hedges_score) / 3, 2),
+        "metrics": [
+            {
+                "label": "Темп речи (слов/мин)",
+                "value": pace_info.get("value", 0)
+            },
+            {
+                "label": "Слова-паразиты на 100 слов",
+                "value": fillers_info.get("per_100_words", 0)
+            },
+            {
+                "label": "Неуверенные фразы на 100 слов", 
+                "value": hedges_info.get("per_100_words", 0)
+            }
+        ],
+        "diagnostics": [
+            {
+                "label": "Темп речи",
+                "status": pace_info.get("substatus", "good"),
+                "comment": pace_info.get("advice", "")
+            },
+            {
+                "label": "Слова-паразиты",
+                "status": fillers_info.get("substatus", "good"), 
+                "comment": fillers_info.get("advice", "")
+            },
+            {
+                "label": "Уверенность речи",
+                "status": hedges_info.get("substatus", "good"),
+                "comment": hedges_info.get("advice", "")
+            }
+        ]
+    }
+
+    pauses_info = checklist.get("pauses", {})
+    coverage_info = checklist.get("coverage", {})
+    spoken_ratio_info = checklist.get("spoken_ratio", {})
+    
+    # Рассчитываем оценки на основе метрик
+    pauses_score = calculate_pauses_score(
+        pauses_info.get("count", 0),
+        pauses_info.get("per_min", 0),
+        pauses_info.get("max_sec", 0)
+    )
+    coverage_score = calculate_coverage_score(coverage_info.get("value"))
+    spoken_ratio_score = calculate_spoken_ratio_score(spoken_ratio_info.get("value", 0))
+    
+    # Учитываем только доступные оценки
+    delivery_scores = [s for s in [pauses_score, coverage_score, spoken_ratio_score] if s is not None]
+    delivery_avg = sum(delivery_scores) / len(delivery_scores) if delivery_scores else 0.6
+    
+    delivery_group = {
+        "name": "Подача и презентация", 
+        "value": round(delivery_avg, 2),
+        "metrics": [
+            {
+                "label": "Длинные паузы (≥4с)",
+                "value": pauses_info.get("count", 0)
+            },
+            {
+                "label": "Покрытие скрипта (%)",
+                "value": coverage_info.get("value", 0) if coverage_info.get("value") is not None else 0
+            },
+            {
+                "label": "Доля речи",
+                "value": round(spoken_ratio_info.get("value", 0) * 100, 1) if spoken_ratio_info.get("value") else 0
+            }
+        ],
+        "diagnostics": [
+            {
+                "label": "Управление паузами",
+                "status": pauses_info.get("substatus", "good"),
+                "comment": pauses_info.get("advice", "")
+            },
+            {
+                "label": "Соответствие скрипту",
+                "status": coverage_info.get("substatus", "good"),
+                "comment": coverage_info.get("advice", "")
+            },
+            {
+                "label": "Баланс речи и пауз",
+                "status": spoken_ratio_info.get("substatus", "good"),
+                "comment": spoken_ratio_info.get("advice", "")
+            }
+        ]
+    }
+
+    mic_loudness_info = checklist.get("mic_loudness", {})
+    mic_noise_info = checklist.get("mic_noise", {})
+    time_info = checklist.get("time_use", {})
+    
+    # Рассчитываем оценки на основе метрик
+    mic_score = calculate_mic_score(
+        mic_loudness_info.get("speech_rms_dbfs"),
+        mic_noise_info.get("snr_db")
+    )
+    timing_score = calculate_timing_score(time_info.get("ratio"))
+    
+    # Учитываем только доступные оценки
+    tech_scores = [s for s in [mic_score, timing_score] if s is not None]
+    tech_avg = sum(tech_scores) / len(tech_scores) if tech_scores else 0.6
+    
+    technical_group = {
+        "name": "Технические аспекты",
+        "value": round(tech_avg, 2),
+        "metrics": [
+            {
+                "label": "Продолжительность (мин)",
+                "value": round(analysis_result.get("duration_sec_total", 0) / 60, 1)
+            },
+            {
+                "label": "Громкость речи (dBFS)",
+                "value": mic_loudness_info.get("speech_rms_dbfs", 0)
+            },
+            {
+                "label": "Соотношение сигнал/шум (dB)",
+                "value": mic_noise_info.get("snr_db", 0)
+            }
+        ],
+        "diagnostics": [
+            {
+                "label": "Качество записи",
+                "status": mic_loudness_info.get("substatus", "good"),
+                "comment": mic_loudness_info.get("advice", "")
+            },
+            {
+                "label": "Фоновый шум",
+                "status": mic_noise_info.get("substatus", "good"), 
+                "comment": mic_noise_info.get("advice", "")
+            },
+            {
+                "label": "Тайминг",
+                "status": time_info.get("substatus", "good"),
+                "comment": time_info.get("advice", "")
+            }
+        ]
+    }
+
+    all_recommendations = []
+    for key in ["pace", "pauses", "fillers", "hedges", "coverage", "time_use", "spoken_ratio", "mic_loudness", "mic_noise"]:
+        advice = checklist.get(key, {}).get("advice", "")
+        if advice and advice not in all_recommendations:
+            all_recommendations.append(advice)
+
+    good_count = sum(1 for key in checklist if checklist[key].get("status") == "good")
+    warning_count = sum(1 for key in checklist if checklist[key].get("status") == "warning") 
+    error_count = sum(1 for key in checklist if checklist[key].get("status") == "error")
+    
+    if error_count > 2:
+        feedback = "Необходимо серьёзно поработать над техникой выступления. Сфокусируйтесь на основных проблемах."
+    elif warning_count > 3:
+        feedback = "Хорошая основа, но есть области для улучшения. Поработайте над выявленными недостатками."
+    else:
+        feedback = "Отличное выступление! Минимальные корректировки помогут достичь совершенства."
+
+    strengths = []
+    areas_for_improvement = []
+    
+    status_mapping = {
+        "pace": "Хороший темп речи",
+        "pauses": "Оптимальное использование пауз", 
+        "fillers": "Минимум слов-паразитов",
+        "hedges": "Уверенная манера речи",
+        "coverage": "Полное покрытие материала",
+        "time_use": "Отличный тайминг",
+        "spoken_ratio": "Хороший баланс речи и пауз",
+        "mic_loudness": "Качественный звук",
+        "mic_noise": "Чистая запись без шумов"
+    }
+    
+    improvement_mapping = {
+        "pace": "Работа над темпом речи",
+        "pauses": "Управление паузами",
+        "fillers": "Устранение слов-паразитов", 
+        "hedges": "Повышение уверенности речи",
+        "coverage": "Улучшение покрытия материала",
+        "time_use": "Работа с таймингом",
+        "spoken_ratio": "Баланс речи и пауз",
+        "mic_loudness": "Качество звука",
+        "mic_noise": "Устранение фонового шума"
+    }
+    
+    for key, description in status_mapping.items():
+        status = checklist.get(key, {}).get("status", "")
+        if status == "good":
+            strengths.append(description)
+        elif status in ["warning", "error"]:
+            areas_for_improvement.append(improvement_mapping[key])
+
+    return {
+        "groups": [speech_group, delivery_group, technical_group],
+        "recommendations": all_recommendations[:6],
+        "feedback": feedback,
+        "strengths": strengths,
+        "areas_for_improvement": areas_for_improvement
+    }
 
 
 if __name__ == "__main__":
