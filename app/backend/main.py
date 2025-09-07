@@ -34,6 +34,7 @@ from models.text_editor import (
     TextRecommendationsResponse,
     app_graph,
 )
+from models.video_grader import VideoGrader
 
 app = FastAPI(title=PROJECT_NAME)
 
@@ -451,6 +452,14 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
         raise HTTPException(status_code=400, detail='File size must be less than 100MB')
 
     # TODO: Интеграция с AI для анализа видео
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
+        tmp.write(video_content)
+        tmp_path = tmp.name
+
+    grader = VideoGrader()
+    frames = grader.split_video(tmp_path, step_seconds=1)
+    results = grader.analyze_frames(frames)
+    report = grader.final_score(results)
     # Пока возвращаем hardcoded результаты
 
     import random
@@ -466,7 +475,7 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
     engagement_score = round((base_score + random.uniform(-0.2, 0.5)) / 10, 2)
     technical_score = round((base_score + random.uniform(-0.6, 0.2)) / 10, 2)
 
-    return {
+    default = {
         'groups': [
             {
                 'name': 'Речь и артикуляция',
@@ -633,6 +642,10 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
             'Увеличение интерактивности с аудиторией',
         ],
     }
+
+    default['groups'][2] = report
+
+    return default
 
 
 @app.post('/api/v1/score/text', response_model=TextAnalysisResponse)

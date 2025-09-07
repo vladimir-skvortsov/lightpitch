@@ -245,17 +245,17 @@ class VideoGrader:
             {
                 'label': 'Взгляд',
                 'status': status(eyes_score, 0.90, 0.70),
-                'value': round(eyes_score, 2),
+                'value': round(eyes_score, 2) * 10,
             },
             {
                 'label': 'Жестикуляция',
                 'status': status(gesticulation_ratio, 0.25, 0.10),
-                'value': round(gesticulation_ratio, 2),
+                'value': round(gesticulation_ratio, 2) * 10,
             },
             {
                 'label': 'Открытая поза',
                 'status': status(pose_ratio, 0.70, 0.40),
-                'value': round(pose_ratio, 2),
+                'value': round(pose_ratio, 2) * 10,
             },
         ]
 
