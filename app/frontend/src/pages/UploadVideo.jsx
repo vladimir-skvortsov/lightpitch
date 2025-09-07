@@ -133,7 +133,7 @@ const UploadVideo = () => {
                 >
                   🗑️ Убрать файл
                 </Button>
-                <Button variant='primary' size='large' onClick={handleUpload} disabled={uploading}>
+                <Button variant='primary' onClick={handleUpload} disabled={uploading}>
                   {uploading ? '⏳ Анализируем...' : '📊 Получить результаты'}
                 </Button>
               </div>
