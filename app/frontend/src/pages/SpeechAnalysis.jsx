@@ -14,7 +14,6 @@ const SpeechAnalysis = () => {
     try {
       setLoading(true)
 
-      // Fetch pitch data
       const pitchResponse = await fetch(`/api/v1/pitches/${id}`)
       if (!pitchResponse.ok) {
         throw new Error('Pitch not found')
@@ -22,7 +21,6 @@ const SpeechAnalysis = () => {
       const pitchData = await pitchResponse.json()
       setPitch(pitchData)
 
-      // Fetch speech analysis data
       const analysisResponse = await fetch(`/api/v1/pitches/${id}/text`)
       if (!analysisResponse.ok) {
         throw new Error('Analysis not available')
