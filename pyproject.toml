@@ -1,5 +1,5 @@
 [tool.ruff.lint]
-ignore = ["E722", "E402", "F841"]
+ignore = ["E722", "E402", "F841", "F401"]
 
 [tool.ruff.format]
 quote-style = "single"
