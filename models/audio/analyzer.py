@@ -754,7 +754,7 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
             else:
                 return 0.75
 
-    def calculate_coverage_score(coverage_value: float) -> float:
+    def calculate_coverage_score(coverage_value) -> float:
         if coverage_value is None:
             return None
         if coverage_value >= 90.0:
@@ -812,13 +812,60 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     fillers_score = calculate_fillers_score(fillers_info.get('per_100_words', 0))
     hedges_score = calculate_hedges_score(hedges_info.get('per_100_words', 0))
 
+    # Получаем информацию из всех категорий для объединения в одну группу
+    pauses_info = checklist.get('pauses', {})
+    coverage_info = checklist.get('coverage', {})
+    spoken_ratio_info = checklist.get('spoken_ratio', {})
+    mic_loudness_info = checklist.get('mic_loudness', {})
+    mic_noise_info = checklist.get('mic_noise', {})
+    time_info = checklist.get('time_use', {})
+
+    # Вычисляем все scores для единой группы
+    pauses_score = calculate_pauses_score(
+        pauses_info.get('count', 0), pauses_info.get('per_min', 0), pauses_info.get('max_sec', 0)
+    )
+    coverage_score = calculate_coverage_score(coverage_info.get('value'))
+    spoken_ratio_score = calculate_spoken_ratio_score(spoken_ratio_info.get('value', 0))
+    mic_score = calculate_mic_score(mic_loudness_info.get('speech_rms_dbfs'), mic_noise_info.get('snr_db'))
+    timing_score = calculate_timing_score(time_info.get('ratio'))
+
+    # Объединяем все scores в одну группу (исключаем None значения)
+    all_scores = [
+        s
+        for s in [
+            pace_score,
+            fillers_score,
+            hedges_score,
+            pauses_score,
+            coverage_score,
+            spoken_ratio_score,
+            mic_score,
+            timing_score,
+        ]
+        if s is not None
+    ]
+    overall_avg = sum(all_scores) / len(all_scores) if all_scores else None
+
+    # Единая группа "Речь и артикуляция" со всеми метриками
     speech_group = {
         'name': 'Речь и артикуляция',
-        'value': round((pace_score + fillers_score + hedges_score) / 3, 2),
+        'value': round(overall_avg, 2) if overall_avg is not None else None,
         'metrics': [
             {'label': 'Темп речи (слов/мин)', 'value': pace_info.get('value', 0)},
             {'label': 'Слова-паразиты на 100 слов', 'value': fillers_info.get('per_100_words', 0)},
             {'label': 'Неуверенные фразы на 100 слов', 'value': hedges_info.get('per_100_words', 0)},
+            {'label': 'Длинные паузы (≥4с)', 'value': pauses_info.get('count', 0)},
+            {
+                'label': 'Покрытие скрипта (%)',
+                'value': coverage_info.get('value') if coverage_info.get('value') is not None else None,
+            },
+            {
+                'label': 'Доля речи (%)',
+                'value': round(spoken_ratio_info.get('value', 0) * 100, 1) if spoken_ratio_info.get('value') else 0,
+            },
+            {'label': 'Продолжительность (мин)', 'value': round(analysis_result.get('duration_sec_total', 0) / 60, 1)},
+            {'label': 'Громкость речи (dBFS)', 'value': mic_loudness_info.get('speech_rms_dbfs', 0)},
+            {'label': 'Соотношение сигнал/шум (dB)', 'value': mic_noise_info.get('snr_db', 0)},
         ],
         'diagnostics': [
             {
@@ -836,37 +883,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
                 'status': hedges_info.get('substatus', 'good'),
                 'comment': hedges_info.get('advice', ''),
             },
-        ],
-    }
-
-    pauses_info = checklist.get('pauses', {})
-    coverage_info = checklist.get('coverage', {})
-    spoken_ratio_info = checklist.get('spoken_ratio', {})
-
-    pauses_score = calculate_pauses_score(
-        pauses_info.get('count', 0), pauses_info.get('per_min', 0), pauses_info.get('max_sec', 0)
-    )
-    coverage_score = calculate_coverage_score(coverage_info.get('value'))
-    spoken_ratio_score = calculate_spoken_ratio_score(spoken_ratio_info.get('value', 0))
-
-    delivery_scores = [s for s in [pauses_score, coverage_score, spoken_ratio_score] if s is not None]
-    delivery_avg = sum(delivery_scores) / len(delivery_scores) if delivery_scores else 0.6
-
-    delivery_group = {
-        'name': 'Подача и презентация',
-        'value': round(delivery_avg, 2),
-        'metrics': [
-            {'label': 'Длинные паузы (≥4с)', 'value': pauses_info.get('count', 0)},
-            {
-                'label': 'Покрытие скрипта (%)',
-                'value': coverage_info.get('value', 0) if coverage_info.get('value') is not None else 0,
-            },
-            {
-                'label': 'Доля речи',
-                'value': round(spoken_ratio_info.get('value', 0) * 100, 1) if spoken_ratio_info.get('value') else 0,
-            },
-        ],
-        'diagnostics': [
             {
                 'label': 'Управление паузами',
                 'status': pauses_info.get('substatus', 'good'),
@@ -882,28 +898,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
                 'status': spoken_ratio_info.get('substatus', 'good'),
                 'comment': spoken_ratio_info.get('advice', ''),
             },
-        ],
-    }
-
-    mic_loudness_info = checklist.get('mic_loudness', {})
-    mic_noise_info = checklist.get('mic_noise', {})
-    time_info = checklist.get('time_use', {})
-
-    mic_score = calculate_mic_score(mic_loudness_info.get('speech_rms_dbfs'), mic_noise_info.get('snr_db'))
-    timing_score = calculate_timing_score(time_info.get('ratio'))
-
-    tech_scores = [s for s in [mic_score, timing_score] if s is not None]
-    tech_avg = sum(tech_scores) / len(tech_scores) if tech_scores else 0.6
-
-    technical_group = {
-        'name': 'Технические аспекты',
-        'value': round(tech_avg, 2),
-        'metrics': [
-            {'label': 'Продолжительность (мин)', 'value': round(analysis_result.get('duration_sec_total', 0) / 60, 1)},
-            {'label': 'Громкость речи (dBFS)', 'value': mic_loudness_info.get('speech_rms_dbfs', 0)},
-            {'label': 'Соотношение сигнал/шум (dB)', 'value': mic_noise_info.get('snr_db', 0)},
-        ],
-        'diagnostics': [
             {
                 'label': 'Качество записи',
                 'status': mic_loudness_info.get('substatus', 'good'),
@@ -980,7 +974,7 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
             areas_for_improvement.append(improvement_mapping[key])
 
     return {
-        'groups': [speech_group, delivery_group, technical_group],
+        'groups': [speech_group],
         'recommendations': all_recommendations[:6],
         'feedback': feedback,
         'strengths': strengths,
