@@ -353,17 +353,21 @@ def build_audio_checklist(*,
         pace_status = color("good")
         pace_advice = "Хороший темп: держи 110–140 слов/мин, ключевые тезисы выделяй короткими паузами."
     elif 90 <= pace < 110:
-        pace_status = color("warning"); pace_sub = "too_slow"
+        pace_status = color("warning")
+        pace_sub = "too_slow"
         pace_advice = "Чуть медленно. Укороти паузы до 0.3–0.6 с, избегай растягиваний."
     elif 140 < pace <= 160:
-        pace_status = color("warning"); pace_sub = "too_fast"
+        pace_status = color("warning")
+        pace_sub = "too_fast"
         pace_advice = ("Чуть быстро. Добавляй «дыхательные» паузы 0.5–1.0 с после смысловых блоков, "
                        "делай акценты замедлением.")
     elif pace < 90:
-        pace_status = color("error"); pace_sub = "too_slow"
+        pace_status = color("error")
+        pace_sub = "too_slow"
         pace_advice = "Сильно медленно (<90 wpm). Дроби длинные фразы, убирай протяжные звуки."
     else:
-        pace_status = color("error"); pace_sub = "too_fast"
+        pace_status = color("error")
+        pace_sub = "too_fast"
         pace_advice = "Сильно быстро (>160 wpm). Делай пометки-паузы в тексте и контролируй дыхание."
 
     # Pauses
