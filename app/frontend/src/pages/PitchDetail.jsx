@@ -137,6 +137,13 @@ const PitchDetail = () => {
               </div>
             )}
 
+            {pitch.planned_duration_minutes && (
+              <div className='block'>
+                <h3>Планируемая длительность</h3>
+                <p>{pitch.planned_duration_minutes} мин</p>
+              </div>
+            )}
+
             {pitch.tags && pitch.tags.length > 0 && (
               <div className='block'>
                 <h3>Теги</h3>

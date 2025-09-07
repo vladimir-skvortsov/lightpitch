@@ -1,6 +1,6 @@
 {
   "meta": {
-    "audio_path": "data/audio/audio/test_good_1.wav",
+    "audio_path": "/var/folders/_5/267hyv_x24l2v01mjkhyfkgc0000gn/T/tmpium4is_v.wav",
     "language": "ru",
     "whisper_size": "small",
     "pause_threshold_sec": 4,
@@ -8,30 +8,30 @@
     "planned_duration_sec": 60.0
   },
   "transcript_text": "Здравствуйте, я представляю сервис тренировки презентации для стартапов. Проблема в том, что многие фандеры знают продукт, но теряются на сцене, спешат, перегружают слайды и не укладывают своего время. Наше решение — тренажер, который анализирует тексты слайды, а также голоса видеовуступления. Он показывает скорость речи, длинные паузы, слова паразиты и совпадение со скриптом. Как это работает? Вы загружаете презентацию и текст, затем записываете репетицию. Система строит отчет в стиле чек-листа, сильные стороны, зоны улучшения и грубые ошибки с конкретными рекомендациями. Кому полезны? Командом, который готовится к демо-дню, продажам и внутренним печам. Мы измеряем прогресс и помогаем уверенно уложиться в тайм-лимит. Наша цель — повысить качество выступления и конверсию встреч. Спасибо за внимание.",
-  "duration_sec_total": 58.44,
-  "duration_sec_spoken": 53.36,
+  "duration_sec_total": 58.47,
+  "duration_sec_spoken": 53.54,
   "speech_window_start_sec": 0.66,
   "speech_window_end_sec": 57.74,
   "speech_window_sec": 57.08,
   "words_total": 109,
   "wpm_overall": 111.9,
-  "wpm_spoken": 122.6,
+  "wpm_spoken": 122.1,
   "speech_segments": [
     {
-      "start": 1.111,
-      "end": 13.598
+      "start": 1.094,
+      "end": 13.582
     },
     {
       "start": 14.257,
-      "end": 26.93
+      "end": 26.997
     },
     {
-      "start": 27.503,
-      "end": 28.567
+      "start": 27.487,
+      "end": 28.617
     },
     {
       "start": 29.225,
-      "end": 42.151
+      "end": 42.168
     },
     {
       "start": 42.674,
@@ -43,7 +43,7 @@
     },
     {
       "start": 49.39,
-      "end": 58.435
+      "end": 58.469
     }
   ],
   "long_pauses": [],
@@ -130,7 +130,7 @@
   "audio_checklist": {
     "pace": {
       "label": "Темп речи (слов/мин)",
-      "value": 122.6,
+      "value": 122.1,
       "status": "good",
       "substatus": "ok",
       "advice": "Хороший темп: держи 110–140 слов/мин, ключевые тезисы выделяй короткими паузами.",
@@ -187,7 +187,7 @@
     },
     "spoken_ratio": {
       "label": "Доля речи",
-      "value": 0.913,
+      "value": 0.916,
       "status": "warning",
       "substatus": "too_high",
       "advice": "Почти без передышки. Добавь короткие паузы 0.5–1.0 c для акцентов.",
@@ -195,19 +195,19 @@
     },
     "mic_loudness": {
       "label": "Громкость речи (dBFS)",
-      "speech_rms_dbfs": -25.3,
-      "speech_peak_dbfs": -2.6,
+      "speech_rms_dbfs": -28.9,
+      "speech_peak_dbfs": -6.2,
       "clipping_ratio": 0.0,
       "status": "warning",
       "substatus": "too_quiet",
       "advice": "Чуть тихо. Добавь усиление микрофона или приблизься.",
-      "target": "RMS −23…−14 dBFS, без клиппинга"
+      "target": "RMS −24…−14 dBFS, без клиппинга"
     },
     "mic_noise": {
       "label": "Фоновый шум / SNR",
-      "snr_db": 25.3,
-      "speech_rms_dbfs": -25.3,
-      "noise_rms_dbfs": -50.6,
+      "snr_db": 25.4,
+      "speech_rms_dbfs": -28.9,
+      "noise_rms_dbfs": -54.3,
       "status": "good",
       "substatus": "clean",
       "advice": "Фон тихий, всё хорошо.",

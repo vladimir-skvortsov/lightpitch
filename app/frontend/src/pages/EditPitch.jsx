@@ -10,6 +10,7 @@ const EditPitch = () => {
     title: '',
     description: '',
     content: '',
+    planned_duration_minutes: '',
     tags: [],
   })
   const [tagInput, setTagInput] = useState('')
@@ -34,6 +35,7 @@ const EditPitch = () => {
         title: pitch.title || '',
         description: pitch.description || '',
         content: pitch.content || '',
+        planned_duration_minutes: pitch.planned_duration_minutes || '',
         tags: pitch.tags || [],
       })
       setCurrentPresentationName(pitch.presentation_file_name || '')
@@ -199,8 +201,14 @@ const EditPitch = () => {
     async (e) => {
       e.preventDefault()
 
-      if (!formData.title.trim() || !formData.content.trim()) {
-        setError('Название и содержание выступления обязательны')
+      if (!formData.title.trim() || !formData.content.trim() || !formData.planned_duration_minutes) {
+        setError('Название, содержание выступления и планируемая длительность обязательны')
+        return
+      }
+
+      const durationMinutes = parseInt(formData.planned_duration_minutes, 10)
+      if (isNaN(durationMinutes) || durationMinutes <= 0 || durationMinutes > 480) {
+        setError('Длительность должна быть от 1 до 480 минут')
         return
       }
 
@@ -217,6 +225,7 @@ const EditPitch = () => {
             title: formData.title.trim(),
             description: formData.description.trim() || null,
             content: formData.content.trim(),
+            planned_duration_minutes: durationMinutes,
             tags: formData.tags.length > 0 ? formData.tags : null,
           }),
         })
@@ -251,7 +260,7 @@ const EditPitch = () => {
         setSaving(false)
       }
     },
-    [formData.title, formData.content, formData.description, formData.tags, presentationFile, id, navigate]
+    [formData.title, formData.content, formData.description, formData.planned_duration_minutes, formData.tags, presentationFile, id, navigate]
   )
 
   if (loading) {
@@ -313,6 +322,23 @@ const EditPitch = () => {
               required
               disabled={saving}
             />
+          </div>
+
+          <div className='form-group'>
+            <label htmlFor='planned_duration_minutes'>Планируемая длительность (минуты) *</label>
+            <input
+              type='number'
+              id='planned_duration_minutes'
+              name='planned_duration_minutes'
+              value={formData.planned_duration_minutes}
+              onChange={handleChange}
+              placeholder='Введите длительность в минутах'
+              min='1'
+              max='480'
+              required
+              disabled={saving}
+            />
+            <p className='form-help'>Укажите планируемую длительность выступления от 1 до 480 минут</p>
           </div>
 
           <div className='form-group'>
@@ -452,7 +478,7 @@ const EditPitch = () => {
             <Button
               type='submit'
               variant='primary'
-              disabled={saving || !formData.title.trim() || !formData.content.trim()}
+              disabled={saving || !formData.title.trim() || !formData.content.trim() || !formData.planned_duration_minutes}
             >
               {saving ? 'Сохранение...' : 'Сохранить изменения'}
             </Button>

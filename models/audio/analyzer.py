@@ -277,10 +277,10 @@ def analyze_mic_quality(audio_path: str, speech_segs: List[Tuple[float, float]])
         elif speech_rms > -12.0:
             loud_status, loud_sub = color('warning'), 'too_loud'
             loud_advice = 'Слишком громко. Уменьши усиление/расстояние до микрофона.'
-        elif -23.0 <= speech_rms <= -14.0:
+        elif -24.0 <= speech_rms <= -14.0:
             loud_status, loud_sub = color('good'), 'ok'
             loud_advice = 'Громкость комфортная. Так держать!'
-        elif -28.0 <= speech_rms < -23.0:
+        elif -30.0 <= speech_rms < -24.0:
             loud_status, loud_sub = color('warning'), 'too_quiet'
             loud_advice = 'Чуть тихо. Добавь усиление микрофона или приблизься.'
         else:
@@ -295,7 +295,7 @@ def analyze_mic_quality(audio_path: str, speech_segs: List[Tuple[float, float]])
         'status': loud_status,
         'substatus': loud_sub,
         'advice': loud_advice,
-        'target': 'RMS −23…−14 dBFS, без клиппинга',
+        'target': 'RMS −24…−14 dBFS, без клиппинга',
     }
 
     if (speech_rms is None) or (noise_rms is None):
@@ -330,16 +330,16 @@ def analyze_mic_quality(audio_path: str, speech_segs: List[Tuple[float, float]])
 
 def build_audio_checklist(
     *,
-    wpm_spoken: float,
-    long_pauses: List[Dict],
-    duration_total: float,
-    duration_spoken: float,
-    words_total: int,
-    filler_count_total: int,
-    hedge_count_total: int,
-    coverage: Optional[Dict],
-    planned_duration_sec: float,
-    speech_window_sec: float,
+                          wpm_spoken: float,
+                          long_pauses: List[Dict],
+                          duration_total: float,
+                          duration_spoken: float,
+                          words_total: int,
+                          filler_count_total: int,
+                          hedge_count_total: int,
+                          coverage: Optional[Dict],
+                          planned_duration_sec: float,
+                          speech_window_sec: float,
     mic_quality: Dict,
 ) -> Dict[str, Dict]:
     def color(s: str) -> str:
@@ -812,7 +812,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     fillers_score = calculate_fillers_score(fillers_info.get('per_100_words', 0))
     hedges_score = calculate_hedges_score(hedges_info.get('per_100_words', 0))
 
-    # Получаем информацию из всех категорий для объединения в одну группу
     pauses_info = checklist.get('pauses', {})
     coverage_info = checklist.get('coverage', {})
     spoken_ratio_info = checklist.get('spoken_ratio', {})
@@ -820,7 +819,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     mic_noise_info = checklist.get('mic_noise', {})
     time_info = checklist.get('time_use', {})
 
-    # Вычисляем все scores для единой группы
     pauses_score = calculate_pauses_score(
         pauses_info.get('count', 0), pauses_info.get('per_min', 0), pauses_info.get('max_sec', 0)
     )
@@ -829,24 +827,9 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     mic_score = calculate_mic_score(mic_loudness_info.get('speech_rms_dbfs'), mic_noise_info.get('snr_db'))
     timing_score = calculate_timing_score(time_info.get('ratio'))
 
-    # Объединяем все scores в одну группу (исключаем None значения)
-    all_scores = [
-        s
-        for s in [
-            pace_score,
-            fillers_score,
-            hedges_score,
-            pauses_score,
-            coverage_score,
-            spoken_ratio_score,
-            mic_score,
-            timing_score,
-        ]
-        if s is not None
-    ]
+    all_scores = [s for s in [pace_score, fillers_score, hedges_score, pauses_score, coverage_score, spoken_ratio_score, mic_score, timing_score] if s is not None]
     overall_avg = sum(all_scores) / len(all_scores) if all_scores else None
 
-    # Единая группа "Речь и артикуляция" со всеми метриками
     speech_group = {
         'name': 'Речь и артикуляция',
         'value': round(overall_avg, 2) if overall_avg is not None else None,
@@ -870,47 +853,48 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
         'diagnostics': [
             {
                 'label': 'Темп речи',
-                'status': pace_info.get('substatus', 'good'),
+                'status': pace_info.get('status', 'good'),
                 'comment': pace_info.get('advice', ''),
             },
             {
                 'label': 'Слова-паразиты',
-                'status': fillers_info.get('substatus', 'good'),
+                'status': fillers_info.get('status', 'good'),
                 'comment': fillers_info.get('advice', ''),
             },
             {
                 'label': 'Уверенность речи',
-                'status': hedges_info.get('substatus', 'good'),
+                'status': hedges_info.get('status', 'good'),
                 'comment': hedges_info.get('advice', ''),
             },
             {
                 'label': 'Управление паузами',
-                'status': pauses_info.get('substatus', 'good'),
+                'status': pauses_info.get('status', 'good'),
                 'comment': pauses_info.get('advice', ''),
             },
             {
                 'label': 'Соответствие скрипту',
-                'status': coverage_info.get('substatus', 'good'),
+                'status': coverage_info.get('status', 'good'),
                 'comment': coverage_info.get('advice', ''),
             },
             {
                 'label': 'Баланс речи и пауз',
-                'status': spoken_ratio_info.get('substatus', 'good'),
+                'status': spoken_ratio_info.get('status', 'good'),
                 'comment': spoken_ratio_info.get('advice', ''),
             },
             {
                 'label': 'Качество записи',
-                'status': mic_loudness_info.get('substatus', 'good'),
+                'status': mic_loudness_info.get('status', 'good'),
                 'comment': mic_loudness_info.get('advice', ''),
             },
             {
                 'label': 'Фоновый шум',
-                'status': mic_noise_info.get('substatus', 'good'),
+                'status': mic_noise_info.get('status', 'good'),
                 'comment': mic_noise_info.get('advice', ''),
             },
-            {'label': 'Тайминг', 'status': time_info.get('substatus', 'good'), 'comment': time_info.get('advice', '')},
+            {'label': 'Тайминг', 'status': time_info.get('status', 'good'), 'comment': time_info.get('advice', '')},
         ],
     }
+
 
     all_recommendations = []
     for key in [

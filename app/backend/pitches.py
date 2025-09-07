@@ -31,6 +31,7 @@ def create_pitch(pitch_data: PitchCreate) -> Pitch:
         id=pitch_id,
         title=pitch_data.title,
         content=pitch_data.content or '',
+        planned_duration_minutes=pitch_data.planned_duration_minutes,
         description=pitch_data.description,
         tags=pitch_data.tags or [],
         created_at=now,

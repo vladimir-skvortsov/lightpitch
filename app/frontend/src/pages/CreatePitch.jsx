@@ -10,6 +10,7 @@ const CreatePitch = () => {
     title: '',
     description: '',
     content: '',
+    planned_duration_minutes: '',
     tags: [],
   })
   const [tagInput, setTagInput] = useState('')
@@ -150,8 +151,14 @@ const CreatePitch = () => {
     async (e) => {
       e.preventDefault()
 
-      if (!formData.title.trim() || !formData.content.trim()) {
-        setError('Название и содержание выступления обязательны')
+      if (!formData.title.trim() || !formData.content.trim() || !formData.planned_duration_minutes) {
+        setError('Название, содержание выступления и планируемая длительность обязательны')
+        return
+      }
+
+      const durationMinutes = parseInt(formData.planned_duration_minutes, 10)
+      if (isNaN(durationMinutes) || durationMinutes <= 0 || durationMinutes > 480) {
+        setError('Длительность должна быть от 1 до 480 минут')
         return
       }
 
@@ -170,6 +177,7 @@ const CreatePitch = () => {
             title: formData.title.trim(),
             description: description || null,
             content: formData.content.trim(),
+            planned_duration_minutes: durationMinutes,
             tags: formData.tags.length > 0 ? formData.tags : null,
           }),
         })
@@ -205,7 +213,7 @@ const CreatePitch = () => {
         setLoading(false)
       }
     },
-    [formData.title, formData.content, formData.description, formData.tags, presentationFile, navigate]
+    [formData.title, formData.content, formData.description, formData.planned_duration_minutes, formData.tags, presentationFile, navigate]
   )
 
   return (
@@ -237,6 +245,23 @@ const CreatePitch = () => {
               required
               disabled={loading}
             />
+          </div>
+
+          <div className='form-group'>
+            <label htmlFor='planned_duration_minutes'>Планируемая длительность (минуты) *</label>
+            <input
+              type='number'
+              id='planned_duration_minutes'
+              name='planned_duration_minutes'
+              value={formData.planned_duration_minutes}
+              onChange={handleChange}
+              placeholder='Введите длительность в минутах'
+              min='1'
+              max='480'
+              required
+              disabled={loading}
+            />
+            <p className='form-help'>Укажите планируемую длительность выступления от 1 до 480 минут</p>
           </div>
 
           <div className='form-group'>
@@ -363,7 +388,7 @@ const CreatePitch = () => {
             <Button
               type='submit'
               variant='primary'
-              disabled={loading || !formData.title.trim() || !formData.content.trim()}
+              disabled={loading || !formData.title.trim() || !formData.content.trim() || !formData.planned_duration_minutes}
             >
               {loading ? 'Создание...' : 'Создать выступление'}
             </Button>
