@@ -1,24 +1,25 @@
-from enum import Enum
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class TextStyle(str, Enum):
-    CASUAL = "casual"
-    PROFESSIONAL = "professional"
-    SCIENTIFIC = "scientific"
+    CASUAL = 'casual'
+    PROFESSIONAL = 'professional'
+    SCIENTIFIC = 'scientific'
 
 
 class AnalysisType(str, Enum):
-    WEAK_SPOTS = "weak_spots"
-    SPEECH_TIME = "speech_time"
-    REMOVE_PARASITES = "remove_parasites"
-    REMOVE_BUREAUCRACY = "remove_bureaucracy"
-    REMOVE_PASSIVE = "remove_passive"
-    STRUCTURE_BLOCKS = "structure_blocks"
-    STYLE_TRANSFORM = "style_transform"
+    WEAK_SPOTS = 'weak_spots'
+    SPEECH_TIME = 'speech_time'
+    REMOVE_PARASITES = 'remove_parasites'
+    REMOVE_BUREAUCRACY = 'remove_bureaucracy'
+    REMOVE_PASSIVE = 'remove_passive'
+    STRUCTURE_BLOCKS = 'structure_blocks'
+    STYLE_TRANSFORM = 'style_transform'
 
 
 class WeakSpot(BaseModel):
@@ -40,10 +41,10 @@ class ProcessingStep(BaseModel):
 
 
 class TextAnalysisRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=10000, description="Text to analyze")
-    analysis_types: List[AnalysisType] = Field(..., description="Types of analysis to perform")
-    style: Optional[TextStyle] = Field(None, description="Style for transformation")
-    language: str = Field("ru", description="Language code (ru, en, etc.)")
+    text: str = Field(..., min_length=1, max_length=10000, description='Text to analyze')
+    analysis_types: List[AnalysisType] = Field(..., description='Types of analysis to perform')
+    style: Optional[TextStyle] = Field(None, description='Style for transformation')
+    language: str = Field('ru', description='Language code (ru, en, etc.)')
 
 
 class TextAnalysisResponse(BaseModel):
@@ -58,7 +59,7 @@ class TextAnalysisResponse(BaseModel):
 
 class TextRecommendationsRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=10000)
-    language: str = Field("ru", description="Language code")
+    language: str = Field('ru', description='Language code')
 
 
 class TextRecommendationsResponse(BaseModel):
@@ -87,5 +88,3 @@ class AnalysisState:
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
-
-

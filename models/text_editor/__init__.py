@@ -1,20 +1,27 @@
+from .service import TextAnalysisService
 from .types import (
-    TextStyle,
+    AnalysisState,
     AnalysisType,
-    WeakSpot,
     ProcessingStep,
     TextAnalysisRequest,
     TextAnalysisResponse,
     TextRecommendationsRequest,
     TextRecommendationsResponse,
-    AnalysisState,
+    TextStyle,
+    WeakSpot,
 )
 from .workflow import app_graph
-from .service import TextAnalysisService
 
 __all__ = [
-    'TextStyle', 'AnalysisType', 'WeakSpot', 'ProcessingStep',
-    'TextAnalysisRequest', 'TextAnalysisResponse', 'TextRecommendationsRequest',
-    'TextRecommendationsResponse', 'AnalysisState', 'app_graph', 'TextAnalysisService'
+    'TextStyle',
+    'AnalysisType',
+    'WeakSpot',
+    'ProcessingStep',
+    'TextAnalysisRequest',
+    'TextAnalysisResponse',
+    'TextRecommendationsRequest',
+    'TextRecommendationsResponse',
+    'AnalysisState',
+    'app_graph',
+    'TextAnalysisService',
 ]
-

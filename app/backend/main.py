@@ -1,7 +1,9 @@
+import logging
 import os
 import shutil
 import tempfile
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from docx import Document
@@ -9,8 +11,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-import logging
-from datetime import datetime
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -22,14 +22,15 @@ from pitches import delete_pitch as delete_pitch_service
 from pitches import get_pitch as get_pitch_service
 from pitches import list_pitches as list_pitches_service
 from pitches import update_pitch as update_pitch_service
+
 from models.text_editor import (
-    TextAnalysisResponse,
-    TextAnalysisRequest,
-    TextRecommendationsResponse,
-    TextRecommendationsRequest,
     AnalysisState,
     AnalysisType,
+    TextAnalysisRequest,
+    TextAnalysisResponse,
     TextAnalysisService,
+    TextRecommendationsRequest,
+    TextRecommendationsResponse,
     app_graph,
 )
 
@@ -402,10 +403,10 @@ async def get_speech_analysis(pitch_id: str):
 
     try:
         service = TextAnalysisService()
-        return await service.get_legacy_interface(pitch.content, "ru")
+        return await service.get_legacy_interface(pitch.content, 'ru')
 
     except Exception as e:
-        logger.error(f"Speech analysis failed: {str(e)}")
+        logger.error(f'Speech analysis failed: {str(e)}')
         # Fallback к простому отображению с базовыми метриками
         words = len((pitch.content or '').split())
         speech_time_min = round(words / 150.0, 2)
@@ -428,7 +429,7 @@ async def get_speech_analysis(pitch_id: str):
             'feedback': 'Анализ в ограниченном режиме.',
             'strengths': [],
             'areas_for_improvement': [],
-            'recommendations': []
+            'recommendations': [],
         }
 
 
@@ -690,10 +691,7 @@ async def score_text(request: TextAnalysisRequest):
             AnalysisType.STRUCTURE_BLOCKS,
             AnalysisType.STYLE_TRANSFORM,
         }
-        if (
-            final_text.strip() == (request.text or '').strip()
-            and any(t in analysis_types for t in expected_transforms)
-        ):
+        if final_text.strip() == (request.text or '').strip() and any(t in analysis_types for t in expected_transforms):
             try:
                 service = TextAnalysisService()
                 direct = await service.process_text_combined(
@@ -775,7 +773,7 @@ async def score_text(request: TextAnalysisRequest):
             ],
         }
 
-        logger.error(f"Analysis failed: {str(e)}")
+        logger.error(f'Analysis failed: {str(e)}')
 
         return TextAnalysisResponse(
             request_id=request_id,
