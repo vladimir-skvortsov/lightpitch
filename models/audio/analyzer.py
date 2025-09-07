@@ -709,97 +709,87 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     checklist = analysis_result.get("audio_checklist", {})
     
     def calculate_pace_score(pace_value: float) -> float:
-        # Точно по диапазонам из build_audio_checklist
         if 110 <= pace_value <= 140:
-            return 1.0  # good
+            return 1.0 
         elif 90 <= pace_value < 110 or 140 < pace_value <= 160:
-            return 0.75  # warning
-        else:  # pace < 90 or pace > 160
-            return 0.40  # error
+            return 0.75 
+        else: 
+            return 0.40 
     
     def calculate_fillers_score(fillers_per_100: float) -> float:
-        # Точно по диапазонам из build_audio_checklist
         if fillers_per_100 <= 1.0:
-            return 1.0  # good
+            return 1.0 
         elif fillers_per_100 <= 3.0:
-            return 0.75  # warning
-        else:  # fillers_per_100 > 3.0
-            return 0.40  # error
+            return 0.75
+        else:
+            return 0.40
     
     def calculate_hedges_score(hedges_per_100: float) -> float:
-        # Точно по диапазонам из build_audio_checklist
         if hedges_per_100 <= 0.5:
-            return 1.0  # good
+            return 1.0
         elif hedges_per_100 <= 1.5:
-            return 0.75  # warning
-        else:  # hedges_per_100 > 1.5
-            return 0.40  # error
+            return 0.75
+        else:
+            return 0.40
     
     def calculate_pauses_score(count: int, per_min: float, max_sec: float) -> float:
-        # Точно по логике из build_audio_checklist
         if per_min <= 0.5 and max_sec <= 3.0:
-            return 1.0  # good
+            return 1.0
         else:
-            # Все остальные случаи - warning или error
             too_many = per_min > 1.5
             too_long = max_sec > 4.0
             if too_many or too_long:
-                return 0.40  # error
+                return 0.40
             else:
-                return 0.75  # warning
+                return 0.75
     
     def calculate_coverage_score(coverage_value: float) -> float:
-        # Точно по диапазонам из build_audio_checklist
         if coverage_value is None:
-            return None  # Нет данных
+            return None
         if coverage_value >= 90.0:
-            return 1.0  # good
+            return 1.0
         elif coverage_value >= 75.0:
-            return 0.75  # warning
-        else:  # coverage_value < 75.0
-            return 0.40  # error
+            return 0.75
+        else:
+            return 0.40
     
     def calculate_spoken_ratio_score(ratio: float) -> float:
-        # Точно по диапазонам из build_audio_checklist
         if 0.70 <= ratio <= 0.90:
-            return 1.0  # good
+            return 1.0
         elif 0.60 <= ratio < 0.70 or 0.90 < ratio <= 0.95:
-            return 0.75  # warning
-        else:  # ratio < 0.60 or ratio > 0.95
-            return 0.40  # error
+            return 0.75
+        else:
+            return 0.40
     
     def calculate_timing_score(ratio: float) -> float:
-        # Точно по диапазонам из build_audio_checklist
         if ratio is None:
-            return None  # Нет данных
+            return None
         if 0.95 <= ratio <= 1.05:
-            return 1.0  # good (±5%)
+            return 1.0
         elif (0.90 <= ratio < 0.95) or (1.05 < ratio <= 1.10):
-            return 0.75  # warning (±5-10%)
-        else:  # ratio < 0.90 or ratio > 1.10
-            return 0.40  # error (>10%)
+            return 0.75
+        else:
+            return 0.40
     
     def calculate_mic_score(rms_dbfs: float, snr_db: float) -> float:
-        # Точно по диапазонам из analyze_mic_quality
         loudness_score = None
         if rms_dbfs is not None:
             if -23.0 <= rms_dbfs <= -14.0:
-                loudness_score = 1.0  # good
+                loudness_score = 1.0
             elif (-28.0 <= rms_dbfs < -23.0) or (-14.0 < rms_dbfs <= -12.0):
-                loudness_score = 0.75  # warning
-            else:  # rms_dbfs < -28.0 or rms_dbfs > -12.0 or clipping
-                loudness_score = 0.40  # error
+                loudness_score = 0.75
+            else:
+                loudness_score = 0.40
         
         noise_score = None
         if snr_db is not None:
             if snr_db >= 20.0:
-                noise_score = 1.0  # good
+                noise_score = 1.0
             elif 12.0 <= snr_db < 20.0:
-                noise_score = 0.75  # warning
-            else:  # snr_db < 12.0
-                noise_score = 0.40  # error
+                noise_score = 0.75
+            else:
+                noise_score = 0.40
         
-        # Возвращаем среднее, игнорируя None
         scores = [s for s in [loudness_score, noise_score] if s is not None]
         return sum(scores) / len(scores) if scores else None
 
@@ -807,7 +797,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     fillers_info = checklist.get("fillers", {})
     hedges_info = checklist.get("hedges", {})
     
-    # Рассчитываем оценки на основе метрик
     pace_score = calculate_pace_score(pace_info.get("value", 0))
     fillers_score = calculate_fillers_score(fillers_info.get("per_100_words", 0))
     hedges_score = calculate_hedges_score(hedges_info.get("per_100_words", 0))
@@ -852,7 +841,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     coverage_info = checklist.get("coverage", {})
     spoken_ratio_info = checklist.get("spoken_ratio", {})
     
-    # Рассчитываем оценки на основе метрик
     pauses_score = calculate_pauses_score(
         pauses_info.get("count", 0),
         pauses_info.get("per_min", 0),
@@ -861,7 +849,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     coverage_score = calculate_coverage_score(coverage_info.get("value"))
     spoken_ratio_score = calculate_spoken_ratio_score(spoken_ratio_info.get("value", 0))
     
-    # Учитываем только доступные оценки
     delivery_scores = [s for s in [pauses_score, coverage_score, spoken_ratio_score] if s is not None]
     delivery_avg = sum(delivery_scores) / len(delivery_scores) if delivery_scores else 0.6
     
@@ -905,14 +892,12 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     mic_noise_info = checklist.get("mic_noise", {})
     time_info = checklist.get("time_use", {})
     
-    # Рассчитываем оценки на основе метрик
     mic_score = calculate_mic_score(
         mic_loudness_info.get("speech_rms_dbfs"),
         mic_noise_info.get("snr_db")
     )
     timing_score = calculate_timing_score(time_info.get("ratio"))
     
-    # Учитываем только доступные оценки
     tech_scores = [s for s in [mic_score, timing_score] if s is not None]
     tech_avg = sum(tech_scores) / len(tech_scores) if tech_scores else 0.6
     
