@@ -229,7 +229,14 @@ class TextAnalysisService:
                     Пример: длинное предложение на 5–6 строк без пауз
                 11. other — другие проблемы
 
-                ФОРМАТ ВЫВОДА (строго JSON, без преамбулы и без ```):
+                ФОРМАТ ВЫВОДА (СТРОГО валидный JSON, без преамбулы и без ```):
+                ТРЕБОВАНИЯ К ПОЛЯМ:
+                - issue_type: одно из точных значений ["clarity","redundancy","bureaucracy","filler","passive_overuse","logic_gap","tone_mismatch","term_misuse","punctuation_error","wordiness","other"]
+                - severity: одно из ["low","medium","high"]
+                - position: целое число (индекс символа в исходном тексте, начиная с 0)
+                - length: целое число (длина проблемного фрагмента в символах) или null
+                - original_text: исходный проблемный фрагмент
+                - suggestion: конкретное улучшение (коротко и по делу)
                 {
                 "weak_spots": [
                     {
@@ -251,6 +258,8 @@ class TextAnalysisService:
                 ОБЯЗАТЕЛЬНО:
                 - Старайся находить не только слова-паразиты, но и все другие виды проблем.
                 - Указывай конкретные фрагменты текста, а не общие замечания.
+                - Если сомневаешься, не маркируй как проблему. Ошибки не выдумывай.
+                - Если проблем нет — верни пустой массив weak_spots и пустые рекомендации.
                 - Если подходящих проблем нет, возвращай пустой массив.
                 """
             ,
@@ -304,8 +313,30 @@ class TextAnalysisService:
         elif not isinstance(pos, int):
             spot["position"] = 0
         
-        spot.setdefault("length", None)
+        # sanitize length
+        length_val = spot.get("length")
+        if isinstance(length_val, str):
+            try:
+                spot["length"] = int(float(length_val))
+            except ValueError:
+                spot["length"] = None
+        elif isinstance(length_val, float):
+            spot["length"] = int(length_val)
+        elif not isinstance(length_val, int):
+            spot["length"] = None
+
         spot.setdefault("explanation", None)
+
+        # normalize enums to whitelist to avoid skewed metrics
+        allowed_issue_types = {
+            'clarity','redundancy','bureaucracy','filler','passive_overuse','logic_gap','tone_mismatch','term_misuse','punctuation_error','wordiness','other'
+        }
+        issue_type = (spot.get("issue_type") or "").strip()
+        spot["issue_type"] = issue_type if issue_type in allowed_issue_types else 'other'
+
+        allowed_severity = {'low','medium','high'}
+        severity = (spot.get("severity") or "").strip().lower()
+        spot["severity"] = severity if severity in allowed_severity else 'medium'
         
         return spot
 
