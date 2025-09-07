@@ -18,6 +18,12 @@
   --alfa-red-shadow: #ef312480;
   --alfa-dark-red-shadow: #d1292080;
   --alfa-light-red-shadow: #ff6b5b80;
+
+  // Color variables for scores
+  --score-excellent: #0cce6b;
+  --score-good: #ffa400;
+  --score-average: #ff5722;
+  --score-poor: #ff1744;
 }
 
 :root {
@@ -68,6 +74,27 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  padding: 8px 0;
+  color: var(--alfa-dark-gray);
+  position: relative;
+  padding-left: 20px;
+
+  &::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--alfa-red);
+    font-weight: bold;
+  }
 }
 
 @media (prefers-color-scheme: light) {

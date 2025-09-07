@@ -66,7 +66,7 @@ const PitchResults = () => {
 
   return (
     <main className='main'>
-      <div className='container'>
+      <div className='container pitch-results'>
         <div className='results-container'>
           <div className='results-header'>
             <Button variant='outline' as={Link} to={`/pitch/${id}`}>

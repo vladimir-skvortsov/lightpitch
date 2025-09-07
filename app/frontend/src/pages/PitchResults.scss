@@ -1,306 +1,307 @@
-// PitchResults page styles
-.results-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-
-  h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-  }
-}
-
-// Общий балл
-.overall-score-section {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  background: var(--alfa-white);
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 30px;
-}
-
-.score-circle {
-  text-align: center;
-  min-width: 120px;
-}
-
-.score-value {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: 800;
-  color: white;
-  margin: 0 auto 10px;
-
-  &.score-excellent {
-    background: #10b981;
-  }
-  &.score-good {
-    background: #3b82f6;
-  }
-  &.score-fair {
-    background: #f59e0b;
-  }
-  &.score-poor {
-    background: #ef4444;
-  }
-}
-
-.score-label {
-  font-size: 1rem;
-  color: var(--alfa-gray);
-  font-weight: 500;
-}
-
-.score-summary {
-  flex: 1;
-
-  h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-    margin-bottom: 10px;
-  }
-
-  p {
-    color: var(--alfa-gray);
-    margin-bottom: 5px;
-  }
-}
-
-// Метрики
-.metrics-section {
-  background: var(--alfa-white);
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 30px;
-
-  h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-    margin-bottom: 20px;
-  }
-}
-
-.metrics-grid {
-  display: grid;
-  gap: 20px;
-}
-
-.metric-item {
-  display: grid;
-  grid-template-columns: 150px 1fr 50px;
-  align-items: center;
-  gap: 15px;
-}
-
-.metric-name {
-  font-weight: 500;
-  color: var(--alfa-dark-gray);
-}
-
-.metric-bar {
-  height: 8px;
-  background: var(--alfa-light-gray);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.metric-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--alfa-red), var(--alfa-light-red));
-  border-radius: 4px;
-  transition: width 0.8s ease;
-}
-
-.metric-value {
-  font-weight: 600;
-  color: var(--alfa-dark-gray);
-  text-align: right;
-}
-
-// Обратная связь
-.feedback-section {
-  background: var(--alfa-white);
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 30px;
-
-  h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-    margin-bottom: 20px;
-  }
-}
-
-.feedback-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.feedback-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 15px;
-  border-radius: 10px;
-
-  &.feedback-positive {
-    background: #f0fdf4;
-    border-left: 4px solid #10b981;
-  }
-
-  &.feedback-improvement {
-    background: #fffbeb;
-    border-left: 4px solid #f59e0b;
-  }
-}
-
-.feedback-icon {
-  font-size: 1.2rem;
-  margin-top: 2px;
-}
-
-.feedback-item p {
-  margin: 0;
-  color: var(--alfa-dark-gray);
-  line-height: 1.5;
-}
-
-// Сильные стороны и улучшения
-.strengths-improvements {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-bottom: 40px;
-}
-
-.strengths-section,
-.improvements-section {
-  background: var(--alfa-white);
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-
-  h3 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-    margin-bottom: 20px;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  li {
-    padding: 8px 0;
-    color: var(--alfa-dark-gray);
-    position: relative;
-    padding-left: 20px;
-
-    &::before {
-      content: '•';
-      position: absolute;
-      left: 0;
-      color: var(--alfa-red);
-      font-weight: bold;
-    }
-  }
-}
-
-// Действия
-.results-actions {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  padding-top: 20px;
-}
-
-// Responsive design
-@media (max-width: 768px) {
+.pitch-results {
   .results-container {
-    padding: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
   }
 
   .results-header {
-    flex-direction: column;
-    gap: 16px;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
 
     h2 {
-      font-size: 1.5rem;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--alfa-dark-gray);
     }
   }
 
+  // Общий балл
   .overall-score-section {
-    flex-direction: column;
-    text-align: center;
-    gap: 20px;
-    padding: 30px 20px;
-  }
-
-  .metric-item {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    text-align: left;
-  }
-
-  .metric-value {
-    text-align: left;
-  }
-
-  .strengths-improvements {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .results-actions {
-    flex-direction: column;
+    display: flex;
     align-items: center;
-
-    button,
-    a {
-      width: 100%;
-      max-width: 300px;
-    }
+    gap: 40px;
+    background: var(--alfa-white);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
   }
-}
 
-@media (max-width: 480px) {
-  .overall-score-section,
-  .metrics-section,
-  .feedback-section,
-  .strengths-section,
-  .improvements-section {
-    padding: 20px 16px;
+  .score-circle {
+    text-align: center;
+    min-width: 120px;
   }
 
   .score-value {
-    width: 80px;
-    height: 80px;
-    font-size: 1.5rem;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 auto 10px;
+
+    &.score-excellent {
+      background: #10b981;
+    }
+    &.score-good {
+      background: #3b82f6;
+    }
+    &.score-fair {
+      background: #f59e0b;
+    }
+    &.score-poor {
+      background: #ef4444;
+    }
+  }
+
+  .score-label {
+    font-size: 1rem;
+    color: var(--alfa-gray);
+    font-weight: 500;
+  }
+
+  .score-summary {
+    flex: 1;
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--alfa-dark-gray);
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: var(--alfa-gray);
+      margin-bottom: 5px;
+    }
+  }
+
+  // Метрики
+  .metrics-section {
+    background: var(--alfa-white);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--alfa-dark-gray);
+      margin-bottom: 20px;
+    }
+  }
+
+  .metrics-grid {
+    display: grid;
+    gap: 20px;
+  }
+
+  .metric-item {
+    display: grid;
+    grid-template-columns: 150px 1fr 50px;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .metric-name {
+    font-weight: 500;
+    color: var(--alfa-dark-gray);
+  }
+
+  .metric-bar {
+    height: 8px;
+    background: var(--alfa-light-gray);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .metric-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--alfa-red), var(--alfa-light-red));
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+
+  .metric-value {
+    font-weight: 600;
+    color: var(--alfa-dark-gray);
+    text-align: right;
+  }
+
+  // Обратная связь
+  .feedback-section {
+    background: var(--alfa-white);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--alfa-dark-gray);
+      margin-bottom: 20px;
+    }
+  }
+
+  .feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .feedback-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border-radius: 10px;
+
+    &.feedback-positive {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+    }
+
+    &.feedback-improvement {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+  }
+
+  .feedback-icon {
+    font-size: 1.2rem;
+    margin-top: 2px;
+  }
+
+  .feedback-item p {
+    margin: 0;
+    color: var(--alfa-dark-gray);
+    line-height: 1.5;
+  }
+
+  // Сильные стороны и улучшения
+  .strengths-improvements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+
+  .strengths-section,
+  .improvements-section {
+    background: var(--alfa-white);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--alfa-dark-gray);
+      margin-bottom: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 8px 0;
+      color: var(--alfa-dark-gray);
+      position: relative;
+      padding-left: 20px;
+
+      &::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: var(--alfa-red);
+        font-weight: bold;
+      }
+    }
+  }
+
+  // Действия
+  .results-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding-top: 20px;
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    .results-container {
+      padding: 16px;
+    }
+
+    .results-header {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .overall-score-section {
+      flex-direction: column;
+      text-align: center;
+      gap: 20px;
+      padding: 30px 20px;
+    }
+
+    .metric-item {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .metric-value {
+      text-align: left;
+    }
+
+    .strengths-improvements {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .results-actions {
+      flex-direction: column;
+      align-items: center;
+
+      button,
+      a {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .overall-score-section,
+    .metrics-section,
+    .feedback-section,
+    .strengths-section,
+    .improvements-section {
+      padding: 20px 16px;
+    }
+
+    .score-value {
+      width: 80px;
+      height: 80px;
+      font-size: 1.5rem;
+    }
   }
 }

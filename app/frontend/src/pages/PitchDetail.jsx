@@ -228,15 +228,15 @@ const PitchDetail = () => {
                   <div className='speech-counters'>
                     <div className='counter counter--success'>
                       <span className='counter-icon'>✓</span>
-                      <span className='counter-number'>8</span>
+                      <span className='counter-number'>6</span>
                     </div>
                     <div className='counter counter--warning'>
                       <span className='counter-icon'>⚠</span>
-                      <span className='counter-number'>5</span>
+                      <span className='counter-number'>7</span>
                     </div>
                     <div className='counter counter--error'>
                       <span className='counter-icon'>✕</span>
-                      <span className='counter-number'>2</span>
+                      <span className='counter-number'>1</span>
                     </div>
                   </div>
                 </div>

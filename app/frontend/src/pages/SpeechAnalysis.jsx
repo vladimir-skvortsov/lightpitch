@@ -67,159 +67,158 @@ const SpeechAnalysis = () => {
   }
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'var(--score-excellent)'
-    if (score >= 60) return 'var(--score-good)'
-    if (score >= 40) return 'var(--score-average)'
+    if (score >= 0.9) return 'var(--score-excellent)'
+    if (score >= 0.75) return 'var(--score-good)'
+    if (score >= 0.5) return 'var(--score-average)'
     return 'var(--score-poor)'
+  }
+
+  const formatScore = (score) => {
+    return Math.round(score * 100)
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'good':
+        return '✓'
+      case 'warning':
+        return '⚠'
+      case 'error':
+        return '✕'
+      default:
+        return '•'
+    }
   }
 
   return (
     <main className='main'>
-      <div className='container'>
-        <div className='speech-analysis'>
-          <div className='analysis-header'>
-            <Button variant='outline' as={Link} to={`/pitch/${id}`} className='back-button'>
-              ← Назад к выступлению
-            </Button>
-            <div className='header-content'>
-              <h1 className='analysis-title'>Анализ текста выступления</h1>
-              <p className='pitch-title'>{pitch?.title}</p>
-            </div>
+      <div className='container speech-analysis'>
+        <div className='content-header'>
+          <h2 className='analysis-title'>Анализ текста</h2>
+          <Button variant='outline' as={Link} to={`/pitch/${id}`} className='back-button'>
+            ← Назад к выступлению
+          </Button>
+        </div>
+
+        <div className='content-container'>
+          <div className='block group-scores'>
+            {analysis.groups.map((group, index) => (
+              <div key={index} className='group-score-card'>
+                <div className='group-header'>
+                  <div className='group-score'>
+                    <div className='score-circle' style={{ borderColor: getScoreColor(group.value) }}>
+                      <span className='score-number'>{formatScore(group.value)}</span>
+                    </div>
+                  </div>
+                  <h3 className='group-name'>{group.name}</h3>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {analysis && (
-            <>
-              <div className='analysis-overview'>
-                <div className='score-section'>
-                  <div className='score-circle' style={{ borderColor: getScoreColor(analysis.overall_score) }}>
-                    <div className='score-number'>{analysis.overall_score}</div>
-                    <div className='score-label'>из 100</div>
+          {analysis.groups.map((group, groupIndex) => (
+            <div key={groupIndex} className='block'>
+              <div className='group-section-header'>
+                <div className='group-header'>
+                  <div className='score-circle' style={{ borderColor: getScoreColor(group.value) }}>
+                    <span className='score-number'>{formatScore(group.value)}</span>
                   </div>
-                  <div className='score-description'>
-                    <h3>Общая оценка речи</h3>
-                    <p>Анализ структуры, стиля и содержания вашего выступления</p>
-                  </div>
-                </div>
-
-                <div className='summary-cards'>
-                  <div className='summary-card summary-card--success'>
-                    <div className='card-header'>
-                      <span className='card-icon'>✓</span>
-                      <span className='card-title'>Хорошие практики</span>
-                    </div>
-                    <div className='card-count'>{analysis.good_practices.length}</div>
-                  </div>
-
-                  <div className='summary-card summary-card--warning'>
-                    <div className='card-header'>
-                      <span className='card-icon'>⚠</span>
-                      <span className='card-title'>Предупреждения</span>
-                    </div>
-                    <div className='card-count'>{analysis.warnings.length}</div>
-                  </div>
-
-                  <div className='summary-card summary-card--error'>
-                    <div className='card-header'>
-                      <span className='card-icon'>✕</span>
-                      <span className='card-title'>Ошибки</span>
-                    </div>
-                    <div className='card-count'>{analysis.errors.length}</div>
-                  </div>
+                  <h3 className='group-name'>{group.name}</h3>
                 </div>
               </div>
 
-              <div className='analysis-sections'>
-                {/* Good Practices */}
-                <div className='analysis-section'>
-                  <h2 className='section-title section-title--success'>
-                    <span className='section-icon'>✓</span>
-                    Хорошие практики ({analysis.good_practices.length})
-                  </h2>
-                  <div className='section-content'>
-                    {analysis.good_practices.map((item, index) => (
-                      <div key={index} className='analysis-item analysis-item--success'>
-                        <div className='item-header'>
-                          <span className='item-icon'>✓</span>
-                          <h3 className='item-title'>{item.title}</h3>
-                        </div>
-                        <p className='item-description'>{item.description}</p>
-                        <div className='item-meta'>
-                          <span className='item-category'>{item.category}</span>
-                        </div>
+              {/* Metrics */}
+              {group.metrics && group.metrics.length > 0 && (
+                <div className='metrics-section'>
+                  <h4>Метрики</h4>
+                  <div className='metrics-list'>
+                    {group.metrics.map((metric, metricIndex) => (
+                      <div key={metricIndex} className='metric-item'>
+                        <span className='metric-label'>{metric.label}</span>
+                        <span className='metric-value'>{metric.value}</span>
                       </div>
                     ))}
                   </div>
                 </div>
+              )}
 
-                {/* Warnings */}
-                <div className='analysis-section'>
-                  <h2 className='section-title section-title--warning'>
-                    <span className='section-icon'>⚠</span>
-                    Предупреждения ({analysis.warnings.length})
-                  </h2>
-                  <div className='section-content'>
-                    {analysis.warnings.map((item, index) => (
-                      <div key={index} className='analysis-item analysis-item--warning'>
-                        <div className='item-header'>
-                          <span className='item-icon'>⚠</span>
-                          <h3 className='item-title'>{item.title}</h3>
+              {/* Diagnostics */}
+              {group.diagnostics && group.diagnostics.length > 0 && (
+                <div className='diagnostics-section'>
+                  <h4>Диагностика</h4>
+                  <div className='diagnostics-list'>
+                    {group.diagnostics.map((diagnostic, diagIndex) => (
+                      <div key={diagIndex} className={`diagnostic-item diagnostic-item--${diagnostic.status}`}>
+                        <div className='diagnostic-header'>
+                          <span className='diagnostic-icon'>{getStatusIcon(diagnostic.status)}</span>
+                          <span className='diagnostic-label'>{diagnostic.label}</span>
+                          {diagnostic.sublabel && <span className='diagnostic-sublabel'>• {diagnostic.sublabel}</span>}
                         </div>
-                        <p className='item-description'>{item.description}</p>
-                        <div className='item-meta'>
-                          <span className='item-category'>{item.category}</span>
-                          {item.position && <span className='item-position'>Позиция: {item.position}</span>}
-                        </div>
+                        {diagnostic.comment && <p className='diagnostic-comment'>{diagnostic.comment}</p>}
                       </div>
                     ))}
                   </div>
                 </div>
+              )}
+            </div>
+          ))}
 
-                {/* Errors */}
-                <div className='analysis-section'>
-                  <h2 className='section-title section-title--error'>
-                    <span className='section-icon'>✕</span>
-                    Ошибки ({analysis.errors.length})
-                  </h2>
-                  <div className='section-content'>
-                    {analysis.errors.map((item, index) => (
-                      <div key={index} className='analysis-item analysis-item--error'>
-                        <div className='item-header'>
-                          <span className='item-icon'>✕</span>
-                          <h3 className='item-title'>{item.title}</h3>
-                        </div>
-                        <p className='item-description'>{item.description}</p>
-                        <div className='item-meta'>
-                          <span className='item-category'>{item.category}</span>
-                          {item.position && <span className='item-position'>Позиция: {item.position}</span>}
-                          {item.severity && (
-                            <span className={`item-severity item-severity--${item.severity}`}>
-                              {item.severity === 'high' ? 'Высокая' : item.severity === 'medium' ? 'Средняя' : 'Низкая'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recommendations */}
-                <div className='analysis-section'>
-                  <h2 className='section-title section-title--info'>
-                    <span className='section-icon'>💡</span>
-                    Рекомендации
-                  </h2>
-                  <div className='section-content'>
-                    <ul className='recommendations-list'>
-                      {analysis.recommendations.map((recommendation, index) => (
-                        <li key={index} className='recommendation-item'>
-                          {recommendation}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+          {/* Feedback */}
+          {analysis.feedback && (
+            <div className='block'>
+              <h2 className='section-title'>💬 Общая оценка</h2>
+              <div className='section-content'>
+                <p className='feedback-text'>{analysis.feedback}</p>
               </div>
-            </>
+            </div>
+          )}
+
+          {/* Strengths */}
+          {analysis.strengths && analysis.strengths.length > 0 && (
+            <div className='block'>
+              <h2 className='section-title section-title--success'>💪 Сильные стороны</h2>
+              <div className='section-content'>
+                <ul className='strengths-list'>
+                  {analysis.strengths.map((strength, index) => (
+                    <li key={index} className='strength-item'>
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Areas for improvement */}
+          {analysis.areas_for_improvement && analysis.areas_for_improvement.length > 0 && (
+            <div className='block'>
+              <h2 className='section-title section-title--warning'>🎯 Области для улучшения</h2>
+              <div className='section-content'>
+                <ul className='improvements-list'>
+                  {analysis.areas_for_improvement.map((area, index) => (
+                    <li key={index} className='improvement-item'>
+                      {area}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Recommendations */}
+          {analysis.recommendations && analysis.recommendations.length > 0 && (
+            <div className='block'>
+              <h2 className='section-title section-title--info'>💡 Рекомендации</h2>
+              <div className='section-content'>
+                <ul className='recommendations-list'>
+                  {analysis.recommendations.map((recommendation, index) => (
+                    <li key={index} className='recommendation-item'>
+                      {recommendation}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           )}
         </div>
       </div>
