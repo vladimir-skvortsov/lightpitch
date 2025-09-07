@@ -700,58 +700,177 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
 
     base_score = random.uniform(6.5, 9.0)
 
+    # Generate group scores
+    speech_score = round(base_score / 10, 2)
+    delivery_score = round((base_score + random.uniform(-0.4, 0.3)) / 10, 2)
+    engagement_score = round((base_score + random.uniform(-0.2, 0.5)) / 10, 2)
+    technical_score = round((base_score + random.uniform(-0.6, 0.2)) / 10, 2)
+
     return {
-        'overall_score': round(base_score, 1),
-        'confidence': round(base_score + random.uniform(-0.5, 0.3), 1),
-        'clarity': round(base_score + random.uniform(-0.3, 0.5), 1),
-        'pace': round(base_score + random.uniform(-0.8, 0.2), 1),
-        'engagement': round(base_score + random.uniform(-0.2, 0.7), 1),
-        'body_language': round(base_score + random.uniform(-0.6, 0.4), 1),
-        'eye_contact': round(base_score + random.uniform(-0.4, 0.6), 1),
-        'voice_tone': round(base_score + random.uniform(-0.3, 0.4), 1),
-        'duration': f'{random.randint(1, 5)}:{random.randint(10, 59):02d}',
-        'word_count': random.randint(150, 450),
-        'feedback': [
+        'groups': [
             {
-                'type': 'positive',
-                'message': random.choice(
-                    [
-                        'Отличная четкость речи и хорошая интонация',
-                        'Уверенная подача материала',
-                        'Хороший зрительный контакт с аудиторией',
-                        'Профессиональная манера речи',
-                    ]
-                ),
+                'name': 'Речь и артикуляция',
+                'value': speech_score,
+                'metrics': [
+                    {
+                        'label': 'Четкость речи',
+                        'value': round(base_score + random.uniform(-0.3, 0.5), 1),
+                    },
+                    {
+                        'label': 'Скорость речи (слов/мин)',
+                        'value': random.randint(120, 180),
+                    },
+                    {
+                        'label': 'Громкость голоса',
+                        'value': round(base_score + random.uniform(-0.2, 0.4), 1),
+                    },
+                ],
+                'diagnostics': [
+                    {
+                        'label': 'Четкая артикуляция',
+                        'status': 'good',
+                        'comment': 'Отличная четкость речи и хорошая интонация',
+                    },
+                    {
+                        'label': 'Темп речи',
+                        'status': 'warning',
+                        'comment': 'Рекомендуется немного замедлить темп речи для лучшего восприятия',
+                    },
+                    {
+                        'label': 'Профессиональная манера',
+                        'status': 'good',
+                        'comment': 'Профессиональная манера речи и уверенная подача',
+                    },
+                ],
             },
             {
-                'type': 'improvement',
-                'message': random.choice(
-                    [
-                        'Рекомендуется немного замедлить темп речи для лучшего восприятия',
-                        'Добавьте больше жестов для усиления эмоциональной составляющей',
-                        'Используйте больше пауз для акцентирования важных моментов',
-                        'Увеличьте эмоциональную вовлеченность',
-                    ]
-                ),
+                'name': 'Подача и презентация',
+                'value': delivery_score,
+                'metrics': [
+                    {
+                        'label': 'Уверенность',
+                        'value': round(base_score + random.uniform(-0.5, 0.3), 1),
+                    },
+                    {
+                        'label': 'Зрительный контакт',
+                        'value': round(base_score + random.uniform(-0.4, 0.6), 1),
+                    },
+                    {
+                        'label': 'Язык тела',
+                        'value': round(base_score + random.uniform(-0.6, 0.4), 1),
+                    },
+                ],
+                'diagnostics': [
+                    {
+                        'label': 'Зрительный контакт',
+                        'status': 'good',
+                        'comment': 'Хороший зрительный контакт с аудиторией',
+                    },
+                    {
+                        'label': 'Жестикуляция',
+                        'status': 'warning',
+                        'comment': 'Добавьте больше жестов для усиления эмоциональной составляющей',
+                    },
+                    {
+                        'label': 'Уверенность',
+                        'status': 'good',
+                        'comment': 'Уверенная подача материала',
+                    },
+                ],
             },
             {
-                'type': 'positive',
-                'message': random.choice(
-                    ['Хорошая структура выступления', 'Логичное изложение материала', 'Удачные примеры и аналогии']
-                ),
+                'name': 'Вовлеченность аудитории',
+                'value': engagement_score,
+                'metrics': [
+                    {
+                        'label': 'Эмоциональность',
+                        'value': round(base_score + random.uniform(-0.2, 0.7), 1),
+                    },
+                    {
+                        'label': 'Интерактивность',
+                        'value': round(base_score + random.uniform(-0.8, 0.3), 1),
+                    },
+                    {
+                        'label': 'Использование пауз',
+                        'value': round(base_score + random.uniform(-0.5, 0.2), 1),
+                    },
+                ],
+                'diagnostics': [
+                    {
+                        'label': 'Структура выступления',
+                        'status': 'good',
+                        'comment': 'Хорошая структура выступления и логичное изложение',
+                    },
+                    {
+                        'label': 'Эмоциональная вовлеченность',
+                        'status': 'warning',
+                        'comment': 'Увеличьте эмоциональную вовлеченность для лучшего контакта с аудиторией',
+                    },
+                    {
+                        'label': 'Паузы',
+                        'status': 'warning',
+                        'comment': 'Используйте больше пауз для акцентирования важных моментов',
+                    },
+                ],
+            },
+            {
+                'name': 'Технические аспекты',
+                'value': technical_score,
+                'metrics': [
+                    {
+                        'label': 'Продолжительность (мин)',
+                        'value': round(random.randint(120, 300) / 60, 1),
+                    },
+                    {
+                        'label': 'Количество слов',
+                        'value': random.randint(150, 450),
+                    },
+                    {
+                        'label': 'Качество звука',
+                        'value': round(base_score + random.uniform(-0.3, 0.2), 1),
+                    },
+                ],
+                'diagnostics': [
+                    {
+                        'label': 'Качество записи',
+                        'status': 'good',
+                        'comment': 'Хорошее качество звука и видео',
+                    },
+                    {
+                        'label': 'Продолжительность',
+                        'status': 'good',
+                        'comment': 'Оптимальная продолжительность выступления',
+                    },
+                    {
+                        'label': 'Техническое исполнение',
+                        'status': 'good',
+                        'comment': 'Отличное техническое качество записи',
+                    },
+                ],
             },
         ],
+        'recommendations': [
+            'Немного замедлите темп речи для лучшего восприятия',
+            'Добавьте больше жестов для усиления эмоциональной составляющей',
+            'Используйте больше пауз для акцентирования важных моментов',
+            'Увеличьте эмоциональную вовлеченность с аудиторией',
+            'Поддерживайте зрительный контакт на протяжении всего выступления',
+            'Работайте над вариативностью интонации',
+        ],
+        'feedback': 'Ваше выступление демонстрирует высокий профессиональный уровень с четкой артикуляцией и уверенной подачей. Основные области для улучшения: темп речи и эмоциональная вовлеченность.',
         'strengths': [
-            'Четкая артикуляция',
-            'Хорошая структура выступления',
+            'Четкая артикуляция и профессиональная речь',
+            'Хорошая структура и логика выступления',
             'Уверенная подача материала',
-            'Профессиональная манера речи',
+            'Качественный зрительный контакт с аудиторией',
+            'Отличное техническое исполнение',
         ],
         'areas_for_improvement': [
-            'Темп речи',
-            'Язык тела и жестикуляция',
-            'Паузы для акцентирования',
-            'Эмоциональная вовлеченность',
+            'Оптимизация темпа речи',
+            'Развитие языка тела и жестикуляции',
+            'Использование пауз для акцентирования',
+            'Повышение эмоциональной вовлеченности',
+            'Увеличение интерактивности с аудиторией',
         ],
     }
 
