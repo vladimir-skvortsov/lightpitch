@@ -22,7 +22,7 @@ from pitches import delete_pitch as delete_pitch_service
 from pitches import get_pitch as get_pitch_service
 from pitches import list_pitches as list_pitches_service
 from pitches import update_pitch as update_pitch_service
-from models.text_editor.text_analysis import (
+from models.text_editor import (
     TextAnalysisResponse,
     TextAnalysisRequest,
     TextRecommendationsResponse,
