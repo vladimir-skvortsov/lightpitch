@@ -198,80 +198,60 @@ class TextAnalysisService:
         return {
             "weak_spots": """
                 Ты — эксперт-редактор текста. Язык входного текста: {{LANG}}.
-                Задача: выявить слабые места и предложить конкретные улучшения.
-                
-                ВАЖНО:
-                - Верни СТРОГО валидный JSON без преамбулы и без кодовых блоков.
-                - Используй ТОЛЬКО issue_type из списка ниже (один на элемент):
-                  1. clarity — неясная формулировка, двусмысленность
-                  2. redundancy — повторы, лишние слова
-                  3. bureaucracy — канцелярит, тяжёлые штампы
-                  4. filler — слова-паразиты
-                  5. passive_overuse — избыточный пассивный залог
-                  6. logic_gap — логический провал, нет связки/обоснования
-                  7. tone_mismatch — тон не соответствует задаче/аудитории
-                  8. term_misuse — неверное использование терминов/жаргона
-                  9. punctuation_error — ошибки пунктуации
-                  10. wordiness — чрезмерно длинные и тяжёлые предложения
-                  11. other - если проблема не попадает в список.
-                
-                ФОРМАТ ВЫВОДА:
-                {
-                  "position_mode": "chars",
-                  "weak_spots": [
-                    {
-                      "position": number,            // индекс начала фрагмента
-                      "length": number,              // длина проблемного фрагмента
-                      "original_text": string,
-                      "issue_type": string,          // одно из 11
-                      "explanation": string,         // почему это слабое место
-                      "suggestion": string,          // как улучшить
-                      "severity": "low|medium|high"
-                    }
-                  ],
-                  "global_recommendations": [string], // 3–7 пунктов
-                  "taxonomy_version": "top10-v1"
-                }
-                
-                При невозможности анализа верни:
-                {"error":"reason"}
-                """,
+                Твоя задача: найти слабые места в тексте и дать точные рекомендации по исправлению. 
+                Важно: ищи все категории проблем, не останавливайся на первых найденных.
 
-            "combined_processing": """
-                Ты — эксперт-редактор текста. Выполни комплексную обработку текста согласно заданным параметрам.
-                
-                ПАРАМЕТРЫ ОБРАБОТКИ: {processing_params}
-                ЦЕЛЕВОЙ СТИЛЬ: {target_style}
-                ЯЗЫК: {language}
-                
-                ЗАДАЧИ:
-                {tasks}
-                
-                ВЕРНИ СТРОГО валидный JSON в следующем формате:
-                {{
-                  "processed_text": "обработанный текст",
-                  "speech_time_original": число,     // время выступления для исходного текста в минутах
-                  "word_count_original": число,      // количество слов в исходном тексте
-                  "speech_time_final": число,        // время выступления для финального текста в минутах
-                  "word_count_final": число,         // количество слов в финальном тексте
-                  "changes_summary": [строка],       // список изменений
-                  "processing_details": {{
-                    "parasites_removed": число,
-                    "bureaucracy_simplified": boolean,
-                    "passive_voice_changed": boolean,
-                    "structure_added": boolean,
-                    "style_transformed": "стиль|null"
-                  }}
-                }}
-                
-                ИНСТРУКЦИИ ПО ОБРАБОТКЕ:
-                1. Удаление слов-паразитов: убери "ну", "вот", "как бы", "в общем", "короче", "типа", "блин", "э-э", "м-м" и похожие
-                2. Упрощение канцелярита: замени сложные канцелярские обороты на простые фразы
-                3. Исправление пассивного залога: замени на активный залог где возможно
-                4. Структурирование: добавь заголовки и логические переходы между блоками
-                5. Преобразование стиля: адаптируй под указанный стиль
-                
-                Выполняй ТОЛЬКО те задачи, которые указаны в параметрах. Сохраняй смысл и естественность текста.
+                КРИТЕРИИ СЕРЬЕЗНОСТИ:
+                - HIGH (ошибки): орфографические ошибки, грубые нарушения грамматики, фактические ошибки.
+                - MEDIUM (предупреждения): длинные или перегруженные предложения, логические провалы, ошибки пунктуации, тяжёлые штампы.
+                - LOW (замечания): стилистические улучшения, замена слов-паразитов, упрощение формулировок.
+
+                ТИПЫ ПРОБЛЕМ (issue_type):
+                1. clarity — неясная формулировка, двусмысленность
+                Пример: "этот вопрос как-то не так понятен" → "этот вопрос непонятен"
+                2. redundancy — повторы, лишние слова
+                Пример: "он повторил это снова" → "он повторил это"
+                3. bureaucracy — канцелярит, штампы
+                Пример: "в целях осуществления" → "чтобы"
+                4. filler — слова-паразиты
+                Пример: "ну, как бы, в общем" → (удалить)
+                5. passive_overuse — избыточный пассивный залог
+                Пример: "было проведено исследование" → "мы провели исследование"
+                6. logic_gap — логический провал, отсутствует связка
+                Пример: "Мы сделали продукт. Поэтому продажи выросли в 10 раз" (нет связи)
+                7. tone_mismatch — тон не соответствует задаче/аудитории
+                Пример: "Чуваки, это бомба!" в деловой презентации
+                8. term_misuse — неверное или чрезмерно сложное использование терминов
+                Пример: "алгоритм называется гистограмма" (ошибка)
+                9. punctuation_error — ошибки пунктуации
+                Пример: "Слишком много текста мало пауз отсутствует call-to-action" → нужны запятые/точки
+                10. wordiness — чрезмерно длинные предложения
+                    Пример: длинное предложение на 5–6 строк без пауз
+                11. other — другие проблемы
+
+                ФОРМАТ ВЫВОДА (строго JSON, без преамбулы и без ```):
+                {
+                "weak_spots": [
+                    {
+                    "position": number,
+                    "length": number,
+                    "original_text": "проблемный фрагмент",
+                    "issue_type": "один из 11 типов",
+                    "explanation": "почему это проблема",
+                    "suggestion": "как исправить",
+                    "severity": "low|medium|high"
+                    }
+                ],
+                "global_recommendations": [
+                    "конкретная рекомендация 1",
+                    "конкретная рекомендация 2"
+                ]
+                }
+
+                ОБЯЗАТЕЛЬНО:
+                - Старайся находить не только слова-паразиты, но и все другие виды проблем.
+                - Указывай конкретные фрагменты текста, а не общие замечания.
+                - Если подходящих проблем нет, возвращай пустой массив.
                 """
         }
 
@@ -379,6 +359,377 @@ class TextAnalysisService:
                     "style_transformed": None
                 }
             }
+
+    async def get_formatted_analysis(self, text: str, language: str) -> Dict[str, Any]:
+        """Получить анализ текста в формате для интерфейса"""
+        weak_spots, recommendations = await self.analyze_weak_spots(text, language)
+        
+        # Преобразуем weak_spots в новый формат
+        good_practices = []
+        warnings = []
+        errors = []
+        
+        # Категоризируем проблемы по типам и серьезности
+        for spot in weak_spots:
+            item = {
+                'title': self._get_issue_title(spot.issue_type),
+                'description': spot.suggestion,
+                'category': self._get_category_name(spot.issue_type),
+                'position': f'Позиция: {spot.position}'
+            }
+            
+            # Определяем тип по серьезности и типу проблемы
+            if spot.severity == 'high' or spot.issue_type in ['punctuation_error', 'term_misuse']:
+                errors.append({
+                    **item,
+                    'severity': 'high' if spot.severity == 'high' else 'medium'
+                })
+            elif spot.severity == 'medium' or spot.issue_type in ['wordiness', 'passive_overuse', 'clarity']:
+                warnings.append(item)
+        
+        # Добавляем положительные моменты на основе отсутствия проблем
+        issue_types_found = {spot.issue_type for spot in weak_spots}
+        self._add_good_practices(good_practices, issue_types_found, text)
+        
+        # Рассчитываем общий балл
+        total_issues = len(errors) * 3 + len(warnings) * 1
+        text_length = len(text.split())
+        base_score = max(50, 95 - (total_issues * 100 / max(text_length, 50)))
+        
+        return {
+            'overall_score': round(base_score),
+            'good_practices': good_practices,
+            'warnings': warnings,
+            'errors': errors,
+            'recommendations': recommendations[:7]  # Ограничиваем до 7 рекомендаций
+        }
+
+    def _score_by_issue_density(self, issues_count: int, words: int, weight: float = 1.0) -> float:
+        """Оценка 0..1 по плотности проблем на 1000 слов: меньше проблем — выше оценка"""
+        words_safe = max(1, words)
+        density = (issues_count * 1000.0) / words_safe
+        penalty = min(0.6, (density / 50.0) * weight)  # 50 проблем/1000 слов дают сильный штраф
+        return max(0.4, 1.0 - penalty)
+
+    def _build_group(self, name: str, value: float, diagnostics: list, metrics: list) -> Dict[str, Any]:
+        return {
+            'name': name,
+            'value': round(value, 2),
+            'metrics': metrics,
+            'diagnostics': diagnostics,
+        }
+
+    async def get_legacy_interface(self, text: str, language: str) -> Dict[str, Any]:
+        """Сформировать интерфейс в «группах» для фронтенда
+        Группы: Орфография, Слова‑паразиты, Канцеляризмы, Пассивный залог, Структура
+        Метрики: Кол-во слов, Время выступления (мин)
+        """
+        weak_spots, recommendations = await self.analyze_weak_spots(text, language)
+        words = len(text.split())
+        speech_time_min = round(words / 150.0, 2)
+
+        # Индексы по типам проблем
+        by_type: Dict[str, list] = {}
+        for ws in weak_spots:
+            by_type.setdefault(ws.issue_type, []).append(ws)
+
+        def diag_from_spots(spots: list, ok_label: str) -> list:
+            if not spots:
+                return [{
+                    'label': ok_label,
+                    'status': 'good',
+                    'comment': None,
+                }]
+            diags = []
+            for s in spots[:10]:  # ограничим вывод
+                diags.append({
+                    'label': s.original_text[:50] + ('...' if len(s.original_text) > 50 else ''),
+                    'status': 'error' if s.severity == 'high' else 'warning',
+                    'sublabel': None,
+                    'comment': s.suggestion or s.explanation,
+                })
+            return diags
+
+        # 1) Орфография (пока используем пунктуацию как прокси)
+        ortho_spots = by_type.get('punctuation_error', [])
+        ortho_value = self._score_by_issue_density(len(ortho_spots), words, weight=1.0)
+        ortho_metrics = [
+            {'label': 'Ошибки пунктуации', 'value': len(ortho_spots)},
+            {'label': 'Количество слов', 'value': words},
+            {'label': 'Время речи (мин)', 'value': speech_time_min},
+        ]
+        ortho_group = self._build_group('Орфография и пунктуация', ortho_value, diag_from_spots(ortho_spots, 'Ошибок не обнаружено'), ortho_metrics)
+
+        # 2) Слова‑паразиты
+        filler_spots = by_type.get('filler', [])
+        filler_value = self._score_by_issue_density(len(filler_spots), words, weight=1.2)
+        filler_metrics = [
+            {'label': 'Встречи слов‑паразитов', 'value': len(filler_spots)},
+        ]
+        filler_group = self._build_group('Слова‑паразиты', filler_value, diag_from_spots(filler_spots, 'Паразитов не обнаружено'), filler_metrics)
+
+        # 3) Канцеляризмы
+        bur_spots = by_type.get('bureaucracy', [])
+        bur_value = self._score_by_issue_density(len(bur_spots), words, weight=1.1)
+        bur_metrics = [
+            {'label': 'Канцеляризмов', 'value': len(bur_spots)},
+        ]
+        bur_group = self._build_group('Канцеляризмы', bur_value, diag_from_spots(bur_spots, 'Канцеляризмов не обнаружено'), bur_metrics)
+
+        # 4) Пассивный залог
+        passive_spots = by_type.get('passive_overuse', [])
+        passive_value = self._score_by_issue_density(len(passive_spots), words, weight=1.0)
+        passive_metrics = [
+            {'label': 'Случаи пассивного залога', 'value': len(passive_spots)},
+        ]
+        passive_group = self._build_group('Пассивный залог', passive_value, diag_from_spots(passive_spots, 'Нет избыточного пассивного залога'), passive_metrics)
+
+        # 5) Структура (логические провалы)
+        structure_spots = by_type.get('logic_gap', [])
+        structure_value = self._score_by_issue_density(len(structure_spots), words, weight=1.3)
+        structure_metrics = [
+            {'label': 'Логические разрывы', 'value': len(structure_spots)},
+        ]
+        structure_group = self._build_group('Структура', structure_value, diag_from_spots(structure_spots, 'Логических разрывов не обнаружено'), structure_metrics)
+
+        # Итог и рекомендации
+        groups = [
+            ortho_group,
+            bur_group,
+            filler_group,
+            passive_group,
+            structure_group,
+        ]
+
+        # Генерируем детальную обратную связь через нейросеть
+        detailed_feedback = await self._generate_detailed_feedback(text, weak_spots, by_type, words, language)
+        
+        return {
+            'groups': groups,
+            'feedback': detailed_feedback.get('feedback', 'Анализ завершен'),
+            'strengths': detailed_feedback.get('strengths', []),
+            'areas_for_improvement': detailed_feedback.get('areas_for_improvement', []),
+            'recommendations': detailed_feedback.get('recommendations', recommendations[:7]),
+        }
+
+    async def _generate_detailed_feedback(self, text: str, weak_spots: list, by_type: dict, words: int, language: str) -> dict:
+        """Генерирует детальную обратную связь через нейросеть"""
+        
+        # Подготавливаем данные для анализа
+        issues_summary = []
+        for issue_type, spots in by_type.items():
+            if spots:
+                issues_summary.append(f"{issue_type}: {len(spots)} проблем")
+        
+        issues_text = ", ".join(issues_summary) if issues_summary else "проблем не найдено"
+        
+        # Создаем промпт для детального анализа
+        feedback_prompt = f"""
+        Ты — эксперт-редактор текста. Проанализируй текст и найденные проблемы, затем дай детальную обратную связь.
+        
+        ТЕКСТ ДЛЯ АНАЛИЗА:
+        {text[:2000]}...
+        
+        НАЙДЕННЫЕ ПРОБЛЕМЫ: {issues_text}
+        КОЛИЧЕСТВО СЛОВ: {words}
+        
+        ВЕРНИ СТРОГО валидный JSON в следующем формате:
+        {{
+            "feedback": "краткая общая оценка текста (1-2 предложения)",
+            "strengths": [
+                "конкретная сильная сторона 1",
+                "конкретная сильная сторона 2",
+                "конкретная сильная сторона 3"
+            ],
+            "areas_for_improvement": [
+                "конкретная область для улучшения 1", 
+                "конкретная область для улучшения 2",
+                "конкретная область для улучшения 3"
+            ],
+            "recommendations": [
+                "конкретная рекомендация 1",
+                "конкретная рекомендация 2", 
+                "конкретная рекомендация 3",
+                "конкретная рекомендация 4",
+                "конкретная рекомендация 5"
+            ]
+        }}
+        
+        ТРЕБОВАНИЯ:
+        - Будь конкретным и практичным
+        - Учитывай найденные проблемы
+        - Давай 3-5 сильных сторон (если есть)
+        - Давай 3-5 областей для улучшения
+        - Давай 5-7 конкретных рекомендаций
+        - Пиши на русском языке
+        - Если проблем мало, подчеркни сильные стороны
+        - Если проблем много, сфокусируйся на главных недостатках
+        """
+        
+        try:
+            response = await self.openai_service.analyze_text(feedback_prompt, text, expect_json=True)
+            data = json.loads(response)
+            
+            # Валидируем и очищаем данные
+            return {
+                'feedback': data.get('feedback', 'Анализ завершен'),
+                'strengths': [s for s in data.get('strengths', []) if s and s.strip()],
+                'areas_for_improvement': [a for a in data.get('areas_for_improvement', []) if a and a.strip()],
+                'recommendations': [r for r in data.get('recommendations', []) if r and r.strip()],
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate detailed feedback: {e}")
+            # Fallback к простой эвристике
+            avg_value = sum(len(by_type.get(issue_type, [])) for issue_type in ['punctuation_error', 'bureaucracy', 'filler', 'passive_overuse', 'logic_gap']) / 5.0
+            
+            if avg_value < 1:
+                return {
+                    'feedback': 'Отличный текст! Качество изложения высокое.',
+                    'strengths': ['Хорошая структура', 'Понятный язык', 'Отсутствие серьезных ошибок'],
+                    'areas_for_improvement': [],
+                    'recommendations': ['Продолжайте в том же духе', 'Регулярно проверяйте текст на ошибки']
+                }
+            else:
+                return {
+                    'feedback': 'Текст требует доработки. Есть возможности для улучшения.',
+                    'strengths': ['Хорошая тематика', 'Информативность'],
+                    'areas_for_improvement': ['Исправление найденных ошибок', 'Улучшение стиля'],
+                    'recommendations': ['Внимательно проверьте пунктуацию', 'Упростите сложные предложения', 'Уберите лишние слова']
+                }
+
+    def _get_issue_title(self, issue_type: str) -> str:
+        """Получить заголовок проблемы"""
+        titles = {
+            'clarity': 'Неясная формулировка',
+            'redundancy': 'Избыточность текста',
+            'bureaucracy': 'Канцелярские обороты',
+            'filler': 'Слова-паразиты',
+            'passive_overuse': 'Злоупотребление пассивным залогом',
+            'logic_gap': 'Нарушение логики',
+            'tone_mismatch': 'Несоответствие тона',
+            'term_misuse': 'Сложная терминология',
+            'punctuation_error': 'Ошибки пунктуации',
+            'wordiness': 'Длинные предложения',
+            'other': 'Другие проблемы'
+        }
+        return titles.get(issue_type, 'Проблема текста')
+
+    def _get_category_name(self, issue_type: str) -> str:
+        """Получить название категории"""
+        categories = {
+            'clarity': 'Понятность',
+            'redundancy': 'Стиль',
+            'bureaucracy': 'Стиль',
+            'filler': 'Лексика',
+            'passive_overuse': 'Грамматика',
+            'logic_gap': 'Структура',
+            'tone_mismatch': 'Стиль',
+            'term_misuse': 'Понятность',
+            'punctuation_error': 'Грамматика',
+            'wordiness': 'Стиль',
+            'other': 'Общее'
+        }
+        return categories.get(issue_type, 'Общее')
+
+    def _add_good_practices(self, good_practices: list, issues_found: set, text: str):
+        """Добавить положительные практики на основе анализа"""
+        
+        # Проверяем структуру
+        if 'logic_gap' not in issues_found:
+            good_practices.append({
+                'title': 'Четкая структура выступления',
+                'description': 'Выступление имеет логичную последовательность идей',
+                'category': 'Структура'
+            })
+        
+        # Проверяем ясность
+        if 'clarity' not in issues_found:
+            good_practices.append({
+                'title': 'Понятная формулировка идей',
+                'description': 'Основные мысли изложены четко и доступно',
+                'category': 'Содержание'
+            })
+        
+        # Проверяем краткость
+        if 'wordiness' not in issues_found and 'redundancy' not in issues_found:
+            good_practices.append({
+                'title': 'Краткость изложения',
+                'description': 'Информация представлена без лишних слов',
+                'category': 'Стиль'
+            })
+        
+        # Проверяем отсутствие паразитов
+        if 'filler' not in issues_found:
+            good_practices.append({
+                'title': 'Чистая речь',
+                'description': 'Отсутствуют слова-паразиты и лишние элементы',
+                'category': 'Лексика'
+            })
+        
+        # Проверяем призыв к действию (эвристически)
+        if any(word in text.lower() for word in ['рекомендую', 'предлагаю', 'призываю', 'действие', 'решение']):
+            good_practices.append({
+                'title': 'Призыв к действию',
+                'description': 'В выступлении есть четкие рекомендации',
+                'category': 'Заключение'
+            })
+        
+        # Проверяем использование примеров
+        if any(word in text.lower() for word in ['например', 'пример', 'случай', 'ситуация']):
+            good_practices.append({
+                'title': 'Использование примеров',
+                'description': 'Для иллюстрации используются конкретные примеры',
+                'category': 'Содержание'
+            })
+        
+        # Если нет серьезных проблем с тоном
+        if 'tone_mismatch' not in issues_found:
+            good_practices.append({
+                'title': 'Подходящий тон',
+                'description': 'Стиль изложения соответствует цели выступления',
+                'category': 'Стиль'
+            })
+        
+        # Проверяем активный залог
+        if 'passive_overuse' not in issues_found:
+            good_practices.append({
+                'title': 'Активная форма изложения',
+                'description': 'Преобладает активный залог, что делает речь динамичной',
+                'category': 'Грамматика'
+            })
+
+    def get_fallback_analysis(self):
+        """Резервный анализ в случае ошибки API"""
+        return {
+            'overall_score': 75,
+            'good_practices': [
+                {
+                    'title': 'Четкая структура выступления',
+                    'description': 'Выступление имеет логичное построение',
+                    'category': 'Структура',
+                },
+                {
+                    'title': 'Понятная формулировка',
+                    'description': 'Основные идеи изложены доступно',
+                    'category': 'Содержание',
+                },
+            ],
+            'warnings': [
+                {
+                    'title': 'Требуется детальный анализ',
+                    'description': 'Для полного анализа необходимо повторить запрос',
+                    'category': 'Система',
+                    'position': 'Весь текст',
+                },
+            ],
+            'errors': [],
+            'recommendations': [
+                'Повторите анализ для получения детальных рекомендаций',
+                'Проверьте длину текста - очень короткие или длинные тексты анализируются хуже',
+            ],
+        }
+
 
 
 def create_analysis_workflow() -> StateGraph:
