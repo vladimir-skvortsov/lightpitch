@@ -8,6 +8,7 @@ import RecordVideo from './pages/RecordVideo'
 import UploadVideo from './pages/UploadVideo'
 import PitchResults from './pages/PitchResults'
 import PresentationAnalysis from './pages/PresentationAnalysis'
+import SpeechAnalysis from './pages/SpeechAnalysis'
 
 const App = () => {
   return (
@@ -32,6 +33,7 @@ const App = () => {
         <Route path='/pitch/:id/upload' element={<UploadVideo />} />
         <Route path='/pitch/:id/results' element={<PitchResults />} />
         <Route path='/pitch/:id/presentation-analysis' element={<PresentationAnalysis />} />
+        <Route path='/pitch/:id/speech-analysis' element={<SpeechAnalysis />} />
         <Route path='*' element={<NotFound />} />
       </Routes>
     </div>

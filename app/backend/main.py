@@ -377,6 +377,124 @@ async def get_presentation_analysis(pitch_id: str):
     return analysis
 
 
+@app.get('/api/v1/pitches/{pitch_id}/text')
+async def get_speech_analysis(pitch_id: str):
+    """Get speech analysis for a pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+
+    if not pitch.content:
+        raise HTTPException(status_code=404, detail='No speech content found for this pitch')
+
+    # For now, return hardcoded analysis data
+    # TODO: Implement actual speech analysis using AI/ML models
+    analysis = {
+        'overall_score': 72,
+        'good_practices': [
+            {
+                'title': 'Четкая структура выступления',
+                'description': 'Выступление имеет логичное введение, основную часть и заключение',
+                'category': 'Структура',
+            },
+            {
+                'title': 'Использование конкретных примеров',
+                'description': 'Приводятся релевантные примеры для иллюстрации ключевых точек',
+                'category': 'Содержание',
+            },
+            {
+                'title': 'Призыв к действию',
+                'description': 'В заключении четко сформулировано, что должна делать аудитория',
+                'category': 'Заключение',
+            },
+            {
+                'title': 'Эмоциональная связь',
+                'description': 'Используются эмоциональные элементы для вовлечения аудитории',
+                'category': 'Воздействие',
+            },
+            {
+                'title': 'Краткость изложения',
+                'description': 'Основные идеи представлены кратко и ясно',
+                'category': 'Стиль',
+            },
+            {
+                'title': 'Актуальная проблематика',
+                'description': 'Затрагиваются актуальные для аудитории вопросы',
+                'category': 'Релевантность',
+            },
+            {
+                'title': 'Логическая последовательность',
+                'description': 'Идеи представлены в логической последовательности',
+                'category': 'Структура',
+            },
+            {
+                'title': 'Убедительные аргументы',
+                'description': 'Приводятся веские аргументы в поддержку основных тезисов',
+                'category': 'Аргументация',
+            },
+        ],
+        'warnings': [
+            {
+                'title': 'Длинные предложения',
+                'description': 'Некоторые предложения слишком длинные и могут быть трудными для восприятия',
+                'category': 'Стиль',
+                'position': 'Абзацы 2, 5',
+            },
+            {
+                'title': 'Повторы слов',
+                'description': 'Слово "инновация" повторяется слишком часто',
+                'category': 'Лексика',
+                'position': 'По всему тексту',
+            },
+            {
+                'title': 'Недостаток переходов',
+                'description': 'Между некоторыми разделами отсутствуют плавные переходы',
+                'category': 'Структура',
+                'position': 'Абзацы 3-4',
+            },
+            {
+                'title': 'Сложная терминология',
+                'description': 'Используется специальная терминология без объяснений',
+                'category': 'Понятность',
+                'position': 'Абзац 6',
+            },
+            {
+                'title': 'Отсутствие статистики',
+                'description': 'Утверждения не подкреплены числовыми данными',
+                'category': 'Доказательность',
+                'position': 'Абзацы 4, 7',
+            },
+        ],
+        'errors': [
+            {
+                'title': 'Нечеткое введение',
+                'description': 'Во введении не ясно сформулирована цель выступления',
+                'category': 'Структура',
+                'position': 'Абзац 1',
+                'severity': 'high',
+            },
+            {
+                'title': 'Слабое заключение',
+                'description': 'Заключение не резюмирует ключевые моменты выступления',
+                'category': 'Заключение',
+                'position': 'Последний абзац',
+                'severity': 'medium',
+            },
+        ],
+        'recommendations': [
+            'Сократите длинные предложения для лучшего восприятия',
+            'Добавьте конкретную статистику для подтверждения утверждений',
+            'Четче сформулируйте цель выступления во введении',
+            'Улучшите заключение, резюмируя ключевые моменты',
+            'Добавьте переходные фразы между разделами',
+            'Объясните специальную терминологию для широкой аудитории',
+            'Разнообразьте лексику, избегая частых повторов',
+        ],
+    }
+
+    return analysis
+
+
 # AI endpoints
 @app.post('/api/v1/score/pitch')
 async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = Form(None)):
@@ -457,11 +575,6 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
             'Эмоциональная вовлеченность',
         ],
     }
-
-
-@app.post('/api/v1/score/text')
-async def score_text():
-    return {}
 
 
 @app.post('/api/v1/score/presentation')

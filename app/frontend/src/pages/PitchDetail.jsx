@@ -201,28 +201,58 @@ const PitchDetail = () => {
             )}
 
             <div className='block'>
-              <h3>Текст выступления</h3>
-              <div
-                className={`pitch-content ${
-                  !isContentExpanded ? 'pitch-content--collapsed' : 'pitch-content--expanded'
-                }`}
-              >
-                <div className='pitch-content-text'>
-                  {pitch.content.split('\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
+              <div className='pitch-detail-speech'>
+                <h3>Текст выступления</h3>
+                <div className='speech-card clickable-card' onClick={() => navigate(`/pitch/${id}/speech-analysis`)}>
+                  <div className='speech-info'>
+                    <div className='speech-preview'>
+                      <div
+                        className={`pitch-content ${
+                          !isContentExpanded ? 'pitch-content--collapsed' : 'pitch-content--expanded'
+                        }`}
+                      >
+                        <div className='pitch-content-text'>
+                          {pitch.content.split('\n').map((paragraph, index) => (
+                            <p key={index}>{paragraph}</p>
+                          ))}
+                        </div>
+                        {!isContentExpanded && pitch.content.length > 500 && (
+                          <div className='pitch-content-gradient'></div>
+                        )}
+                      </div>
+                    </div>
+                    <div className='speech-arrow'>
+                      <span className='arrow-icon'>→</span>
+                    </div>
+                  </div>
+                  <div className='speech-counters'>
+                    <div className='counter counter--success'>
+                      <span className='counter-icon'>✓</span>
+                      <span className='counter-number'>8</span>
+                    </div>
+                    <div className='counter counter--warning'>
+                      <span className='counter-icon'>⚠</span>
+                      <span className='counter-number'>5</span>
+                    </div>
+                    <div className='counter counter--error'>
+                      <span className='counter-icon'>✕</span>
+                      <span className='counter-number'>2</span>
+                    </div>
+                  </div>
                 </div>
-                {!isContentExpanded && pitch.content.length > 500 && <div className='pitch-content-gradient'></div>}
+                {pitch.content.length > 500 && (
+                  <Button
+                    variant='outline'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsContentExpanded(!isContentExpanded)
+                    }}
+                    className='content-toggle-btn'
+                  >
+                    {isContentExpanded ? '🔼 Свернуть' : '🔽 Показать полностью'}
+                  </Button>
+                )}
               </div>
-              {pitch.content.length > 500 && (
-                <Button
-                  variant='outline'
-                  onClick={() => setIsContentExpanded(!isContentExpanded)}
-                  className='content-toggle-btn'
-                >
-                  {isContentExpanded ? '🔼 Свернуть' : '🔽 Показать полностью'}
-                </Button>
-              )}
             </div>
           </div>
         )}
