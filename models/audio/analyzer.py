@@ -330,16 +330,16 @@ def analyze_mic_quality(audio_path: str, speech_segs: List[Tuple[float, float]])
 
 def build_audio_checklist(
     *,
-                          wpm_spoken: float,
-                          long_pauses: List[Dict],
-                          duration_total: float,
-                          duration_spoken: float,
-                          words_total: int,
-                          filler_count_total: int,
-                          hedge_count_total: int,
-                          coverage: Optional[Dict],
-                          planned_duration_sec: float,
-                          speech_window_sec: float,
+    wpm_spoken: float,
+    long_pauses: List[Dict],
+    duration_total: float,
+    duration_spoken: float,
+    words_total: int,
+    filler_count_total: int,
+    hedge_count_total: int,
+    coverage: Optional[Dict],
+    planned_duration_sec: float,
+    speech_window_sec: float,
     mic_quality: Dict,
 ) -> Dict[str, Dict]:
     def color(s: str) -> str:
@@ -827,7 +827,20 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
     mic_score = calculate_mic_score(mic_loudness_info.get('speech_rms_dbfs'), mic_noise_info.get('snr_db'))
     timing_score = calculate_timing_score(time_info.get('ratio'))
 
-    all_scores = [s for s in [pace_score, fillers_score, hedges_score, pauses_score, coverage_score, spoken_ratio_score, mic_score, timing_score] if s is not None]
+    all_scores = [
+        s
+        for s in [
+            pace_score,
+            fillers_score,
+            hedges_score,
+            pauses_score,
+            coverage_score,
+            spoken_ratio_score,
+            mic_score,
+            timing_score,
+        ]
+        if s is not None
+    ]
     overall_avg = sum(all_scores) / len(all_scores) if all_scores else None
 
     speech_group = {
@@ -894,7 +907,6 @@ def convert_to_frontend_format(analysis_result: Dict) -> Dict:
             {'label': 'Тайминг', 'status': time_info.get('status', 'good'), 'comment': time_info.get('advice', '')},
         ],
     }
-
 
     all_recommendations = []
     for key in [

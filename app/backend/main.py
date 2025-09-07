@@ -54,41 +54,42 @@ app.add_middleware(
 
 
 def extract_audio_from_video(video_path: str, audio_path: str) -> bool:
-    logger.info(f"Starting audio extraction from {video_path}")
-    
+    logger.info(f'Starting audio extraction from {video_path}')
+
     try:
         from moviepy import VideoFileClip
-        logger.info("MoviePy import successful, starting extraction")
-        
+
+        logger.info('MoviePy import successful, starting extraction')
+
         video = VideoFileClip(video_path)
-        logger.info(f"Video loaded successfully, duration: {video.duration}s")
-        
+        logger.info(f'Video loaded successfully, duration: {video.duration}s')
+
         audio = video.audio
         if audio is not None:
-            logger.info("Audio track found, writing to file")
+            logger.info('Audio track found, writing to file')
             audio.write_audiofile(audio_path, logger=None)
             audio.close()
             video.close()
-            logger.info(f"Successfully extracted audio using moviepy from {video_path} to {audio_path}")
-            
+            logger.info(f'Successfully extracted audio using moviepy from {video_path} to {audio_path}')
+
             # Проверим, что файл действительно создался
             if os.path.exists(audio_path):
                 file_size = os.path.getsize(audio_path)
-                logger.info(f"Audio file created successfully, size: {file_size} bytes")
+                logger.info(f'Audio file created successfully, size: {file_size} bytes')
                 return True
             else:
-                logger.error("Audio file was not created")
+                logger.error('Audio file was not created')
                 return False
         else:
-            logger.error("No audio track found in video")
+            logger.error('No audio track found in video')
             video.close()
             return False
-            
+
     except ImportError as e:
-        logger.error(f"moviepy not available - install with: pip install moviepy. Error: {e}")
+        logger.error(f'moviepy not available - install with: pip install moviepy. Error: {e}')
         return False
     except Exception as e:
-        logger.error(f"Error extracting audio with moviepy: {str(e)}")
+        logger.error(f'Error extracting audio with moviepy: {str(e)}')
         return False
 
 
@@ -479,8 +480,8 @@ async def get_speech_analysis(pitch_id: str):
 @app.post('/api/v1/score/pitch')
 async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = Form(None)):
     """Analyze pitch video with real audio analysis and visual analysis"""
-    
-    logger.info(f"Processing video upload: {video.filename} for pitch {pitch_id}")
+
+    logger.info(f'Processing video upload: {video.filename} for pitch {pitch_id}')
 
     # Validate video file
     content_type = video.content_type or ''
@@ -500,68 +501,69 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
     try:
         audio_path = video_path.replace('.mp4', '.wav')
         audio_extracted = extract_audio_from_video(video_path, audio_path)
-        
+
         audio_analysis = None
         if audio_extracted and os.path.exists(audio_path):
             try:
                 script_text = None
                 planned_duration = 120.0
-                
+
                 if pitch_id:
                     pitch = get_pitch_service(pitch_id)
                     if pitch and pitch.content:
                         script_text = pitch.content
                         if hasattr(pitch, 'planned_duration_minutes') and pitch.planned_duration_minutes:
-                            planned_duration = pitch.planned_duration_minutes * 60.0 
+                            planned_duration = pitch.planned_duration_minutes * 60.0
                         else:
                             word_count = len(pitch.content.split())
                             planned_duration = max(60.0, word_count * 0.4)
-                
+
                 script_path = None
                 if script_text:
                     script_path = video_path.replace('.mp4', '_script.txt')
                     with open(script_path, 'w', encoding='utf-8') as f:
                         f.write(script_text)
-                
+
                 from models.audio.analyzer import analyze_file
+
                 raw_result = analyze_file(
                     audio_path=audio_path,
                     script_path=script_path,
                     planned_duration_sec=planned_duration,
                     language='ru',
-                    whisper_size='small'
+                    whisper_size='small',
                 )
-                
+
                 audio_analysis = analyze_file_frontend_format(
                     audio_path=audio_path,
                     script_path=script_path,
                     planned_duration_sec=planned_duration,
                     language='ru',
-                    whisper_size='small'
+                    whisper_size='small',
                 )
-                
+
                 output_dir = '../../models/audio/output'
                 os.makedirs(output_dir, exist_ok=True)
-                
+
                 raw_path = os.path.join(output_dir, 'analysis_raw.json')
                 with open(raw_path, 'w', encoding='utf-8') as f:
                     json.dump(raw_result, f, ensure_ascii=False, indent=2)
-                logger.info(f"Raw analysis saved to {raw_path}")
-                
+                logger.info(f'Raw analysis saved to {raw_path}')
+
                 frontend_path = os.path.join(output_dir, 'analysis_frontend.json')
                 with open(frontend_path, 'w', encoding='utf-8') as f:
                     json.dump(audio_analysis, f, ensure_ascii=False, indent=2)
-                logger.info(f"Frontend analysis saved to {frontend_path}")
-                
+                logger.info(f'Frontend analysis saved to {frontend_path}')
+
                 if script_path and os.path.exists(script_path):
                     os.unlink(script_path)
-                    
+
             except Exception as e:
-                logger.error(f"Audio analysis failed: {str(e)}")
+                logger.error(f'Audio analysis failed: {str(e)}')
                 audio_analysis = None
         else:
-            logger.warning("Audio extraction failed - using fallback data")
-        
+            logger.warning('Audio extraction failed - using fallback data')
+
         # Анализ видео (визуальная часть)
         grader = VideoGrader()
         frames = grader.split_video(video_path, step_seconds=1)
@@ -570,6 +572,7 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
 
         # Generate hardcoded scores for other groups (пока)
         import random
+
         base_score = random.uniform(6.5, 9.0)
         delivery_score = round((base_score + random.uniform(-0.4, 0.3)) / 10, 2)
         engagement_score = round((base_score + random.uniform(-0.2, 0.5)) / 10, 2)
@@ -583,10 +586,10 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
 
     speech_group = None
     if audio_analysis and 'groups' in audio_analysis and len(audio_analysis['groups']) > 0:
-        logger.info("Using real audio analysis data")
+        logger.info('Using real audio analysis data')
         speech_group = audio_analysis['groups'][0]
     else:
-        logger.info("Using fallback hardcoded data - audio analysis failed or empty")
+        logger.info('Using fallback hardcoded data - audio analysis failed or empty')
         speech_score = round(base_score / 10, 2)
         speech_group = {
             'name': 'Речь и артикуляция',
@@ -741,24 +744,25 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
 
     default['groups'][2] = report
 
-    
     if not default['recommendations']:
         default['recommendations'] = [
             'Немного замедлите темп речи для лучшего восприятия',
             'Добавьте больше жестов для усиления эмоциональной составляющей',
             'Используйте больше пауз для акцентирования важных моментов',
         ]
-    
+
     if not default['feedback']:
-        default['feedback'] = 'Ваше выступление демонстрирует профессиональный уровень. Рекомендации помогут достичь еще лучших результатов.'
-    
+        default['feedback'] = (
+            'Ваше выступление демонстрирует профессиональный уровень. Рекомендации помогут достичь еще лучших результатов.'
+        )
+
     if not default['strengths']:
         default['strengths'] = [
             'Четкая артикуляция и профессиональная речь',
             'Хорошая структура и логика выступления',
             'Уверенная подача материала',
         ]
-    
+
     if not default['areas_for_improvement']:
         default['areas_for_improvement'] = [
             'Оптимизация темпа речи',
@@ -991,6 +995,7 @@ async def score_audio(
                     duration_to_use = pitch.planned_duration_minutes * 60.0  # Конвертируем в секунды
 
             from models.audio.analyzer import analyze_file
+
             raw_result = analyze_file(
                 audio_path=audio_path,
                 script_path=script_path,
@@ -998,7 +1003,7 @@ async def score_audio(
                 language='ru',
                 whisper_size='small',
             )
-            
+
             result = analyze_file_frontend_format(
                 audio_path=audio_path,
                 script_path=script_path,
@@ -1006,19 +1011,19 @@ async def score_audio(
                 language='ru',
                 whisper_size='small',
             )
-            
+
             output_dir = '../../models/audio/output'
             os.makedirs(output_dir, exist_ok=True)
-            
+
             raw_path = os.path.join(output_dir, 'analysis_raw.json')
             with open(raw_path, 'w', encoding='utf-8') as f:
                 json.dump(raw_result, f, ensure_ascii=False, indent=2)
-            logger.info(f"Raw analysis saved to {raw_path}")
-            
+            logger.info(f'Raw analysis saved to {raw_path}')
+
             frontend_path = os.path.join(output_dir, 'analysis_frontend.json')
             with open(frontend_path, 'w', encoding='utf-8') as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
-            logger.info(f"Frontend analysis saved to {frontend_path}")
+            logger.info(f'Frontend analysis saved to {frontend_path}')
 
             return result
 
