@@ -11,6 +11,7 @@
       font-size: 1rem;
       font-weight: 600;
       color: var(--alfa-dark-gray);
+      cursor: help;
     }
   }
 
@@ -18,13 +19,16 @@
     margin-top: 16px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 12px;
+    width: 100%;
 
     .edit-spinner {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
+      width: 100%;
 
       .spinner {
         width: 24px;
@@ -35,6 +39,12 @@
         animation: spin 1s linear infinite;
         margin: 0;
       }
+    }
+
+    // Make the action button stretch full width
+    button,
+    a {
+      width: 100%;
     }
   }
 
@@ -57,6 +67,68 @@
     .markdown-list {
       margin: 8px 0 8px 20px;
       list-style: disc;
+    }
+  }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    .section-title {
+      margin: 0;
+    }
+
+    .result-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .view-toggle {
+        display: inline-flex;
+        border: 1px solid var(--alfa-light-gray);
+        border-radius: 10px;
+        overflow: hidden;
+
+        .toggle-btn {
+          padding: 10px 16px;
+          background: #fff;
+          border: none;
+          cursor: pointer;
+          color: var(--alfa-dark-gray);
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        .toggle-btn.active {
+          background: var(--alfa-red);
+          color: #fff;
+        }
+      }
+
+      .copy-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+
+        .info-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          border: 1px solid var(--alfa-light-gray);
+          color: var(--alfa-dark-gray);
+          font-weight: 700;
+          font-size: 12px;
+          cursor: default;
+          background: #fff;
+        }
+      }
     }
   }
 }

@@ -12,6 +12,8 @@ const SpeechAnalysis = () => {
   const [processing, setProcessing] = useState(false)
   const [editedText, setEditedText] = useState('')
   const [selectedStyle, setSelectedStyle] = useState(null) // 'casual' | 'professional' | 'scientific' | null
+  const [viewMode, setViewMode] = useState('edited') // 'original' | 'edited'
+  const [copied, setCopied] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -137,12 +139,33 @@ const SpeechAnalysis = () => {
       }
       const data = await resp.json()
       setEditedText(data?.final_edited_text || '')
+      setViewMode('edited')
     } catch (e) {
       setError(e.message)
     } finally {
       setProcessing(false)
     }
   }, [sourceText, selectedStyle, processing])
+
+  const handleCopyEdited = useCallback(async () => {
+    if (!editedText) return
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(editedText)
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = editedText
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch (_) {
+      // ignore
+    }
+  }, [editedText])
 
   const getStatusIcon = useCallback((status) => {
     switch (status) {
@@ -344,29 +367,29 @@ const SpeechAnalysis = () => {
             <h2 className='section-title'>🛠 Редактирование текста</h2>
             <div className='section-content'>
               <div className='style-checkboxes' style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title='Разговорный, дружелюбный тон, простые формулировки'>
                   <input
                     type='checkbox'
                     checked={selectedStyle === 'casual'}
                     onChange={() => handleToggleStyle('casual')}
                   />
-                  <span>Неформальный</span>
+                  <span title='Разговорный, дружелюбный тон, простые формулировки'>Неформальный</span>
                 </label>
-                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title='Деловой, структурированный стиль, ясность и краткость'>
                   <input
                     type='checkbox'
                     checked={selectedStyle === 'professional'}
                     onChange={() => handleToggleStyle('professional')}
                   />
-                  <span>Профессиональный</span>
+                  <span title='Деловой, структурированный стиль, ясность и краткость'>Профессиональный</span>
                 </label>
-                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label className='checkbox-item' style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title='Академический тон, строгая терминология и логика изложения'>
                   <input
                     type='checkbox'
                     checked={selectedStyle === 'scientific'}
                     onChange={() => handleToggleStyle('scientific')}
                   />
-                  <span>Научный</span>
+                  <span title='Академический тон, строгая терминология и логика изложения'>Научный</span>
                 </label>
               </div>
 
@@ -387,11 +410,40 @@ const SpeechAnalysis = () => {
           {/* Edited text result */}
           {editedText && (
             <div className='block'>
-              <h2 className='section-title'>📝 Итоговый текст</h2>
+              <div className='result-header'>
+                <h2 className='section-title'>
+                  {viewMode === 'edited' ? '📝 Итоговый текст' : '📄 Оригинальный текст'}
+                </h2>
+                <div className='result-controls'>
+                  <div className='view-toggle' role='tablist' aria-label='Переключатель До/После'>
+                    <button
+                      className={`toggle-btn ${viewMode === 'original' ? 'active' : ''}`}
+                      onClick={() => setViewMode('original')}
+                      type='button'
+                    >
+                      До
+                    </button>
+                    <button
+                      className={`toggle-btn ${viewMode === 'edited' ? 'active' : ''}`}
+                      onClick={() => setViewMode('edited')}
+                      type='button'
+                    >
+                      После
+                    </button>
+                  </div>
+                  {viewMode === 'edited' && (
+                    <div className='copy-wrap'>
+                      <Button variant='outline' onClick={handleCopyEdited} disabled={!editedText}>
+                        {copied ? 'Скопировано!' : 'Скопировать итоговый текст'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className='section-content'>
                 <div className='pitch-content pitch-content--expanded'>
                   <div className='pitch-content-text'>
-                    {renderMarkdownContent(editedText)}
+                    {renderMarkdownContent(viewMode === 'edited' ? editedText : sourceText)}
                   </div>
                 </div>
               </div>
