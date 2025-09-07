@@ -468,9 +468,8 @@ async def get_presentation_analysis(pitch_id: str):
     return analysis
 
 
-@app.get('/api/v1/pitches/{pitch_id}/text')
 async def get_speech_analysis(pitch_id: str):
-    """Get speech analysis for a pitch"""
+    """Get speech analysis for a pitch with new format"""
     pitch = get_pitch_service(pitch_id)
     if not pitch:
         raise HTTPException(status_code=404, detail='Pitch not found')
