@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, EmailStr
 
 
 class PitchBase(BaseModel):
@@ -125,3 +125,46 @@ class HypotheticalQuestion(HypotheticalQuestionBase):
     id: str
     created_at: datetime
     updated_at: datetime
+
+
+# User Models
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str
+    is_active: bool = True
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class User(UserBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class UserInDB(User):
+    hashed_password: str
+
+
+# Authentication Models
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
