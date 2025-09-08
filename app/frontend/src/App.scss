@@ -11,7 +11,14 @@
 .header {
   color: var(--alfa-black);
   padding: 40px 0;
-  text-align: center;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-link {
+  text-decoration: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,8 +43,30 @@
   font-size: 1.2rem;
   font-weight: 400;
   opacity: 0.9;
-  max-width: 600px;
-  margin: 0 auto;
+  text-align: center;
+}
+
+// Navigation styles
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-authenticated {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-guest {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-greeting {
+  font-weight: 400;
 }
 
 // Main content wrapper - общие стили для всех страниц
@@ -273,12 +302,35 @@
 
 // Общие responsive стили
 @media (max-width: 768px) {
+  .header {
+    padding: 16px 20px;
+
+    .nav-authenticated {
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .nav-guest {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .user-greeting {
+      font-size: 0.8rem;
+    }
+  }
+
   .container {
     padding: 0 16px;
   }
 
   .logo {
-    font-size: 2.5rem;
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
   }
 
   .content-header {

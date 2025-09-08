@@ -128,7 +128,7 @@ const PitchDetail = () => {
           <div className='error'>
             <p>⚠️ {error}</p>
             <Button variant='primary' as={Link} to='/'>
-              Вернуться на главную
+              Вернуться к питчам
             </Button>
           </div>
         </div>
@@ -141,7 +141,7 @@ const PitchDetail = () => {
       <div className='container'>
         <div className='content-header'>
           <Button variant='outline' as={Link} to='/'>
-            ← Назад к списку
+            ← Назад к питчам
           </Button>
           <div className='pitch-actions'>
             <Dropdown trigger={<Button variant='primary'>Начать тренировку</Button>}>

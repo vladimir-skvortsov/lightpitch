@@ -75,8 +75,8 @@ const Landing = () => {
             </p>
             <div className='hero-actions'>
               {isAuthenticated() ? (
-                <Button variant='primary' size='large' as={Link} to='/dashboard'>
-                  Перейти к питчам
+                <Button variant='primary' size='large' as={Link} to='/create'>
+                  Создать питч
                 </Button>
               ) : (
                 <>
