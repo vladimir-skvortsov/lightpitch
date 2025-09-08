@@ -1,0 +1,141 @@
+// Authentication pages styles
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #e5e7eb;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--alfa-dark-gray);
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--alfa-gray);
+    font-size: 1rem;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-weight: 600;
+    color: var(--alfa-dark-gray);
+    font-size: 0.9rem;
+  }
+
+  input {
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+
+    &:focus {
+      outline: none;
+      border-color: #ef394e;
+      box-shadow: 0 0 0 3px rgba(239, 57, 78, 0.1);
+    }
+
+    &:disabled {
+      background-color: #f9fafb;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+
+  p {
+    color: var(--alfa-gray);
+    font-size: 0.9rem;
+  }
+}
+
+.auth-link {
+  color: #ef394e;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #d1212f;
+    text-decoration: underline;
+  }
+}
+
+// Responsive design
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 24px;
+    border-radius: 12px;
+  }
+
+  .auth-header {
+    margin-bottom: 24px;
+
+    h1 {
+      font-size: 1.8rem;
+    }
+  }
+
+  .form-group {
+    gap: 6px;
+
+    input {
+      padding: 12px 14px;
+    }
+  }
+}
