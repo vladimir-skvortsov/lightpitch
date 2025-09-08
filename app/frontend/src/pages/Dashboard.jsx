@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Button from '../components/Button'
@@ -10,28 +10,30 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchPitches = async () => {
-      try {
-        const response = await fetch('/api/v1/pitches/', {
-          headers: getAuthHeaders(),
-        })
+  const fetchPitches = useCallback(async () => {
+    try {
+      setLoading(true)
 
-        if (response.ok) {
-          const data = await response.json()
-          setPitches(data)
-        } else {
-          throw new Error('Failed to fetch pitches')
-        }
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+      const response = await fetch('/api/v1/pitches/', {
+        headers: getAuthHeaders(),
+      })
+
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки выступлений')
       }
-    }
+      const data = await response.json()
 
-    fetchPitches()
+      setPitches(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }, [getAuthHeaders])
+
+  useEffect(() => {
+    fetchPitches()
+  }, [fetchPitches, getAuthHeaders])
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -57,28 +59,41 @@ const Dashboard = () => {
   return (
     <main className='main'>
       <div className='container'>
-        <div className='dashboard-page'>
-          <div className='dashboard-header'>
-            <div className='welcome-section'>
-              <h1>Ваши выступления</h1>
-            </div>
-            <div className='header-actions'>
-              <Button variant='primary' as={Link} to='/create'>
-                Добавить
-              </Button>
-            </div>
+        <div className='content-header'>
+          <h2>Ваши выступления</h2>
+          <Button variant='primary' as={Link} to='/create'>
+            Добавить
+          </Button>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className='loading'>
+            <div className='spinner'></div>
+            <p>Загрузка выступлений...</p>
           </div>
+        )}
 
-          {error && <div className='error-message'>⚠️ {error}</div>}
+        {/* Error State */}
+        {error && (
+          <div className='error'>
+            <p>⚠️ {error}</p>
+            <Button variant='secondary' onClick={fetchPitches}>
+              Попробовать снова
+            </Button>
+          </div>
+        )}
 
-          <div className='dashboard-content'>
+        {/* Pitches List */}
+        {!loading && !error && (
+          <>
             {pitches.length === 0 ? (
               <div className='empty-state'>
-                <div className='empty-icon'>🎯</div>
-                <h3>У вас пока нет питчей</h3>
-                <p>Создайте свой первый питч и начните улучшать навыки выступлений</p>
+                <div className='empty-icon'>🎤</div>
+                <h3>У вас пока нет выступлений</h3>
+                <p>Создайте своё первое выступление, чтобы начать тренировку с AI</p>
                 <Button variant='primary' as={Link} to='/create'>
-                  Создать первый питч
+                  Создать первое выступление
                 </Button>
               </div>
             ) : (
@@ -105,8 +120,8 @@ const Dashboard = () => {
                 ))}
               </div>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </main>
   )
