@@ -48,10 +48,12 @@
 
   &:hover:not(:disabled):not(.btn--disabled) {
     background: var(--alfa-light-gray);
+    color: var(--alfa-black);
   }
 
   &:active:not(:disabled):not(.btn--disabled) {
-    background: var(--alfa-dark-red);
+    background: var(--alfa-gray);
+    color: var(--alfa-black);
   }
 }
 
