@@ -1,11 +1,14 @@
-from typing import Dict
+from typing import Dict, List
 
-from db_models import Pitch
+from db_models import Pitch, TrainingSession, HypotheticalQuestion
 
-# In-memory storage for pitches (temporary until database is added)
+# In-memory storage (temporary until database is added)
 pitches_db: Dict[str, Pitch] = {}
+training_sessions_db: Dict[str, TrainingSession] = {}
+hypothetical_questions_db: Dict[str, HypotheticalQuestion] = {}
 
 
+# Pitch operations
 def get_pitch_by_id(pitch_id: str) -> Pitch | None:
     """Get a pitch by its ID"""
     return pitches_db.get(pitch_id)
@@ -30,3 +33,67 @@ def delete_pitch_by_id(pitch_id: str) -> Pitch | None:
 def pitch_exists(pitch_id: str) -> bool:
     """Check if a pitch exists"""
     return pitch_id in pitches_db
+
+
+# Training Session operations
+def get_training_session_by_id(session_id: str) -> TrainingSession | None:
+    """Get a training session by its ID"""
+    return training_sessions_db.get(session_id)
+
+
+def get_training_sessions_by_pitch_id(pitch_id: str) -> List[TrainingSession]:
+    """Get all training sessions for a specific pitch"""
+    return [session for session in training_sessions_db.values() if session.pitch_id == pitch_id]
+
+
+def get_all_training_sessions() -> List[TrainingSession]:
+    """Get all training sessions"""
+    return list(training_sessions_db.values())
+
+
+def store_training_session(session: TrainingSession) -> TrainingSession:
+    """Store a training session in the database"""
+    training_sessions_db[session.id] = session
+    return session
+
+
+def delete_training_session_by_id(session_id: str) -> TrainingSession | None:
+    """Delete a training session by its ID and return the deleted session"""
+    return training_sessions_db.pop(session_id, None)
+
+
+def training_session_exists(session_id: str) -> bool:
+    """Check if a training session exists"""
+    return session_id in training_sessions_db
+
+
+# Hypothetical Question operations
+def get_hypothetical_question_by_id(question_id: str) -> HypotheticalQuestion | None:
+    """Get a hypothetical question by its ID"""
+    return hypothetical_questions_db.get(question_id)
+
+
+def get_hypothetical_questions_by_pitch_id(pitch_id: str) -> List[HypotheticalQuestion]:
+    """Get all hypothetical questions for a specific pitch"""
+    return [question for question in hypothetical_questions_db.values() if question.pitch_id == pitch_id]
+
+
+def get_all_hypothetical_questions() -> List[HypotheticalQuestion]:
+    """Get all hypothetical questions"""
+    return list(hypothetical_questions_db.values())
+
+
+def store_hypothetical_question(question: HypotheticalQuestion) -> HypotheticalQuestion:
+    """Store a hypothetical question in the database"""
+    hypothetical_questions_db[question.id] = question
+    return question
+
+
+def delete_hypothetical_question_by_id(question_id: str) -> HypotheticalQuestion | None:
+    """Delete a hypothetical question by its ID and return the deleted question"""
+    return hypothetical_questions_db.pop(question_id, None)
+
+
+def hypothetical_question_exists(question_id: str) -> bool:
+    """Check if a hypothetical question exists"""
+    return question_id in hypothetical_questions_db

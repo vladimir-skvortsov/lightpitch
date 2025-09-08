@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from enum import Enum
 
 from pydantic import BaseModel, field_validator
 
@@ -37,6 +38,90 @@ class PitchUpdate(BaseModel):
 
 
 class Pitch(PitchBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+# Training Session Models
+class TrainingType(str, Enum):
+    VIDEO_UPLOAD = 'video_upload'
+    VIDEO_RECORD = 'video_record'
+    AUDIO_ONLY = 'audio_only'
+
+
+class TrainingSessionBase(BaseModel):
+    pitch_id: str
+    training_type: TrainingType
+    duration_seconds: Optional[float] = None
+    video_file_path: Optional[str] = None
+    audio_file_path: Optional[str] = None
+    analysis_results: Optional[Dict[str, Any]] = None
+    overall_score: Optional[float] = None
+    notes: Optional[str] = None
+
+
+class TrainingSessionCreate(TrainingSessionBase):
+    pass
+
+
+class TrainingSessionUpdate(BaseModel):
+    duration_seconds: Optional[float] = None
+    video_file_path: Optional[str] = None
+    audio_file_path: Optional[str] = None
+    analysis_results: Optional[Dict[str, Any]] = None
+    overall_score: Optional[float] = None
+    notes: Optional[str] = None
+
+
+class TrainingSession(TrainingSessionBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+# Hypothetical Questions Models
+class QuestionCategory(str, Enum):
+    BUSINESS = 'business'
+    TECHNICAL = 'technical'
+    PERSONAL = 'personal'
+    STRATEGY = 'strategy'
+    FINANCE = 'finance'
+    PRODUCT = 'product'
+    MARKET = 'market'
+    TEAM = 'team'
+
+
+class QuestionDifficulty(str, Enum):
+    EASY = 'easy'
+    MEDIUM = 'medium'
+    HARD = 'hard'
+
+
+class HypotheticalQuestionBase(BaseModel):
+    pitch_id: str
+    question_text: str
+    category: QuestionCategory
+    difficulty: QuestionDifficulty
+    suggested_answer: Optional[str] = None
+    context: Optional[str] = None
+    preparation_tips: Optional[List[str]] = []
+
+
+class HypotheticalQuestionCreate(HypotheticalQuestionBase):
+    pass
+
+
+class HypotheticalQuestionUpdate(BaseModel):
+    question_text: Optional[str] = None
+    category: Optional[QuestionCategory] = None
+    difficulty: Optional[QuestionDifficulty] = None
+    suggested_answer: Optional[str] = None
+    context: Optional[str] = None
+    preparation_tips: Optional[List[str]] = None
+
+
+class HypotheticalQuestion(HypotheticalQuestionBase):
     id: str
     created_at: datetime
     updated_at: datetime

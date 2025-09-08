@@ -9,6 +9,8 @@ import UploadVideo from './pages/UploadVideo'
 import PitchResults from './pages/PitchResults'
 import PresentationAnalysis from './pages/PresentationAnalysis'
 import SpeechAnalysis from './pages/SpeechAnalysis'
+import TrainingSessions from './pages/TrainingSessions'
+import HypotheticalQuestions from './pages/HypotheticalQuestions'
 
 const App = () => {
   return (
@@ -34,6 +36,8 @@ const App = () => {
         <Route path='/pitch/:id/results' element={<PitchResults />} />
         <Route path='/pitch/:id/presentation-analysis' element={<PresentationAnalysis />} />
         <Route path='/pitch/:id/speech-analysis' element={<SpeechAnalysis />} />
+        <Route path='/pitch/:id/training-sessions' element={<TrainingSessions />} />
+        <Route path='/pitch/:id/hypothetical-questions' element={<HypotheticalQuestions />} />
         <Route path='*' element={<NotFound />} />
       </Routes>
     </div>

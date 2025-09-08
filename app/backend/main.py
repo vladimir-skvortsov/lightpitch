@@ -17,12 +17,43 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 from config import PROJECT_NAME
-from db_models import Pitch, PitchCreate, PitchUpdate
+from db_models import (
+    Pitch,
+    PitchCreate,
+    PitchUpdate,
+    TrainingSession,
+    TrainingSessionCreate,
+    TrainingSessionUpdate,
+    HypotheticalQuestion,
+    HypotheticalQuestionCreate,
+    HypotheticalQuestionUpdate,
+)
 from pitches import create_pitch as create_pitch_service
 from pitches import delete_pitch as delete_pitch_service
 from pitches import get_pitch as get_pitch_service
 from pitches import list_pitches as list_pitches_service
 from pitches import update_pitch as update_pitch_service
+
+from training_sessions import (
+    create_training_session as create_training_session_service,
+    get_training_session as get_training_session_service,
+    get_training_sessions_for_pitch as get_training_sessions_for_pitch_service,
+    list_training_sessions as list_training_sessions_service,
+    update_training_session as update_training_session_service,
+    delete_training_session as delete_training_session_service,
+    get_training_session_stats as get_training_session_stats_service,
+)
+
+from hypothetical_questions import (
+    create_hypothetical_question as create_hypothetical_question_service,
+    get_hypothetical_question as get_hypothetical_question_service,
+    get_hypothetical_questions_for_pitch as get_hypothetical_questions_for_pitch_service,
+    list_hypothetical_questions as list_hypothetical_questions_service,
+    update_hypothetical_question as update_hypothetical_question_service,
+    delete_hypothetical_question as delete_hypothetical_question_service,
+    generate_hypothetical_questions_for_pitch as generate_hypothetical_questions_for_pitch_service,
+    get_hypothetical_questions_stats as get_hypothetical_questions_stats_service,
+)
 
 from models.audio.analyzer import analyze_file_frontend_format
 from models.text_editor import (
@@ -483,6 +514,8 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
 
     logger.info(f'Processing video upload: {video.filename} for pitch {pitch_id}')
 
+    from db_models import TrainingType, TrainingSessionCreate
+
     # Validate video file
     content_type = video.content_type or ''
     if not content_type.startswith('video/'):
@@ -770,6 +803,37 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
             'Использование пауз для акцентирования',
         ]
 
+    # Calculate overall score from group scores
+    group_scores = [group['value'] for group in default['groups'] if isinstance(group.get('value'), (int, float))]
+    overall_score = round(sum(group_scores) / len(group_scores), 2) if group_scores else 0.0
+
+    # Save training session if pitch_id is provided
+    if pitch_id:
+        try:
+            # Calculate video duration (this is a placeholder - in real implementation,
+            # you would extract actual duration from the video file)
+            video_duration = random.uniform(60, 300)  # Random duration between 1-5 minutes
+
+            training_session_data = TrainingSessionCreate(
+                pitch_id=pitch_id,
+                training_type=TrainingType.VIDEO_UPLOAD,
+                duration_seconds=video_duration,
+                video_file_path=None,  # Would store actual file path in production
+                analysis_results=default,
+                overall_score=overall_score,
+                notes=f'Video analysis completed. Overall score: {overall_score}',
+            )
+
+            created_session = create_training_session_service(training_session_data)
+            logger.info(f'Training session saved with ID: {created_session.id}')
+
+            # Add session info to response
+            default['training_session_id'] = created_session.id
+
+        except Exception as e:
+            logger.error(f'Failed to save training session: {str(e)}')
+            # Don't fail the whole request if session saving fails
+
     return default
 
 
@@ -978,7 +1042,7 @@ async def score_audio(
 
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            audio_path = os.path.join(temp_dir, f"audio_{uuid.uuid4()}{os.path.splitext(audio.filename or '.wav')[1]}")
+            audio_path = os.path.join(temp_dir, f'audio_{uuid.uuid4()}{os.path.splitext(audio.filename or ".wav")[1]}')
             with open(audio_path, 'wb') as f:
                 f.write(audio_content)
 
@@ -1050,3 +1114,133 @@ async def audio_analysis_status():
             'message': f'Audio analysis not available: {str(e)}',
             'error': 'Missing dependencies',
         }
+
+
+# Training Sessions endpoints
+@app.post('/api/v1/training-sessions/', response_model=TrainingSession)
+async def create_training_session_endpoint(session: TrainingSessionCreate):
+    """Create a new training session"""
+    return create_training_session_service(session)
+
+
+@app.get('/api/v1/training-sessions/', response_model=list[TrainingSession])
+async def get_all_training_sessions():
+    """Get all training sessions"""
+    return list_training_sessions_service()
+
+
+@app.get('/api/v1/training-sessions/{session_id}', response_model=TrainingSession)
+async def get_training_session_endpoint(session_id: str):
+    """Get a specific training session by ID"""
+    session = get_training_session_service(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail='Training session not found')
+    return session
+
+
+@app.get('/api/v1/pitches/{pitch_id}/training-sessions', response_model=list[TrainingSession])
+async def get_training_sessions_for_pitch_endpoint(pitch_id: str):
+    """Get all training sessions for a specific pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+    return get_training_sessions_for_pitch_service(pitch_id)
+
+
+@app.get('/api/v1/pitches/{pitch_id}/training-sessions/stats')
+async def get_training_session_stats_endpoint(pitch_id: str):
+    """Get training session statistics for a specific pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+    return get_training_session_stats_service(pitch_id)
+
+
+@app.put('/api/v1/training-sessions/{session_id}', response_model=TrainingSession)
+async def update_training_session_endpoint(session_id: str, session_update: TrainingSessionUpdate):
+    """Update an existing training session"""
+    updated_session = update_training_session_service(session_id, session_update)
+    if not updated_session:
+        raise HTTPException(status_code=404, detail='Training session not found')
+    return updated_session
+
+
+@app.delete('/api/v1/training-sessions/{session_id}')
+async def delete_training_session_endpoint(session_id: str):
+    """Delete a training session"""
+    deleted_session = delete_training_session_service(session_id)
+    if not deleted_session:
+        raise HTTPException(status_code=404, detail='Training session not found')
+    return {'message': f'Training session has been deleted successfully'}
+
+
+# Hypothetical Questions endpoints
+@app.post('/api/v1/hypothetical-questions/', response_model=HypotheticalQuestion)
+async def create_hypothetical_question_endpoint(question: HypotheticalQuestionCreate):
+    """Create a new hypothetical question"""
+    return create_hypothetical_question_service(question)
+
+
+@app.get('/api/v1/hypothetical-questions/', response_model=list[HypotheticalQuestion])
+async def get_all_hypothetical_questions():
+    """Get all hypothetical questions"""
+    return list_hypothetical_questions_service()
+
+
+@app.get('/api/v1/hypothetical-questions/{question_id}', response_model=HypotheticalQuestion)
+async def get_hypothetical_question_endpoint(question_id: str):
+    """Get a specific hypothetical question by ID"""
+    question = get_hypothetical_question_service(question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail='Hypothetical question not found')
+    return question
+
+
+@app.get('/api/v1/pitches/{pitch_id}/hypothetical-questions', response_model=list[HypotheticalQuestion])
+async def get_hypothetical_questions_for_pitch_endpoint(pitch_id: str):
+    """Get all hypothetical questions for a specific pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+    return get_hypothetical_questions_for_pitch_service(pitch_id)
+
+
+@app.get('/api/v1/pitches/{pitch_id}/hypothetical-questions/stats')
+async def get_hypothetical_questions_stats_endpoint(pitch_id: str):
+    """Get hypothetical questions statistics for a specific pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+    return get_hypothetical_questions_stats_service(pitch_id)
+
+
+@app.post('/api/v1/pitches/{pitch_id}/hypothetical-questions/generate')
+async def generate_hypothetical_questions_endpoint(pitch_id: str, count: int = 5):
+    """Generate hypothetical questions for a specific pitch"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+
+    if count < 1 or count > 20:
+        raise HTTPException(status_code=400, detail='Count must be between 1 and 20')
+
+    questions = generate_hypothetical_questions_for_pitch_service(pitch_id, count)
+    return {'message': f'Generated {len(questions)} hypothetical questions', 'questions': questions}
+
+
+@app.put('/api/v1/hypothetical-questions/{question_id}', response_model=HypotheticalQuestion)
+async def update_hypothetical_question_endpoint(question_id: str, question_update: HypotheticalQuestionUpdate):
+    """Update an existing hypothetical question"""
+    updated_question = update_hypothetical_question_service(question_id, question_update)
+    if not updated_question:
+        raise HTTPException(status_code=404, detail='Hypothetical question not found')
+    return updated_question
+
+
+@app.delete('/api/v1/hypothetical-questions/{question_id}')
+async def delete_hypothetical_question_endpoint(question_id: str):
+    """Delete a hypothetical question"""
+    deleted_question = delete_hypothetical_question_service(question_id)
+    if not deleted_question:
+        raise HTTPException(status_code=404, detail='Hypothetical question not found')
+    return {'message': f'Hypothetical question has been deleted successfully'}

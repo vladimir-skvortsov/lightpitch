@@ -364,6 +364,321 @@
   }
 }
 
+// Training Sessions Widget Styles
+.pitch-detail-training {
+  .training-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &.clickable-card {
+      cursor: pointer;
+
+      &:hover {
+        border-color: #ef394e;
+        box-shadow: 0 8px 25px rgba(239, 57, 78, 0.15);
+        transform: translateY(-2px);
+
+        .arrow-icon {
+          transform: translateX(4px);
+          color: #ef394e;
+        }
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(239, 57, 78, 0.1);
+      }
+    }
+  }
+
+  .training-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .training-overview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .training-icon {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+
+      .icon {
+        font-size: 1.5rem;
+      }
+
+      .training-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .training-title {
+          font-weight: 600;
+          color: #1a1a1a;
+          font-size: 1rem;
+        }
+
+        .training-subtitle {
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+      }
+    }
+
+    .training-arrow {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+
+      .arrow-icon {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        transition: all 0.3s ease;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .training-counters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      min-width: 60px;
+      justify-content: center;
+
+      .counter-icon {
+        font-size: 0.875rem;
+      }
+
+      .counter-number {
+        font-size: 0.875rem;
+        font-weight: 700;
+      }
+
+      .counter-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      &--info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+      }
+
+      &--neutral {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+      }
+
+      &--success {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+
+        .counter-icon {
+          color: #16a34a;
+        }
+      }
+
+      &--warning {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+
+        .counter-icon {
+          color: #ea580c;
+        }
+      }
+
+      &--error {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+
+        .counter-icon {
+          color: #ef4444;
+        }
+      }
+    }
+  }
+}
+
+// Hypothetical Questions Widget Styles
+.pitch-detail-questions {
+  .questions-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &.clickable-card {
+      cursor: pointer;
+
+      &:hover {
+        border-color: #ef394e;
+        box-shadow: 0 8px 25px rgba(239, 57, 78, 0.15);
+        transform: translateY(-2px);
+
+        .arrow-icon {
+          transform: translateX(4px);
+          color: #ef394e;
+        }
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(239, 57, 78, 0.1);
+      }
+    }
+  }
+
+  .questions-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .questions-overview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .questions-icon {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+
+      .icon {
+        font-size: 1.5rem;
+      }
+
+      .questions-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .questions-title {
+          font-weight: 600;
+          color: #1a1a1a;
+          font-size: 1rem;
+        }
+
+        .questions-subtitle {
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+      }
+    }
+
+    .questions-arrow {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+
+      .arrow-icon {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        transition: all 0.3s ease;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .questions-counters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      min-width: 60px;
+      justify-content: center;
+
+      .counter-icon {
+        font-size: 0.875rem;
+      }
+
+      .counter-number {
+        font-size: 0.875rem;
+        font-weight: 700;
+      }
+
+      &--info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+      }
+
+      &--success {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+
+        .counter-icon {
+          color: #16a34a;
+        }
+      }
+
+      &--warning {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+
+        .counter-icon {
+          color: #ea580c;
+        }
+      }
+
+      &--error {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+
+        .counter-icon {
+          color: #ef4444;
+        }
+      }
+    }
+  }
+}
+
 // Responsive design for PitchDetail
 @media (max-width: 768px) {
   .pitch-detail {
@@ -470,6 +785,47 @@
 
   .content-toggle-btn {
     font-size: 0.85rem;
+  }
+
+  // Training and Questions widgets mobile styles
+  .pitch-detail-training,
+  .pitch-detail-questions {
+    .training-card,
+    .questions-card {
+      padding: 16px;
+
+      .training-info,
+      .questions-info {
+        margin-bottom: 16px;
+
+        .training-arrow,
+        .questions-arrow {
+          position: static;
+          margin-top: 8px;
+        }
+      }
+
+      .training-counters,
+      .questions-counters {
+        justify-content: center;
+        gap: 12px;
+
+        .counter {
+          min-width: 50px;
+          padding: 6px 10px;
+          font-size: 0.8rem;
+
+          .counter-icon,
+          .counter-number {
+            font-size: 0.8rem;
+          }
+
+          .counter-text {
+            font-size: 0.7rem;
+          }
+        }
+      }
+    }
   }
 }
 

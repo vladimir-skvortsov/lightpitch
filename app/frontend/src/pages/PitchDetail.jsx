@@ -11,6 +11,8 @@ const PitchDetail = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isContentExpanded, setIsContentExpanded] = useState(false)
+  const [trainingStats, setTrainingStats] = useState(null)
+  const [questionsStats, setQuestionsStats] = useState(null)
 
   const fetchPitch = useCallback(async () => {
     try {
@@ -23,6 +25,28 @@ const PitchDetail = () => {
 
       const data = await response.json()
       setPitch(data)
+
+      // Fetch training sessions stats
+      try {
+        const trainingResponse = await fetch(`/api/v1/pitches/${id}/training-sessions/stats`)
+        if (trainingResponse.ok) {
+          const trainingData = await trainingResponse.json()
+          setTrainingStats(trainingData)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch training stats:', err)
+      }
+
+      // Fetch hypothetical questions stats
+      try {
+        const questionsResponse = await fetch(`/api/v1/pitches/${id}/hypothetical-questions/stats`)
+        if (questionsResponse.ok) {
+          const questionsData = await questionsResponse.json()
+          setQuestionsStats(questionsData)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch questions stats:', err)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -60,6 +84,28 @@ const PitchDetail = () => {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const formatShortDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const getTrainingTypeLabel = (type) => {
+    switch (type) {
+      case 'video_upload':
+        return 'Загрузка видео'
+      case 'video_record':
+        return 'Запись видео'
+      case 'audio_only':
+        return 'Только аудио'
+      default:
+        return type
+    }
   }
 
   if (loading) {
@@ -206,6 +252,118 @@ const PitchDetail = () => {
                 </div>
               </div>
             )}
+
+            {/* Training Sessions Widget */}
+            <div className='block'>
+              <div className='pitch-detail-training'>
+                <h3>Мои тренировки</h3>
+                <div
+                  className='training-card clickable-card'
+                  onClick={() => navigate(`/pitch/${id}/training-sessions`)}
+                >
+                  <div className='training-info'>
+                    <div className='training-overview'>
+                      <div className='training-icon'>
+                        <span className='icon'>🎯</span>
+                        <div className='training-details'>
+                          <span className='training-title'>
+                            {trainingStats?.total_count > 0
+                              ? `${trainingStats.total_count} тренировок`
+                              : 'Нет тренировок'}
+                          </span>
+                          <span className='training-subtitle'>
+                            {trainingStats?.latest_session
+                              ? `Последняя: ${formatShortDate(trainingStats.latest_session.created_at)}`
+                              : 'Начните первую тренировку'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className='training-arrow'>
+                        <span className='arrow-icon'>→</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='training-counters'>
+                    <div className='counter counter--info'>
+                      <span className='counter-icon'>📊</span>
+                      <span className='counter-number'>{trainingStats?.total_count || 0}</span>
+                    </div>
+                    {trainingStats?.best_score && (
+                      <div className='counter counter--success'>
+                        <span className='counter-icon'>🏆</span>
+                        <span className='counter-number'>{Math.round(trainingStats.best_score * 100)}%</span>
+                      </div>
+                    )}
+                    {trainingStats?.latest_session?.training_type && (
+                      <div className='counter counter--neutral'>
+                        <span className='counter-icon'>📹</span>
+                        <span className='counter-text'>
+                          {getTrainingTypeLabel(trainingStats.latest_session.training_type)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hypothetical Questions Widget */}
+            <div className='block'>
+              <div className='pitch-detail-questions'>
+                <h3>Гипотетические вопросы</h3>
+                <div
+                  className='questions-card clickable-card'
+                  onClick={() => navigate(`/pitch/${id}/hypothetical-questions`)}
+                >
+                  <div className='questions-info'>
+                    <div className='questions-overview'>
+                      <div className='questions-icon'>
+                        <span className='icon'>❓</span>
+                        <div className='questions-details'>
+                          <span className='questions-title'>
+                            {questionsStats?.total_count > 0
+                              ? `${questionsStats.total_count} вопросов`
+                              : 'Нет вопросов'}
+                          </span>
+                          <span className='questions-subtitle'>
+                            {questionsStats?.latest_question
+                              ? `Последний: ${formatShortDate(questionsStats.latest_question.created_at)}`
+                              : 'Сгенерируйте вопросы для подготовки'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className='questions-arrow'>
+                        <span className='arrow-icon'>→</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='questions-counters'>
+                    <div className='counter counter--info'>
+                      <span className='counter-icon'>📝</span>
+                      <span className='counter-number'>{questionsStats?.total_count || 0}</span>
+                    </div>
+                    {questionsStats?.by_difficulty?.easy && (
+                      <div className='counter counter--success'>
+                        <span className='counter-icon'>😊</span>
+                        <span className='counter-number'>{questionsStats.by_difficulty.easy}</span>
+                      </div>
+                    )}
+                    {questionsStats?.by_difficulty?.medium && (
+                      <div className='counter counter--warning'>
+                        <span className='counter-icon'>😐</span>
+                        <span className='counter-number'>{questionsStats.by_difficulty.medium}</span>
+                      </div>
+                    )}
+                    {questionsStats?.by_difficulty?.hard && (
+                      <div className='counter counter--error'>
+                        <span className='counter-icon'>😰</span>
+                        <span className='counter-number'>{questionsStats.by_difficulty.hard}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className='block'>
               <div className='pitch-detail-speech'>
