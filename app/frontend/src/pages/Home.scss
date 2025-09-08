@@ -1,22 +1,3 @@
-.main {
-  padding: 60px 0;
-}
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-  gap: 20px;
-
-  h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--alfa-dark-gray);
-  }
-}
-
 // Loading state
 .loading {
   text-align: center;

@@ -7,7 +7,6 @@ import './App.scss'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import PitchDetail from './pages/PitchDetail'
 import CreatePitch from './pages/CreatePitch'
@@ -56,7 +55,6 @@ const Header = () => {
   )
 }
 
-// Main page component that shows Landing or Dashboard based on auth status
 const MainPage = () => {
   const { isAuthenticated, loading } = useAuth()
 
@@ -73,7 +71,7 @@ const MainPage = () => {
     )
   }
 
-  return isAuthenticated() ? <Dashboard /> : <Landing />
+  return isAuthenticated() ? <Home /> : <Landing />
 }
 
 const App = () => {
@@ -89,15 +87,6 @@ const App = () => {
           <Route path='/auth/register' element={<Register />} />
 
           {/* Protected Routes */}
-          <Route
-            path='/dashboard'
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-
           <Route
             path='/home'
             element={

@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import Button from '../components/Button'
 import './Home.scss'
 
 const Home = () => {
+  const { getAuthHeaders } = useAuth()
   const [pitches, setPitches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -12,7 +14,9 @@ const Home = () => {
     try {
       setLoading(true)
 
-      const response = await fetch('/api/v1/pitches')
+      const response = await fetch('/api/v1/pitches/', {
+        headers: getAuthHeaders(),
+      })
 
       if (!response.ok) {
         throw new Error('Ошибка загрузки выступлений')
@@ -25,11 +29,11 @@ const Home = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [getAuthHeaders])
 
   useEffect(() => {
     fetchPitches()
-  }, [fetchPitches])
+  }, [fetchPitches, getAuthHeaders])
 
   const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
