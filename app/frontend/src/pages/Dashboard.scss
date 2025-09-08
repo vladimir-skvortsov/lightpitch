@@ -50,106 +50,112 @@
   }
 }
 
+// Empty state
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--alfa-white);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--alfa-dark-gray);
+    margin-bottom: 10px;
+  }
+
+  p {
+    color: var(--alfa-gray);
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+// Pitches grid
 .pitches-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 24px;
+  margin-top: 20px;
 }
 
 .pitch-card {
-  background: #ffffff;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  background: var(--alfa-white);
+  border-radius: 16px;
   padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  height: fit-content;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 
   &:hover {
-    border-color: #ef394e;
-    box-shadow: 0 8px 25px rgba(239, 57, 78, 0.15);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-color: var(--alfa-red);
   }
-}
-
-.pitch-card-header {
-  margin-bottom: 16px;
 }
 
 .pitch-title {
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--alfa-dark-gray);
-  margin-bottom: 8px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.4;
+  flex: 1;
+  margin-bottom: 12px;
 }
 
 .pitch-date {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--alfa-gray);
+  white-space: nowrap;
+  background: var(--alfa-light-gray);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-bottom: 12px;
 }
 
 .pitch-description {
-  margin-bottom: 20px;
-
-  p {
-    color: var(--alfa-gray);
-    line-height: 1.6;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-}
-
-.pitch-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.pitch-duration {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.meta-label {
-  font-size: 0.9rem;
   color: var(--alfa-gray);
-  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 50px; // Резервируем место для 2 строк даже если описания нет
 }
 
-.meta-value {
-  font-size: 0.9rem;
-  color: var(--alfa-dark-gray);
-  font-weight: 600;
+.pitch-description--placeholder {
+  color: var(--alfa-gray);
+  opacity: 0.7;
+  font-style: italic;
 }
 
 .pitch-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 10px;
 }
 
 .tag {
-  background: #f3f4f6;
-  color: var(--alfa-dark-gray);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.tag-more {
-  background: #e5e7eb;
-  color: var(--alfa-gray);
-  padding: 4px 8px;
-  border-radius: 12px;
+  background: var(--alfa-red);
+  color: var(--alfa-white);
+  padding: 4px 12px;
+  border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -157,111 +163,46 @@
 .pitch-actions {
   display: flex;
   gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  justify-content: flex-end;
 }
 
-// Empty State
-.empty-state {
-  text-align: center;
-  padding: 80px 20px;
-
-  .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 24px;
-  }
-
-  h3 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--alfa-dark-gray);
-    margin-bottom: 12px;
-  }
-
-  p {
-    font-size: 1.1rem;
-    color: var(--alfa-gray);
-    line-height: 1.6;
-    margin-bottom: 32px;
-  }
-}
-
-// Responsive design
+// Responsive design for Home
 @media (max-width: 768px) {
-  .dashboard-page {
-    padding: 24px 0;
-  }
-
-  .dashboard-header {
+  .content-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 24px;
-  }
 
-  .welcome-section {
-    h1 {
-      font-size: 2rem;
-    }
-  }
-
-  .header-actions {
-    width: 100%;
-
-    .button {
-      width: 100%;
+    h2 {
+      font-size: 1.5rem;
+      text-align: center;
     }
   }
 
   .pitches-grid {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
   }
 
-  .pitch-card {
-    padding: 20px;
+  .pitch-date {
+    align-self: flex-start;
   }
 
   .pitch-actions {
-    flex-direction: column;
+    justify-content: stretch;
 
-    .button {
-      width: 100%;
-    }
-  }
-
-  .empty-state {
-    padding: 60px 20px;
-
-    h3 {
-      font-size: 1.5rem;
-    }
-
-    p {
-      font-size: 1rem;
+    button,
+    a {
+      flex: 1;
     }
   }
 }
 
 @media (max-width: 480px) {
-  .dashboard-header {
-    gap: 20px;
-  }
-
-  .welcome-section {
-    h1 {
-      font-size: 1.8rem;
-    }
-
-    p {
-      font-size: 1rem;
-    }
+  .main {
+    padding: 40px 0;
   }
 
   .pitch-card {
-    padding: 16px;
-  }
-
-  .pitch-title {
-    font-size: 1.2rem;
+    padding: 20px;
   }
 }

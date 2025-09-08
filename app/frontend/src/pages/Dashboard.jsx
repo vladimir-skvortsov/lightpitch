@@ -64,7 +64,7 @@ const Dashboard = () => {
             </div>
             <div className='header-actions'>
               <Button variant='primary' as={Link} to='/create'>
-                Создать питч
+                Добавить
               </Button>
             </div>
           </div>
@@ -82,49 +82,27 @@ const Dashboard = () => {
                 </Button>
               </div>
             ) : (
-              <div className='pitches-section'>
-                <h2>Ваши питчи ({pitches.length})</h2>
-                <div className='pitches-grid'>
-                  {pitches.map((pitch) => (
-                    <div key={pitch.id} className='pitch-card'>
-                      <div className='pitch-card-header'>
-                        <h3 className='pitch-title'>{pitch.title}</h3>
-                        <span className='pitch-date'>{formatDate(pitch.created_at)}</span>
-                      </div>
-
-                      <div className='pitch-description'>
-                        <p>{pitch.description || 'Описание отсутствует'}</p>
-                      </div>
-
-                      <div className='pitch-meta'>
-                        <div className='pitch-duration'>
-                          <span className='meta-label'>Длительность:</span>
-                          <span className='meta-value'>{pitch.planned_duration_minutes} мин</span>
+              <div className='pitches-grid'>
+                {pitches.map((pitch) => (
+                  <Link to={`/pitch/${pitch.id}`} key={pitch.id}>
+                    <div className='pitch-card'>
+                      <h3 className='pitch-title'>{pitch.title}</h3>
+                      <div className='pitch-date'>{formatDate(pitch.created_at)}</div>
+                      {pitch.tags && pitch.tags.length > 0 && (
+                        <div className='pitch-tags'>
+                          {pitch.tags.map((tag, index) => (
+                            <span key={index} className='tag'>
+                              {tag}
+                            </span>
+                          ))}
                         </div>
-
-                        {pitch.tags && pitch.tags.length > 0 && (
-                          <div className='pitch-tags'>
-                            {pitch.tags.slice(0, 3).map((tag, index) => (
-                              <span key={index} className='tag'>
-                                {tag}
-                              </span>
-                            ))}
-                            {pitch.tags.length > 3 && <span className='tag-more'>+{pitch.tags.length - 3}</span>}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className='pitch-actions'>
-                        <Button variant='primary' as={Link} to={`/pitch/${pitch.id}`} size='small'>
-                          Открыть
-                        </Button>
-                        <Button variant='outline' as={Link} to={`/pitch/${pitch.id}/edit`} size='small'>
-                          Редактировать
-                        </Button>
-                      </div>
+                      )}
+                      <p className={`pitch-description ${!pitch.description ? 'pitch-description--placeholder' : ''}`}>
+                        {pitch.description}
+                      </p>
                     </div>
-                  ))}
-                </div>
+                  </Link>
+                ))}
               </div>
             )}
           </div>
