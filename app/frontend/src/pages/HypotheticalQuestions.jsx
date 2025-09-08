@@ -187,11 +187,6 @@ const HypotheticalQuestions = () => {
 
         {pitch && (
           <div className='hypothetical-questions-page'>
-            <div className='block'>
-              <h1>Гипотетические вопросы: {pitch.title}</h1>
-              <p className='pitch-description'>{pitch.description}</p>
-            </div>
-
             {stats && (
               <div className='block'>
                 <h2>Статистика</h2>

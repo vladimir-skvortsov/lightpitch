@@ -1,5 +1,8 @@
-// Training Sessions page styles
 .training-sessions-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
   h1 {
     font-size: 2.5rem;
     font-weight: 800;

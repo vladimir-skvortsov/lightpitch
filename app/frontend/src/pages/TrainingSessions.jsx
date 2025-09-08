@@ -129,11 +129,6 @@ const TrainingSessions = () => {
 
         {pitch && (
           <div className='training-sessions-page'>
-            <div className='block'>
-              <h1>Тренировки: {pitch.title}</h1>
-              <p className='pitch-description'>{pitch.description}</p>
-            </div>
-
             {stats && (
               <div className='block'>
                 <h2>Статистика</h2>

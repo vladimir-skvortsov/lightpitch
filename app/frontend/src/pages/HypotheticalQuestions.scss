@@ -1,5 +1,9 @@
-// Hypothetical Questions page styles
 .hypothetical-questions-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+
   h1 {
     font-size: 2.5rem;
     font-weight: 800;
