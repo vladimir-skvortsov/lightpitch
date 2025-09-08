@@ -1,11 +1,12 @@
 from typing import Dict, List
 
-from db_models import Pitch, TrainingSession, HypotheticalQuestion
+from db_models import Pitch, TrainingSession, HypotheticalQuestion, UserInDB
 
 # In-memory storage (temporary until database is added)
 pitches_db: Dict[str, Pitch] = {}
 training_sessions_db: Dict[str, TrainingSession] = {}
 hypothetical_questions_db: Dict[str, HypotheticalQuestion] = {}
+users_db: Dict[str, UserInDB] = {}
 
 
 # Pitch operations
@@ -97,3 +98,43 @@ def delete_hypothetical_question_by_id(question_id: str) -> HypotheticalQuestion
 def hypothetical_question_exists(question_id: str) -> bool:
     """Check if a hypothetical question exists"""
     return question_id in hypothetical_questions_db
+
+
+# User operations
+def get_user_by_id(user_id: str) -> UserInDB | None:
+    """Get a user by their ID"""
+    return users_db.get(user_id)
+
+
+def get_user_by_email(email: str) -> UserInDB | None:
+    """Get a user by their email"""
+    for user in users_db.values():
+        if user.email == email:
+            return user
+    return None
+
+
+def get_all_users() -> List[UserInDB]:
+    """Get all users"""
+    return list(users_db.values())
+
+
+def store_user(user: UserInDB) -> UserInDB:
+    """Store a user in the database"""
+    users_db[user.id] = user
+    return user
+
+
+def delete_user_by_id(user_id: str) -> UserInDB | None:
+    """Delete a user by their ID and return the deleted user"""
+    return users_db.pop(user_id, None)
+
+
+def user_exists(user_id: str) -> bool:
+    """Check if a user exists"""
+    return user_id in users_db
+
+
+def email_exists(email: str) -> bool:
+    """Check if a user with this email exists"""
+    return get_user_by_email(email) is not None
