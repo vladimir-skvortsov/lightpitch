@@ -254,170 +254,159 @@ const PitchDetail = () => {
             )}
 
             {/* Training Sessions Widget */}
-            <div className='block'>
-              <div className='pitch-detail-training'>
-                <h3>Мои тренировки</h3>
-                <div
-                  className='training-card clickable-card'
-                  onClick={() => navigate(`/pitch/${id}/training-sessions`)}
-                >
-                  <div className='training-info'>
-                    <div className='training-overview'>
-                      <div className='training-icon'>
-                        <span className='icon'>🎯</span>
-                        <div className='training-details'>
-                          <span className='training-title'>
-                            {trainingStats?.total_count > 0
-                              ? `${trainingStats.total_count} тренировок`
-                              : 'Нет тренировок'}
-                          </span>
-                          <span className='training-subtitle'>
-                            {trainingStats?.latest_session
-                              ? `Последняя: ${formatShortDate(trainingStats.latest_session.created_at)}`
-                              : 'Начните первую тренировку'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className='training-arrow'>
-                        <span className='arrow-icon'>→</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className='training-counters'>
-                    <div className='counter counter--info'>
-                      <span className='counter-icon'>📊</span>
-                      <span className='counter-number'>{trainingStats?.total_count || 0}</span>
-                    </div>
-                    {trainingStats?.best_score && (
-                      <div className='counter counter--success'>
-                        <span className='counter-icon'>🏆</span>
-                        <span className='counter-number'>{Math.round(trainingStats.best_score * 100)}%</span>
-                      </div>
-                    )}
-                    {trainingStats?.latest_session?.training_type && (
-                      <div className='counter counter--neutral'>
-                        <span className='counter-icon'>📹</span>
-                        <span className='counter-text'>
-                          {getTrainingTypeLabel(trainingStats.latest_session.training_type)}
+            <div className='block pitch-detail-training'>
+              <h3>Мои тренировки</h3>
+              <div className='training-card clickable-card' onClick={() => navigate(`/pitch/${id}/training-sessions`)}>
+                <div className='training-info'>
+                  <div className='training-overview'>
+                    <div className='training-icon'>
+                      <span className='icon'>🎯</span>
+                      <div className='training-details'>
+                        <span className='training-title'>
+                          {trainingStats?.total_count > 0
+                            ? `${trainingStats.total_count} тренировок`
+                            : 'Нет тренировок'}
+                        </span>
+                        <span className='training-subtitle'>
+                          {trainingStats?.latest_session
+                            ? `Последняя: ${formatShortDate(trainingStats.latest_session.created_at)}`
+                            : 'Начните первую тренировку'}
                         </span>
                       </div>
-                    )}
+                    </div>
+                    <div className='training-arrow'>
+                      <span className='arrow-icon'>→</span>
+                    </div>
                   </div>
+                </div>
+                <div className='training-counters'>
+                  <div className='counter counter--info'>
+                    <span className='counter-icon'>📊</span>
+                    <span className='counter-number'>{trainingStats?.total_count || 0}</span>
+                  </div>
+                  {trainingStats?.best_score && (
+                    <div className='counter counter--success'>
+                      <span className='counter-icon'>🏆</span>
+                      <span className='counter-number'>{Math.round(trainingStats.best_score * 100)}%</span>
+                    </div>
+                  )}
+                  {trainingStats?.latest_session?.training_type && (
+                    <div className='counter counter--neutral'>
+                      <span className='counter-icon'>📹</span>
+                      <span className='counter-text'>
+                        {getTrainingTypeLabel(trainingStats.latest_session.training_type)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Hypothetical Questions Widget */}
-            <div className='block'>
-              <div className='pitch-detail-questions'>
-                <h3>Гипотетические вопросы</h3>
-                <div
-                  className='questions-card clickable-card'
-                  onClick={() => navigate(`/pitch/${id}/hypothetical-questions`)}
-                >
-                  <div className='questions-info'>
-                    <div className='questions-overview'>
-                      <div className='questions-icon'>
-                        <span className='icon'>❓</span>
-                        <div className='questions-details'>
-                          <span className='questions-title'>
-                            {questionsStats?.total_count > 0
-                              ? `${questionsStats.total_count} вопросов`
-                              : 'Нет вопросов'}
-                          </span>
-                          <span className='questions-subtitle'>
-                            {questionsStats?.latest_question
-                              ? `Последний: ${formatShortDate(questionsStats.latest_question.created_at)}`
-                              : 'Сгенерируйте вопросы для подготовки'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className='questions-arrow'>
-                        <span className='arrow-icon'>→</span>
+            <div className='block pitch-detail-questions'>
+              <h3>Гипотетические вопросы</h3>
+              <div
+                className='questions-card clickable-card'
+                onClick={() => navigate(`/pitch/${id}/hypothetical-questions`)}
+              >
+                <div className='questions-info'>
+                  <div className='questions-overview'>
+                    <div className='questions-icon'>
+                      <span className='icon'>❓</span>
+                      <div className='questions-details'>
+                        <span className='questions-title'>
+                          {questionsStats?.total_count > 0 ? `${questionsStats.total_count} вопросов` : 'Нет вопросов'}
+                        </span>
+                        <span className='questions-subtitle'>
+                          {questionsStats?.latest_question
+                            ? `Последний: ${formatShortDate(questionsStats.latest_question.created_at)}`
+                            : 'Сгенерируйте вопросы для подготовки'}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <div className='questions-counters'>
-                    <div className='counter counter--info'>
-                      <span className='counter-icon'>📝</span>
-                      <span className='counter-number'>{questionsStats?.total_count || 0}</span>
+                    <div className='questions-arrow'>
+                      <span className='arrow-icon'>→</span>
                     </div>
-                    {questionsStats?.by_difficulty?.easy && (
-                      <div className='counter counter--success'>
-                        <span className='counter-icon'>😊</span>
-                        <span className='counter-number'>{questionsStats.by_difficulty.easy}</span>
-                      </div>
-                    )}
-                    {questionsStats?.by_difficulty?.medium && (
-                      <div className='counter counter--warning'>
-                        <span className='counter-icon'>😐</span>
-                        <span className='counter-number'>{questionsStats.by_difficulty.medium}</span>
-                      </div>
-                    )}
-                    {questionsStats?.by_difficulty?.hard && (
-                      <div className='counter counter--error'>
-                        <span className='counter-icon'>😰</span>
-                        <span className='counter-number'>{questionsStats.by_difficulty.hard}</span>
-                      </div>
-                    )}
                   </div>
+                </div>
+                <div className='questions-counters'>
+                  <div className='counter counter--info'>
+                    <span className='counter-icon'>📝</span>
+                    <span className='counter-number'>{questionsStats?.total_count || 0}</span>
+                  </div>
+                  {questionsStats?.by_difficulty?.easy && (
+                    <div className='counter counter--success'>
+                      <span className='counter-icon'>😊</span>
+                      <span className='counter-number'>{questionsStats.by_difficulty.easy}</span>
+                    </div>
+                  )}
+                  {questionsStats?.by_difficulty?.medium && (
+                    <div className='counter counter--warning'>
+                      <span className='counter-icon'>😐</span>
+                      <span className='counter-number'>{questionsStats.by_difficulty.medium}</span>
+                    </div>
+                  )}
+                  {questionsStats?.by_difficulty?.hard && (
+                    <div className='counter counter--error'>
+                      <span className='counter-icon'>😰</span>
+                      <span className='counter-number'>{questionsStats.by_difficulty.hard}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className='block'>
-              <div className='pitch-detail-speech'>
-                <h3>Текст выступления</h3>
-                <div className='speech-card clickable-card' onClick={() => navigate(`/pitch/${id}/speech-analysis`)}>
-                  <div className='speech-info'>
-                    <div className='speech-preview'>
-                      <div
-                        className={`pitch-content ${
-                          !isContentExpanded ? 'pitch-content--collapsed' : 'pitch-content--expanded'
-                        }`}
-                      >
-                        <div className='pitch-content-text'>
-                          {pitch.content.split('\n').map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                          ))}
-                        </div>
-                        {!isContentExpanded && pitch.content.length > 500 && (
-                          <div className='pitch-content-gradient'></div>
-                        )}
+            <div className='block pitch-detail-speech'>
+              <h3>Текст выступления</h3>
+              <div className='speech-card clickable-card' onClick={() => navigate(`/pitch/${id}/speech-analysis`)}>
+                <div className='speech-info'>
+                  <div className='speech-preview'>
+                    <div
+                      className={`pitch-content ${
+                        !isContentExpanded ? 'pitch-content--collapsed' : 'pitch-content--expanded'
+                      }`}
+                    >
+                      <div className='pitch-content-text'>
+                        {pitch.content.split('\n').map((paragraph, index) => (
+                          <p key={index}>{paragraph}</p>
+                        ))}
                       </div>
-                    </div>
-                    <div className='speech-arrow'>
-                      <span className='arrow-icon'>→</span>
+                      {!isContentExpanded && pitch.content.length > 500 && (
+                        <div className='pitch-content-gradient'></div>
+                      )}
                     </div>
                   </div>
-                  <div className='speech-counters'>
-                    <div className='counter counter--success'>
-                      <span className='counter-icon'>✓</span>
-                      <span className='counter-number'>6</span>
-                    </div>
-                    <div className='counter counter--warning'>
-                      <span className='counter-icon'>⚠</span>
-                      <span className='counter-number'>7</span>
-                    </div>
-                    <div className='counter counter--error'>
-                      <span className='counter-icon'>✕</span>
-                      <span className='counter-number'>1</span>
-                    </div>
+                  <div className='speech-arrow'>
+                    <span className='arrow-icon'>→</span>
                   </div>
                 </div>
-                {pitch.content.length > 500 && (
-                  <Button
-                    variant='outline'
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIsContentExpanded(!isContentExpanded)
-                    }}
-                    className='content-toggle-btn'
-                  >
-                    {isContentExpanded ? '🔼 Свернуть' : '🔽 Показать полностью'}
-                  </Button>
-                )}
+                <div className='speech-counters'>
+                  <div className='counter counter--success'>
+                    <span className='counter-icon'>✓</span>
+                    <span className='counter-number'>6</span>
+                  </div>
+                  <div className='counter counter--warning'>
+                    <span className='counter-icon'>⚠</span>
+                    <span className='counter-number'>7</span>
+                  </div>
+                  <div className='counter counter--error'>
+                    <span className='counter-icon'>✕</span>
+                    <span className='counter-number'>1</span>
+                  </div>
+                </div>
               </div>
+              {pitch.content.length > 500 && (
+                <Button
+                  variant='outline'
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsContentExpanded(!isContentExpanded)
+                  }}
+                  className='content-toggle-btn'
+                >
+                  {isContentExpanded ? '🔼 Свернуть' : '🔽 Показать полностью'}
+                </Button>
+              )}
             </div>
           </div>
         )}
