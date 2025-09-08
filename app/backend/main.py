@@ -4,14 +4,15 @@ import os
 import shutil
 import tempfile
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from docx import Document
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBearer
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -27,6 +28,10 @@ from db_models import (
     HypotheticalQuestion,
     HypotheticalQuestionCreate,
     HypotheticalQuestionUpdate,
+    User,
+    UserCreate,
+    LoginRequest,
+    Token,
 )
 from pitches import create_pitch as create_pitch_service
 from pitches import delete_pitch as delete_pitch_service
@@ -53,6 +58,14 @@ from hypothetical_questions import (
     delete_hypothetical_question as delete_hypothetical_question_service,
     generate_hypothetical_questions_for_pitch as generate_hypothetical_questions_for_pitch_service,
     get_hypothetical_questions_stats as get_hypothetical_questions_stats_service,
+)
+
+from auth import (
+    create_user,
+    authenticate_user,
+    create_access_token,
+    get_current_active_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
 from models.audio.analyzer import analyze_file_frontend_format
@@ -1030,7 +1043,8 @@ async def score_audio(
     content_type = audio.content_type or ''
     allowed_audio_types = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-wav']
 
-    if not any(content_type.startswith(t) for t in ['audio/', 'video/']) and not audio.filename.lower().endswith(
+    filename = audio.filename or ''
+    if not any(content_type.startswith(t) for t in ['audio/', 'video/']) and not filename.lower().endswith(
         ('.wav', '.mp3', '.m4a', '.mp4', '.mpeg')
     ):
         raise HTTPException(status_code=400, detail='File must be an audio file (wav, mp3, m4a, etc.)')
@@ -1244,3 +1258,37 @@ async def delete_hypothetical_question_endpoint(question_id: str):
     if not deleted_question:
         raise HTTPException(status_code=404, detail='Hypothetical question not found')
     return {'message': f'Hypothetical question has been deleted successfully'}
+
+
+# Authentication endpoints
+@app.post('/api/v1/auth/register', response_model=User)
+async def register(user: UserCreate):
+    """Register a new user"""
+    return create_user(user)
+
+
+@app.post('/api/v1/auth/login', response_model=Token)
+async def login(login_data: LoginRequest):
+    """Login user and return access token"""
+    user = authenticate_user(login_data.email, login_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Incorrect email or password',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={'sub': user.email}, expires_delta=access_token_expires)
+    return {'access_token': access_token, 'token_type': 'bearer'}
+
+
+@app.get('/api/v1/auth/me', response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    """Get current authenticated user"""
+    return current_user
+
+
+@app.get('/api/v1/auth/verify')
+async def verify_token(current_user: User = Depends(get_current_active_user)):
+    """Verify if token is valid"""
+    return {'valid': True, 'user_id': current_user.id}
