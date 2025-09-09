@@ -1312,7 +1312,7 @@ async def delete_training_session_endpoint(session_id: str):
     deleted_session = delete_training_session_service(session_id)
     if not deleted_session:
         raise HTTPException(status_code=404, detail='Training session not found')
-    return {'message': f'Training session has been deleted successfully'}
+    return {'message': 'Training session has been deleted successfully'}
 
 
 # Hypothetical Questions endpoints
