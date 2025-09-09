@@ -13,6 +13,9 @@ const HypotheticalQuestions = () => {
   const [error, setError] = useState(null)
   const [expandedQuestions, setExpandedQuestions] = useState(new Set())
   const [generatingQuestions, setGeneratingQuestions] = useState(false)
+  const [commissionMoods, setCommissionMoods] = useState([])
+  const [selectedMood, setSelectedMood] = useState('neutral')
+  const [questionCount, setQuestionCount] = useState(10)
 
   const fetchData = useCallback(async () => {
     try {
@@ -39,6 +42,13 @@ const HypotheticalQuestions = () => {
         const statsData = await statsResponse.json()
         setStats(statsData)
       }
+
+      // Fetch commission moods
+      const moodsResponse = await fetch('/api/v1/questions/moods')
+      if (moodsResponse.ok) {
+        const moodsData = await moodsResponse.json()
+        setCommissionMoods(moodsData)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -50,19 +60,58 @@ const HypotheticalQuestions = () => {
     fetchData()
   }, [fetchData])
 
-  const generateQuestions = async (count = 5) => {
+  const generateQuestions = async (count = questionCount, mood = selectedMood) => {
     try {
       setGeneratingQuestions(true)
-      const response = await fetch(`/api/v1/pitches/${id}/hypothetical-questions/generate`, {
+      
+      if (!pitch?.content) {
+        throw new Error('Нет текста для генерации вопросов')
+      }
+
+      const response = await fetch('/api/v1/questions/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ count }),
+        body: JSON.stringify({
+          text: pitch.content,
+          commission_mood: mood,
+          language: 'ru',
+          question_count: count,
+        }),
       })
 
       if (response.ok) {
-        await fetchData() // Refresh the data
+        const result = await response.json()
+        
+        // Convert generated questions to the format expected by the UI
+        const convertedQuestions = result.questions.map((q, index) => ({
+          id: q.id || `generated_${Date.now()}_${index}`,
+          pitch_id: id,
+          question_text: q.text,
+          category: q.category,
+          difficulty: q.difficulty,
+          context: q.mood_characteristics?.join(', ') || '',
+          suggested_answer: '',
+          preparation_tips: q.follow_up_suggestions || [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }))
+        
+        setQuestions(convertedQuestions)
+        
+        // Update stats
+        setStats({
+          total_count: convertedQuestions.length,
+          by_category: convertedQuestions.reduce((acc, q) => {
+            acc[q.category] = (acc[q.category] || 0) + 1
+            return acc
+          }, {}),
+          by_difficulty: convertedQuestions.reduce((acc, q) => {
+            acc[q.difficulty] = (acc[q.difficulty] || 0) + 1
+            return acc
+          }, {}),
+        })
       } else {
         throw new Error('Ошибка при генерации вопросов')
       }
@@ -165,23 +214,46 @@ const HypotheticalQuestions = () => {
             ← Назад к питчу
           </Button>
           <div className='questions-actions'>
-            <Dropdown
-              trigger={
-                <Button variant='primary' disabled={generatingQuestions}>
-                  {generatingQuestions ? 'Генерация...' : 'Сгенерировать вопросы'}
-                </Button>
-              }
-            >
-              <button className='dropdown-item' onClick={() => generateQuestions(3)} disabled={generatingQuestions}>
-                3 вопроса
-              </button>
-              <button className='dropdown-item' onClick={() => generateQuestions(5)} disabled={generatingQuestions}>
-                5 вопросов
-              </button>
-              <button className='dropdown-item' onClick={() => generateQuestions(10)} disabled={generatingQuestions}>
-                10 вопросов
-              </button>
-            </Dropdown>
+            <div className='generation-controls'>
+              {!generatingQuestions && (
+                <>
+                  <div className='mood-selector'>
+                    <label htmlFor='mood-select'>Настроение комиссии:</label>
+                    <select
+                      id='mood-select'
+                      value={selectedMood}
+                      onChange={(e) => setSelectedMood(e.target.value)}
+                    >
+                      {commissionMoods.map((mood) => (
+                        <option key={mood.value} value={mood.value}>
+                          {mood.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className='count-selector'>
+                    <label htmlFor='count-select'>Количество вопросов:</label>
+                    <select
+                      id='count-select'
+                      value={questionCount}
+                      onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                    >
+                      <option value={5}>5 вопросов</option>
+                      <option value={10}>10 вопросов</option>
+                      <option value={15}>15 вопросов</option>
+                      <option value={20}>20 вопросов</option>
+                    </select>
+                  </div>
+                </>
+              )}
+              <Button 
+                variant='primary' 
+                onClick={() => generateQuestions(questionCount, selectedMood)}
+                disabled={generatingQuestions || !pitch?.content}
+              >
+                {generatingQuestions ? 'Генерация...' : 'Сгенерировать вопросы'}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -234,9 +306,16 @@ const HypotheticalQuestions = () => {
                   <div className='empty-icon'>❓</div>
                   <h3>Пока нет вопросов</h3>
                   <p>Сгенерируйте гипотетические вопросы для подготовки к выступлению</p>
-                  <Button variant='primary' onClick={() => generateQuestions(5)} disabled={generatingQuestions}>
+                  <Button 
+                    variant='primary' 
+                    onClick={() => generateQuestions(questionCount, selectedMood)} 
+                    disabled={generatingQuestions || !pitch?.content}
+                  >
                     {generatingQuestions ? 'Генерация...' : 'Сгенерировать вопросы'}
                   </Button>
+                  {!pitch?.content && (
+                    <p className='warning-text'>⚠️ Для генерации вопросов необходим текст выступления</p>
+                  )}
                 </div>
               ) : (
                 <div className='questions-list'>

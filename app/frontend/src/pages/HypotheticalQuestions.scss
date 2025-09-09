@@ -32,6 +32,84 @@
   gap: 12px;
 }
 
+.generation-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: all 0.3s ease;
+
+  .btn {
+    min-width: 360px;
+    flex-grow: 1;
+    flex-shrink: 0;
+  }
+
+  .mood-selector,
+  .count-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: fadeInSlide 0.3s ease-out;
+
+    label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--alfa-dark-gray);
+      font-family: inherit;
+      margin-bottom: 0;
+    }
+
+    select {
+      padding: 12px 16px;
+      border: 2px solid var(--alfa-gray);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-family: inherit;
+      background: var(--alfa-white);
+      color: var(--alfa-dark-gray);
+      width: 200px;
+      height: 46px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c7883' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 40px;
+
+      &:hover:not(:disabled) {
+        border-color: var(--alfa-red);
+        box-shadow: 0 2px 8px rgba(239, 49, 36, 0.1);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: var(--alfa-red);
+        box-shadow: 0 0 0 3px rgba(239, 49, 36, 0.1);
+      }
+
+      &:disabled {
+        background: var(--alfa-light-gray);
+        color: #9ca3af;
+        cursor: not-allowed;
+        border-color: #e5e7eb;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      }
+
+      option {
+        padding: 8px 12px;
+        font-family: inherit;
+        font-size: 0.875rem;
+        color: var(--alfa-dark-gray);
+        background: var(--alfa-white);
+      }
+    }
+  }
+}
+
 // Stats Grid - reuse from TrainingSessions but add specific styles
 .stats-grid {
   display: grid;
@@ -268,6 +346,13 @@
     font-size: 1.1rem;
     margin-bottom: 32px;
   }
+
+  .warning-text {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 12px;
+    font-weight: 500;
+  }
 }
 
 // Responsive design
@@ -330,8 +415,25 @@
   .questions-actions {
     width: 100%;
 
-    button {
-      width: 100%;
+    .generation-controls {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+
+      .mood-selector,
+      .count-selector {
+        select {
+          width: 100%;
+          height: 44px;
+          font-size: 0.9rem;
+        }
+      }
+
+      button {
+        width: 100%;
+        height: 44px;
+        min-width: auto;
+      }
     }
   }
 
@@ -365,5 +467,34 @@
   .question-date {
     width: auto;
     margin-top: 0;
+  }
+
+  .generation-controls {
+    .mood-selector,
+    .count-selector {
+      select {
+        height: 42px;
+        font-size: 0.85rem;
+        padding: 10px 14px;
+        padding-right: 36px;
+      }
+    }
+
+    button {
+      height: 42px;
+      min-width: auto;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

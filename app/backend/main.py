@@ -79,6 +79,12 @@ from models.text_editor import (
     TextRecommendationsResponse,
     app_graph,
 )
+from models.question_generator import (
+    QuestionGenerator,
+    QuestionGenerationRequest,
+    QuestionGenerationResponse,
+    CommissionMood,
+)
 from models.video_grader import VideoGrader
 
 app = FastAPI(title=PROJECT_NAME)
@@ -1385,6 +1391,40 @@ async def delete_hypothetical_question_endpoint(question_id: str):
     if not deleted_question:
         raise HTTPException(status_code=404, detail='Hypothetical question not found')
     return {'message': f'Hypothetical question has been deleted successfully'}
+
+
+# Question Generation endpoints
+@app.post('/api/v1/questions/generate', response_model=QuestionGenerationResponse)
+async def generate_questions(request: QuestionGenerationRequest):
+    """Generate questions based on text and commission mood"""
+    try:
+        generator = QuestionGenerator()
+        return await generator.generate_questions(request)
+    except Exception as e:
+        logger.error(f'Question generation failed: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Question generation failed: {str(e)}')
+
+
+@app.get('/api/v1/questions/moods')
+async def get_commission_moods():
+    """Get available commission moods"""
+    try:
+        generator = QuestionGenerator()
+        return generator.get_available_moods()
+    except Exception as e:
+        logger.error(f'Failed to get commission moods: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Failed to get commission moods: {str(e)}')
+
+
+@app.get('/api/v1/questions/moods/{mood}')
+async def get_mood_characteristics(mood: CommissionMood):
+    """Get characteristics of a specific commission mood"""
+    try:
+        generator = QuestionGenerator()
+        return generator.get_mood_characteristics(mood)
+    except Exception as e:
+        logger.error(f'Failed to get mood characteristics: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Failed to get mood characteristics: {str(e)}')
 
 
 # Authentication endpoints
