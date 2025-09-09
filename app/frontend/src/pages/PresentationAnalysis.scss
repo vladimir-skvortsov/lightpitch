@@ -1,0 +1,464 @@
+// Presentation Analysis page styles
+.presentation-analysis {
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    .analysis-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .back-button {
+      flex-shrink: 0;
+    }
+  }
+
+  // Overall Score Section
+  .overall-score-section {
+    margin-bottom: 32px;
+
+    .overall-score-card {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 32px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 16px;
+      border: 1px solid #dee2e6;
+
+      .score-display {
+        flex-shrink: 0;
+
+        .score-circle.large {
+          width: 120px;
+          height: 120px;
+          border-width: 6px;
+
+          .score-number.large {
+            font-size: 2rem;
+            font-weight: 800;
+          }
+
+          .score-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: -4px;
+          }
+        }
+      }
+
+      .score-details {
+        flex: 1;
+
+        h2 {
+          margin: 0 0 16px 0;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+
+        .analysis-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          span {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+          }
+
+          .analysis-method {
+            color: var(--alfa-red);
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  // Category Scores
+  .category-scores {
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+
+      .category-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--background-secondary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: var(--alfa-red);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(239, 57, 78, 0.1);
+        }
+
+        .category-score {
+          flex-shrink: 0;
+
+          .score-circle {
+            width: 50px;
+            height: 50px;
+            border-width: 3px;
+
+            .score-number {
+              font-size: 0.9rem;
+              font-weight: 700;
+            }
+          }
+        }
+
+        .category-name {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+      }
+    }
+  }
+
+  // Good Practices Section
+  .good-practices-section {
+    .practices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+
+      .practice-card {
+        padding: 20px;
+        background: var(--background-secondary);
+        border-radius: 12px;
+        border: 1px solid #28a745;
+        border-left: 4px solid #28a745;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
+        }
+
+        .practice-header {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          margin-bottom: 12px;
+
+          .practice-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+          }
+
+          .practice-title {
+            flex: 1;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+          }
+
+          .practice-category {
+            flex-shrink: 0;
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+          }
+        }
+
+        .practice-description {
+          margin: 0;
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          line-height: 1.5;
+        }
+      }
+    }
+  }
+
+  // Warnings Section
+  .warnings-section {
+    .warnings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+
+      .warning-card {
+        padding: 20px;
+        background: var(--background-secondary);
+        border-radius: 12px;
+        border: 1px solid #ffc107;
+        border-left: 4px solid #ffc107;
+
+        .warning-header {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          margin-bottom: 12px;
+
+          .warning-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: #ffc107;
+            color: #212529;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+          }
+
+          .warning-title {
+            flex: 1;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+          }
+
+          .warning-category {
+            flex-shrink: 0;
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+          }
+        }
+
+        .warning-description {
+          margin: 0 0 12px 0;
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          line-height: 1.5;
+        }
+
+        .affected-slides {
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+          font-style: italic;
+        }
+      }
+    }
+  }
+
+  // Errors Section
+  .errors-section {
+    .errors-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+
+      .error-card {
+        padding: 20px;
+        background: var(--background-secondary);
+        border-radius: 12px;
+        border: 1px solid #dc3545;
+        border-left: 4px solid #dc3545;
+
+        .error-header {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          margin-bottom: 12px;
+
+          .error-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+          }
+
+          .error-title {
+            flex: 1;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+          }
+
+          .error-category {
+            flex-shrink: 0;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+          }
+
+          .severity-badge {
+            flex-shrink: 0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+
+            &.severity-high {
+              background: #dc3545;
+              color: white;
+            }
+          }
+        }
+
+        .error-description {
+          margin: 0 0 12px 0;
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          line-height: 1.5;
+        }
+
+        .affected-slides {
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+          font-style: italic;
+        }
+      }
+    }
+  }
+
+  // Legacy group scores (for backward compatibility)
+  .group-scores {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+
+    .group-score-card {
+      background: var(--background-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: var(--alfa-red);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 57, 78, 0.1);
+      }
+
+      .group-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .group-score {
+          flex-shrink: 0;
+        }
+
+        .group-name {
+          flex: 1;
+          margin: 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+      }
+    }
+  }
+
+  // Score circle component
+  .score-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border: 4px solid;
+    border-radius: 50%;
+    position: relative;
+
+    .score-number {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .score-label {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    .overall-score-card {
+      flex-direction: column;
+      text-align: center;
+      gap: 20px !important;
+    }
+
+    .category-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .practices-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .group-scores {
+      grid-template-columns: 1fr !important;
+    }
+
+    .content-header {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+
+      .analysis-title {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+
+// Color variables for scores
+:root {
+  --score-excellent: #28a745;
+  --score-good: #17a2b8;
+  --score-average: #ffc107;
+  --score-poor: #dc3545;
+}
