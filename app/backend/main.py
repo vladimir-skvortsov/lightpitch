@@ -9,7 +9,7 @@ from typing import Optional
 
 from docx import Document
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBearer
@@ -17,58 +17,59 @@ from fastapi.security import HTTPBearer
 load_dotenv()
 logger = logging.getLogger(__name__)
 
+from auth import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    authenticate_user,
+    create_access_token,
+    create_user,
+    get_current_active_user,
+)
 from config import PROJECT_NAME
 from db_models import (
-    Pitch,
-    PitchCreate,
-    PitchUpdate,
-    TrainingSession,
-    TrainingSessionCreate,
-    TrainingSessionUpdate,
     HypotheticalQuestion,
     HypotheticalQuestionCreate,
     HypotheticalQuestionUpdate,
+    LoginRequest,
+    Pitch,
+    PitchCreate,
+    PitchUpdate,
+    Token,
+    TrainingSession,
+    TrainingSessionCreate,
+    TrainingSessionUpdate,
     User,
     UserCreate,
-    LoginRequest,
-    Token,
 )
+from hypothetical_questions import create_hypothetical_question as create_hypothetical_question_service
+from hypothetical_questions import delete_hypothetical_question as delete_hypothetical_question_service
+from hypothetical_questions import (
+    generate_hypothetical_questions_for_pitch as generate_hypothetical_questions_for_pitch_service,
+)
+from hypothetical_questions import get_hypothetical_question as get_hypothetical_question_service
+from hypothetical_questions import get_hypothetical_questions_for_pitch as get_hypothetical_questions_for_pitch_service
+from hypothetical_questions import get_hypothetical_questions_stats as get_hypothetical_questions_stats_service
+from hypothetical_questions import list_hypothetical_questions as list_hypothetical_questions_service
+from hypothetical_questions import update_hypothetical_question as update_hypothetical_question_service
 from pitches import create_pitch as create_pitch_service
 from pitches import delete_pitch as delete_pitch_service
 from pitches import get_pitch as get_pitch_service
 from pitches import list_pitches as list_pitches_service
 from pitches import update_pitch as update_pitch_service
-
-from training_sessions import (
-    create_training_session as create_training_session_service,
-    get_training_session as get_training_session_service,
-    get_training_sessions_for_pitch as get_training_sessions_for_pitch_service,
-    list_training_sessions as list_training_sessions_service,
-    update_training_session as update_training_session_service,
-    delete_training_session as delete_training_session_service,
-    get_training_session_stats as get_training_session_stats_service,
-)
-
-from hypothetical_questions import (
-    create_hypothetical_question as create_hypothetical_question_service,
-    get_hypothetical_question as get_hypothetical_question_service,
-    get_hypothetical_questions_for_pitch as get_hypothetical_questions_for_pitch_service,
-    list_hypothetical_questions as list_hypothetical_questions_service,
-    update_hypothetical_question as update_hypothetical_question_service,
-    delete_hypothetical_question as delete_hypothetical_question_service,
-    generate_hypothetical_questions_for_pitch as generate_hypothetical_questions_for_pitch_service,
-    get_hypothetical_questions_stats as get_hypothetical_questions_stats_service,
-)
-
-from auth import (
-    create_user,
-    authenticate_user,
-    create_access_token,
-    get_current_active_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-)
+from training_sessions import create_training_session as create_training_session_service
+from training_sessions import delete_training_session as delete_training_session_service
+from training_sessions import get_training_session as get_training_session_service
+from training_sessions import get_training_session_stats as get_training_session_stats_service
+from training_sessions import get_training_sessions_for_pitch as get_training_sessions_for_pitch_service
+from training_sessions import list_training_sessions as list_training_sessions_service
+from training_sessions import update_training_session as update_training_session_service
 
 from models.audio.analyzer import analyze_file_frontend_format
+from models.question_generator import (
+    CommissionMood,
+    QuestionGenerationRequest,
+    QuestionGenerationResponse,
+    QuestionGenerator,
+)
 from models.text_editor import (
     AnalysisState,
     AnalysisType,
@@ -78,12 +79,6 @@ from models.text_editor import (
     TextRecommendationsRequest,
     TextRecommendationsResponse,
     app_graph,
-)
-from models.question_generator import (
-    QuestionGenerator,
-    QuestionGenerationRequest,
-    QuestionGenerationResponse,
-    CommissionMood,
 )
 from models.video_grader import VideoGrader
 
@@ -240,9 +235,9 @@ def extract_audio_from_video(video_path: str, audio_path: str) -> bool:
 
 # CRUD operations for pitches
 @app.post('/api/v1/pitches/', response_model=Pitch)
-async def create_pitch_endpoint(pitch: PitchCreate):
+async def create_pitch_endpoint(pitch: PitchCreate, current_user: User = Depends(get_current_active_user)):
     """Create a new pitch"""
-    return create_pitch_service(pitch)
+    return create_pitch_service(pitch, current_user.id)
 
 
 @app.get('/api/v1/pitches/', response_model=list[Pitch])
@@ -660,7 +655,7 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
 
     logger.info(f'Processing video upload: {video.filename} for pitch {pitch_id}')
 
-    from db_models import TrainingType, TrainingSessionCreate
+    from db_models import TrainingSessionCreate, TrainingType
 
     # Validate video file
     content_type = video.content_type or ''
@@ -1390,7 +1385,7 @@ async def delete_hypothetical_question_endpoint(question_id: str):
     deleted_question = delete_hypothetical_question_service(question_id)
     if not deleted_question:
         raise HTTPException(status_code=404, detail='Hypothetical question not found')
-    return {'message': f'Hypothetical question has been deleted successfully'}
+    return {'message': 'Hypothetical question has been deleted successfully'}
 
 
 # Question Generation endpoints

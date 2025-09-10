@@ -15,7 +15,7 @@ from models.description_generator.description_generator import DescriptionGenera
 description_generator = DescriptionGenerator()
 
 
-def create_pitch(pitch_data: PitchCreate) -> Pitch:
+def create_pitch(pitch_data: PitchCreate, user_id: str) -> Pitch:
     """Create a new pitch"""
     pitch_id = str(uuid.uuid4())
     now = datetime.now()
@@ -29,6 +29,7 @@ def create_pitch(pitch_data: PitchCreate) -> Pitch:
 
     new_pitch = Pitch(
         id=pitch_id,
+        user_id=user_id,
         title=pitch_data.title,
         content=pitch_data.content or '',
         planned_duration_minutes=pitch_data.planned_duration_minutes,

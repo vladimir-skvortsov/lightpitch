@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, field_validator, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class PitchBase(BaseModel):
@@ -10,7 +10,7 @@ class PitchBase(BaseModel):
     content: str
     planned_duration_minutes: int
     description: Optional[str] = None
-    tags: Optional[List[str]] = []
+    tags: List[str] = []
     presentation_file_name: Optional[str] = None
     presentation_file_path: Optional[str] = None
 
@@ -39,11 +39,11 @@ class PitchUpdate(BaseModel):
 
 class Pitch(PitchBase):
     id: str
+    user_id: str
     created_at: datetime
     updated_at: datetime
 
 
-# Training Session Models
 class TrainingType(str, Enum):
     VIDEO_UPLOAD = 'video_upload'
     VIDEO_RECORD = 'video_record'
@@ -80,7 +80,6 @@ class TrainingSession(TrainingSessionBase):
     updated_at: datetime
 
 
-# Hypothetical Questions Models
 class QuestionCategory(str, Enum):
     BUSINESS = 'business'
     TECHNICAL = 'technical'
@@ -105,7 +104,7 @@ class HypotheticalQuestionBase(BaseModel):
     difficulty: QuestionDifficulty
     suggested_answer: Optional[str] = None
     context: Optional[str] = None
-    preparation_tips: Optional[List[str]] = []
+    preparation_tips: List[str] = []
 
 
 class HypotheticalQuestionCreate(HypotheticalQuestionBase):
@@ -127,7 +126,6 @@ class HypotheticalQuestion(HypotheticalQuestionBase):
     updated_at: datetime
 
 
-# User Models
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
@@ -155,7 +153,6 @@ class UserInDB(User):
     hashed_password: str
 
 
-# Authentication Models
 class Token(BaseModel):
     access_token: str
     token_type: str

@@ -8,12 +8,12 @@ import json
 import logging
 import os
 import tempfile
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
+import fitz  # PyMuPDF for PDF processing
 import google.generativeai as genai
 from PIL import Image
 from PIL.Image import Image as PILImage
-import fitz  # PyMuPDF for PDF processing
 from pptx import Presentation
 
 logger = logging.getLogger(__name__)

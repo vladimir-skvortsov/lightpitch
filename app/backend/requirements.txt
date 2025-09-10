@@ -30,3 +30,4 @@ google-generativeai>=0.3.2
 PyMuPDF>=1.23.0
 Pillow>=10.0.0
 python-pptx>=0.6.21
+pyairtable>=2.3.3

@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
+import { useAuth } from '../contexts/AuthContext'
 import './Form.scss'
 import './CreatePitch.scss'
 
 const CreatePitch = () => {
   const navigate = useNavigate()
+  const { getAuthHeaders } = useAuth()
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -172,13 +174,14 @@ const CreatePitch = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...getAuthHeaders(),
           },
           body: JSON.stringify({
             title: formData.title.trim(),
             description: description || null,
             content: formData.content.trim(),
             planned_duration_minutes: durationMinutes,
-            tags: formData.tags.length > 0 ? formData.tags : null,
+            tags: formData.tags || [],
           }),
         })
 

@@ -18,14 +18,14 @@ logger = logging.getLogger(__name__)
 
 class QuestionGenerator:
     """Генератор вопросов для защиты работы"""
-    
+
     def __init__(self):
         self.openai_service = OpenAIService()
-    
+
     def _get_question_generation_prompt(self, request: QuestionGenerationRequest) -> str:
         """Создает промпт для генерации вопросов на основе настроения комиссии"""
         mood_config = COMMISSION_MOODS[request.commission_mood]
-        
+
         prompt = f"""
 Ты - эксперт по академическим защитам. Твоя задача - сгенерировать {request.question_count} вопросов для комиссии по защите работы.
 
@@ -73,47 +73,47 @@ class QuestionGenerator:
 {request.text}
 """
         return prompt
-    
+
     async def generate_questions(self, request: QuestionGenerationRequest) -> QuestionGenerationResponse:
         """Генерирует вопросы на основе текста и настроения комиссии"""
         start_time = datetime.now()
         request_id = str(uuid.uuid4())
-        
+
         try:
             prompt = self._get_question_generation_prompt(request)
             response = await self.openai_service.analyze_text(prompt, request.text, expect_json=True)
-            
+
             # Парсинг ответа
             data = json.loads(response)
             questions_data = data.get('questions', [])
             categories = data.get('categories', [])
             mood_description = data.get('mood_description', COMMISSION_MOODS[request.commission_mood].description)
-            
+
             # Фильтрация по категориям если указано
             if request.include_categories:
                 questions_data = [q for q in questions_data if q.get('category') in request.include_categories]
-            
+
             if request.exclude_categories:
                 questions_data = [q for q in questions_data if q.get('category') not in request.exclude_categories]
-            
+
             # Ограничение количества вопросов
-            questions_data = questions_data[:request.question_count]
-            
+            questions_data = questions_data[: request.question_count]
+
             # Создание объектов Question
             questions = []
             for i, q_data in enumerate(questions_data):
                 question = Question(
-                    id=q_data.get('id', f"q_{i+1}"),
+                    id=q_data.get('id', f'q_{i+1}'),
                     text=q_data.get('text', ''),
                     category=q_data.get('category', 'общие'),
                     difficulty=q_data.get('difficulty', 'medium'),
                     mood_characteristics=q_data.get('mood_characteristics', []),
-                    follow_up_suggestions=q_data.get('follow_up_suggestions', [])
+                    follow_up_suggestions=q_data.get('follow_up_suggestions', []),
                 )
                 questions.append(question)
-            
+
             processing_time = (datetime.now() - start_time).total_seconds()
-            
+
             return QuestionGenerationResponse(
                 request_id=request_id,
                 questions=questions,
@@ -121,75 +121,77 @@ class QuestionGenerator:
                 categories=categories,
                 mood_description=mood_description,
                 processing_time_seconds=processing_time,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
-            
+
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON response: {e}")
+            logger.error(f'Failed to parse JSON response: {e}')
             # Возвращаем базовые вопросы в случае ошибки
             return self._get_fallback_questions(request, request_id, start_time)
-        
+
         except Exception as e:
-            logger.error(f"Error generating questions: {e}")
+            logger.error(f'Error generating questions: {e}')
             return self._get_fallback_questions(request, request_id, start_time)
-    
-    def _get_fallback_questions(self, request: QuestionGenerationRequest, request_id: str, start_time: datetime) -> QuestionGenerationResponse:
+
+    def _get_fallback_questions(
+        self, request: QuestionGenerationRequest, request_id: str, start_time: datetime
+    ) -> QuestionGenerationResponse:
         """Возвращает базовые вопросы в случае ошибки"""
         mood_config = COMMISSION_MOODS[request.commission_mood]
-        
+
         fallback_questions = [
             Question(
-                id="fallback_1",
-                text="Подготовьте подробное описание вашей работы с конкретными примерами и результатами",
-                category="business",
-                difficulty="medium",
+                id='fallback_1',
+                text='Подготовьте подробное описание вашей работы с конкретными примерами и результатами',
+                category='business',
+                difficulty='medium',
                 mood_characteristics=[mood_config.question_style],
-                follow_up_suggestions=["Подготовьте визуальные материалы", "Продумайте структуру ответа"]
+                follow_up_suggestions=['Подготовьте визуальные материалы', 'Продумайте структуру ответа'],
             ),
             Question(
-                id="fallback_2", 
-                text="Изучите методологию вашего исследования и подготовьте объяснение выбора методов",
-                category="technical",
-                difficulty="easy",
+                id='fallback_2',
+                text='Изучите методологию вашего исследования и подготовьте объяснение выбора методов',
+                category='technical',
+                difficulty='easy',
                 mood_characteristics=[mood_config.question_style],
-                follow_up_suggestions=["Подготовьте сравнительный анализ методов", "Изучите альтернативные подходы"]
-            )
+                follow_up_suggestions=['Подготовьте сравнительный анализ методов', 'Изучите альтернативные подходы'],
+            ),
         ]
-        
+
         processing_time = (datetime.now() - start_time).total_seconds()
-        
+
         return QuestionGenerationResponse(
             request_id=request_id,
             questions=fallback_questions,
             total_questions=len(fallback_questions),
-            categories=["business", "technical"],
+            categories=['business', 'technical'],
             mood_description=mood_config.description,
             processing_time_seconds=processing_time,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
-    
+
     def get_available_moods(self) -> List[dict]:
         """Возвращает список доступных настроений комиссии"""
         return [
             {
-                "value": mood.value,
-                "name": config.name,
-                "description": config.description,
-                "question_style": config.question_style,
-                "focus_areas": config.focus_areas,
-                "typical_questions": config.typical_questions
+                'value': mood.value,
+                'name': config.name,
+                'description': config.description,
+                'question_style': config.question_style,
+                'focus_areas': config.focus_areas,
+                'typical_questions': config.typical_questions,
             }
             for mood, config in COMMISSION_MOODS.items()
         ]
-    
+
     def get_mood_characteristics(self, mood: CommissionMood) -> dict:
         """Возвращает характеристики конкретного настроения"""
         config = COMMISSION_MOODS[mood]
         return {
-            "name": config.name,
-            "description": config.description,
-            "question_style": config.question_style,
-            "focus_areas": config.focus_areas,
-            "typical_questions": config.typical_questions,
-            "follow_up_style": config.follow_up_style
+            'name': config.name,
+            'description': config.description,
+            'question_style': config.question_style,
+            'focus_areas': config.focus_areas,
+            'typical_questions': config.typical_questions,
+            'follow_up_style': config.follow_up_style,
         }

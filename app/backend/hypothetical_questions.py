@@ -1,16 +1,16 @@
+import random
 import uuid
 from datetime import datetime
 from typing import List
-import random
 
 from db import (
+    delete_hypothetical_question_by_id,
+    get_all_hypothetical_questions,
     get_hypothetical_question_by_id,
     get_hypothetical_questions_by_pitch_id,
-    get_all_hypothetical_questions,
-    store_hypothetical_question,
-    delete_hypothetical_question_by_id,
-    hypothetical_question_exists,
     get_pitch_by_id,
+    hypothetical_question_exists,
+    store_hypothetical_question,
 )
 from db_models import (
     HypotheticalQuestion,

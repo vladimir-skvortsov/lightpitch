@@ -3,11 +3,11 @@ from datetime import datetime
 from typing import List
 
 from db import (
+    delete_training_session_by_id,
+    get_all_training_sessions,
     get_training_session_by_id,
     get_training_sessions_by_pitch_id,
-    get_all_training_sessions,
     store_training_session,
-    delete_training_session_by_id,
     training_session_exists,
 )
 from db_models import TrainingSession, TrainingSessionCreate, TrainingSessionUpdate

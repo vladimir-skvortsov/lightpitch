@@ -1,13 +1,13 @@
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional
+
 import bcrypt
 import jwt
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-from db import get_user_by_email, get_user_by_id, store_user, email_exists
-from db_models import UserCreate, UserInDB, User, TokenData
+from db import email_exists, get_user_by_email, get_user_by_id, store_user
+from db_models import TokenData, User, UserCreate, UserInDB
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Configuration
 SECRET_KEY = 'your-secret-key-change-in-production'
