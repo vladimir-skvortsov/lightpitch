@@ -28,8 +28,6 @@ from auth import (
 from config import PROJECT_NAME
 from db_models import (
     HypotheticalQuestion,
-    HypotheticalQuestionCreate,
-    HypotheticalQuestionUpdate,
     LoginRequest,
     Pitch,
     PitchCreate,
