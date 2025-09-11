@@ -10,10 +10,10 @@ from typing import Dict, List, Any, Optional
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
-# Add the project root to the path to import openai_client
+# Add the project root to the path to import openrouter_client
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from models.text_editor.openai_client import OpenAIService
+from models.text_editor.openrouter_client import OpenRouterService
 from .types import SlideContent, PresentationContent, AnalysisResult
 
 logger = logging.getLogger(__name__)
@@ -24,9 +24,9 @@ class PresentationSummarizer:
     Analyzes presentation files (.pptx) using LLM to provide comprehensive feedback
     """
     
-    def __init__(self, model: str = 'gpt-4o-mini'):
-        """Initialize with OpenAI service"""
-        self.openai_service = OpenAIService(model=model)
+    def __init__(self, model: str = 'anthropic/claude-3.5-haiku'):
+        """Initialize with OpenRouter service"""
+        self.openai_service = OpenRouterService(model=model)
         
         # Analysis prompts
         self.analysis_prompt = """
@@ -287,7 +287,7 @@ class PresentationSummarizer:
             }
 
 
-async def analyze_presentation(file_path: str, model: str = 'gpt-4o-mini') -> Dict[str, Any]:
+async def analyze_presentation(file_path: str, model: str = 'anthropic/claude-3.5-haiku') -> Dict[str, Any]:
     """
     Convenience function to analyze a presentation file
     

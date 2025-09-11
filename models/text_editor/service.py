@@ -3,8 +3,8 @@ import logging
 from typing import Any, Dict, List, Tuple
 
 from .normalizers import normalize_weak_spot
-from .openai_client import OpenAIService
-from .prompts import COMBINED_PROCESSING_PROMPT, WEAK_SPOTS_PROMPT
+from .openrouter_client import OpenRouterService
+from .prompts import COMBINED_PROCESSING_PROMPT, WEAK_SPOTS_PROMPT, FEEDBACK_GENERATION_PROMPT
 from .types import AnalysisType, TextStyle, WeakSpot
 
 logger = logging.getLogger(__name__)
@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 
 class TextAnalysisService:
     def __init__(self):
-        self.openai_service = OpenAIService()
+        self.openai_service = OpenRouterService()
         self.prompts = {
             'weak_spots': WEAK_SPOTS_PROMPT,
             'combined_processing': COMBINED_PROCESSING_PROMPT,
+            'feedback_generation': FEEDBACK_GENERATION_PROMPT,
         }
 
     async def analyze_weak_spots(self, text: str, language: str) -> Tuple[List[WeakSpot], List[str]]:
@@ -108,6 +109,65 @@ class TextAnalysisService:
             'diagnostics': diagnostics,
         }
 
+    async def generate_feedback(self, text: str, weak_spots: List[WeakSpot], recommendations: List[str], language: str) -> Dict[str, Any]:
+        """Generate dynamic feedback based on analysis results"""
+        words = len(text.split())
+        speech_time_min = round(words / 150.0, 2)
+        
+        # Prepare summary of weak spots by type
+        by_type = {}
+        for ws in weak_spots:
+            by_type.setdefault(ws.issue_type, []).append(ws)
+        
+        weak_spots_summary = []
+        for issue_type, spots in by_type.items():
+            count = len(spots)
+            issue_names = {
+                'punctuation_error': 'ошибки пунктуации',
+                'filler': 'слова-паразиты', 
+                'bureaucracy': 'канцеляризмы',
+                'passive_overuse': 'пассивный залог',
+                'logic_gap': 'логические разрывы',
+                'clarity': 'неясные формулировки',
+                'redundancy': 'повторы',
+                'tone_mismatch': 'несоответствие тона',
+                'term_misuse': 'неверное использование терминов',
+                'wordiness': 'избыточная длина предложений',
+                'other': 'другие проблемы'
+            }
+            issue_name = issue_names.get(issue_type, issue_type)
+            weak_spots_summary.append(f"{count} {issue_name}")
+        
+        weak_spots_str = ', '.join(weak_spots_summary) if weak_spots_summary else 'проблем не найдено'
+        recommendations_str = ', '.join(recommendations[:3]) if recommendations else 'специальных рекомендаций нет'
+        
+        prompt = self.prompts['feedback_generation'].format(
+            language=language,
+            weak_spots_summary=weak_spots_str,
+            recommendations_summary=recommendations_str,
+            word_count=words,
+            speech_time_minutes=speech_time_min
+        )
+        
+        try:
+            response = await self.openai_service.analyze_text(prompt, text, expect_json=True)
+            return json.loads(response)
+        except (json.JSONDecodeError, TypeError, KeyError) as e:
+            logger.warning(f'Failed to parse feedback generation response: {e}')
+            # Fallback to basic feedback
+            if weak_spots:
+                return {
+                    'feedback': f'Текст содержит {len(weak_spots)} проблемных мест. Рекомендуется переработать текст для улучшения качества.',
+                    'strengths': ['Текст имеет базовую структуру'],
+                    'areas_for_improvement': ['Устранение найденных проблем', 'Улучшение стиля изложения']
+                }
+            else:
+                return {
+                    'feedback': 'Текст в целом хорошо структурирован и не содержит серьезных проблем.',
+                    'strengths': ['Хорошая структура', 'Отсутствие серьезных ошибок'],
+                    'areas_for_improvement': []
+                }
+
     async def get_legacy_interface(self, text: str, language: str) -> Dict[str, Any]:
         weak_spots, recommendations = await self.analyze_weak_spots(text, language)
         words = len(text.split())
@@ -191,12 +251,13 @@ class TextAnalysisService:
             structure_group,
         ]
 
-        # Генерация деталей перенесена как есть из исходного файла (опущена для компактности)
-        # Здесь можно подключить существующую _generate_detailed_feedback при необходимости
+        # Generate dynamic feedback using AI
+        feedback_data = await self.generate_feedback(text, weak_spots, recommendations, language)
+        
         return {
             'groups': groups,
-            'feedback': 'Анализ завершен',
-            'strengths': [],
-            'areas_for_improvement': [],
+            'feedback': feedback_data.get('feedback', 'Анализ завершен'),
+            'strengths': feedback_data.get('strengths', []),
+            'areas_for_improvement': feedback_data.get('areas_for_improvement', []),
             'recommendations': recommendations[:7],
         }

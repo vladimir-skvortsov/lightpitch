@@ -1,390 +1,354 @@
 """
-Presentation Generator using LLM to create improved presentations
+Presentation Generator using LLM to create improved presentations with visual suggestions
 """
 
 import json
 import logging
 import os
 import sys
+import time
 from typing import Dict, List, Any, Optional
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 
-# Add the project root to the path to import openai_client
+# Add the project root to the path to import other modules
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from models.text_editor.openai_client import OpenAIService
-from .types import SlideContent, GeneratedPresentation, GenerationRequest
+from models.text_editor.openrouter_client import OpenRouterService
+from models.presentation_summary.presentation_summarizer import PresentationSummarizer
+from .types import ImprovedSlide, ImprovedPresentation, VisualElement, VisualElementType, ChartType
 
 logger = logging.getLogger(__name__)
 
 
 class PresentationGenerator:
     """
-    Generates improved presentation files based on analysis results
+    Generates improved presentations with visual element suggestions using LLM
     """
     
-    def __init__(self, model: str = 'gpt-4o-mini'):
-        """Initialize with OpenAI service"""
-        self.openai_service = OpenAIService(model=model)
+    def __init__(self, model: str = 'anthropic/claude-3.5-haiku'):
+        """Initialize with OpenRouter service and presentation summarizer"""
+        self.openai_service = OpenRouterService(model=model)
+        self.summarizer = PresentationSummarizer(model=model)
         
-        # Generation prompt
-        self.generation_prompt = """
-Ты эксперт по созданию презентаций. Создай улучшенную версию презентации на основе анализа и найденных проблем.
+        # Improvement prompt with visual suggestions
+        self.improvement_prompt = """
+Ты эксперт по созданию презентаций. На основе анализа существующей презентации, создай улучшенную версию с предложениями визуальных элементов.
 
-АНАЛИЗ ОРИГИНАЛЬНОЙ ПРЕЗЕНТАЦИИ:
-{analysis_summary}
+ПРАВИЛА УЛУЧШЕНИЯ:
+1. **Убирай канцеляризмы и лишние слова**: "в принципе", "как бы", "собственно", "значит", "ну", "в общем"
+2. **Исправляй грамматику и стилистику**: правильные падежи, согласование, логичные переходы
+3. **Делай тексты более четкими**: одна мысль на слайд, конкретные формулировки
+4. **Улучшай структуру**: логичная последовательность, понятные заголовки
+5. **Добавляй call-to-action**: где это уместно
+6. **Предлагай визуальные элементы**: диаграммы, графики, изображения, таблицы, иконки
 
-НАЙДЕННЫЕ ПРОБЛЕМЫ:
-{warnings_summary}
+ТЕКУЩАЯ ПРЕЗЕНТАЦИЯ:
+{original_content}
 
-КРИТИЧЕСКИЕ ОШИБКИ:
-{errors_summary}
-
-РЕКОМЕНДАЦИИ:
-{recommendations_summary}
-
-ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ:
-{user_requirements}
-
-Создай улучшенную презентацию, которая:
-1. Исправляет все найденные проблемы
-2. Применяет все рекомендации
-3. Соответствует лучшим практикам презентаций
-4. Имеет четкую структуру и логику
-5. Использует простой и понятный язык
-6. Избегает канцеляризмов и лишних слов
+АНАЛИЗ И РЕКОМЕНДАЦИИ:
+{warnings_errors}
 
 Верни результат в JSON формате:
 {{
-  "title": "Название презентации",
-  "slides": [
+  "improved_slides": [
     {{
-      "title": "Заголовок слайда",
-      "content": ["основная мысль слайда"],
-      "bullet_points": ["ключевые пункты"],
-      "speaker_notes": "заметки для докладчика"
+      "slide_number": номер_слайда,
+      "title": "улучшенный_заголовок",
+      "content": ["улучшенный_текст_1", "улучшенный_текст_2"],
+      "bullet_points": ["пункт_1", "пункт_2", "пункт_3"],
+      "speaker_notes": "заметки_для_докладчика",
+      "improvements_applied": ["что_было_улучшено"],
+      "suggested_visuals": [
+        {{
+          "element_type": "chart|graph|diagram|image|table|icon|infografic|timeline|flowchart",
+          "title": "название_элемента",
+          "description": "описание_элемента",
+          "purpose": "зачем_нужен_этот_элемент",
+          "data_suggestion": ["данные_для_диаграммы"],
+          "chart_type": "bar|line|pie|column|area|scatter" (только для charts),
+          "position_suggestion": "center|left|right|top|bottom",
+          "size_suggestion": "small|medium|large"
+        }}
+      ]
     }}
   ],
-  "improvements_applied": [
-    "список примененных улучшений"
+  "improvements_summary": [
+    "список_основных_улучшений"
   ],
-  "theme": "modern/classic/minimal",
-  "notes": "дополнительные заметки"
+  "overall_feedback": "общая_оценка_улучшений"
 }}
 
-Важные принципы:
-- Один слайд = одна основная идея
-- Максимум 6 пунктов на слайд
-- Короткие, четкие формулировки
-- Логичная последовательность
-- Убедительные аргументы
+ПРАВИЛА ДЛЯ ВИЗУАЛЬНЫХ ЭЛЕМЕНТОВ:
+- Предлагай диаграммы для числовых данных и сравнений
+- Используй графики для показа трендов и изменений во времени
+- Добавляй диаграммы для процессов и схем
+- Предлагай таблицы для структурированных данных
+- Рекомендуй иконки для ключевых понятий
+- Используй инфографику для сложных концепций
+- Добавляй timeline для хронологических данных
+
+Создай профессиональную, четкую и визуально привлекательную презентацию.
 """
     
-    def format_analysis_for_generation(self, analysis: Dict[str, Any]) -> Dict[str, str]:
-        """Format analysis data for generation prompt"""
+    def extract_analysis_issues(self, analysis: Dict[str, Any]) -> str:
+        """Extract warnings and errors from analysis for improvement prompt"""
+        issues = []
         
-        # Extract warnings
-        warnings = analysis.get('warnings', [])
-        warnings_text = []
-        for warning in warnings:
-            warnings_text.append(f"• {warning.get('title', '')}: {warning.get('description', '')}")
+        # Add warnings
+        for warning in analysis.get('warnings', []):
+            issues.append(f"⚠️ {warning.get('title', '')}: {warning.get('description', '')}")
         
-        # Extract errors
-        errors = analysis.get('errors', [])
-        errors_text = []
-        for error in errors:
-            errors_text.append(f"• {error.get('title', '')}: {error.get('description', '')}")
+        # Add errors
+        for error in analysis.get('errors', []):
+            issues.append(f"❌ {error.get('title', '')}: {error.get('description', '')}")
         
-        # Extract recommendations
-        recommendations = analysis.get('recommendations', [])
+        # Add recommendations
+        for rec in analysis.get('recommendations', []):
+            issues.append(f"💡 Рекомендация: {rec}")
         
-        # Extract strengths and areas for improvement
-        strengths = analysis.get('strengths', [])
-        areas_for_improvement = analysis.get('areas_for_improvement', [])
-        
-        return {
-            'analysis_summary': f"""
-Файл: {analysis.get('filename', 'Неизвестно')}
-Общая оценка: {analysis.get('overall_score', 0)}/100
-Количество слайдов: {analysis.get('total_slides', 0)}
-
-Сильные стороны:
-{chr(10).join([f"• {s}" for s in strengths])}
-
-Области для улучшения:
-{chr(10).join([f"• {a}" for a in areas_for_improvement])}
-            """.strip(),
-            
-            'warnings_summary': '\n'.join(warnings_text) if warnings_text else "Предупреждений не найдено",
-            
-            'errors_summary': '\n'.join(errors_text) if errors_text else "Критических ошибок не найдено",
-            
-            'recommendations_summary': '\n'.join([f"• {r}" for r in recommendations]) if recommendations else "Рекомендации не предоставлены"
-        }
+        return "\n".join(issues) if issues else "Особых проблем не обнаружено"
     
-    async def generate_presentation_content(self, request: GenerationRequest) -> Dict[str, Any]:
-        """Generate presentation content using LLM"""
+    def parse_visual_element(self, visual_data: Dict[str, Any]) -> VisualElement:
+        """Parse visual element from LLM response"""
         try:
-            # Format analysis for prompt
-            formatted_analysis = self.format_analysis_for_generation(request.original_analysis)
+            element_type = VisualElementType(visual_data.get('element_type', 'chart'))
+            chart_type = None
             
-            # Build user requirements
-            user_requirements = request.user_requirements or "Без дополнительных требований"
-            if request.target_audience:
-                user_requirements += f"\nЦелевая аудитория: {request.target_audience}"
-            if request.presentation_style:
-                user_requirements += f"\nСтиль презентации: {request.presentation_style}"
-            if request.focus_areas:
-                user_requirements += f"\nФокусные области: {', '.join(request.focus_areas)}"
+            if element_type in [VisualElementType.CHART, VisualElementType.GRAPH]:
+                chart_type_str = visual_data.get('chart_type')
+                if chart_type_str:
+                    chart_type = ChartType(chart_type_str)
             
-            # Create prompt
-            prompt = self.generation_prompt.format(
-                analysis_summary=formatted_analysis['analysis_summary'],
-                warnings_summary=formatted_analysis['warnings_summary'],
-                errors_summary=formatted_analysis['errors_summary'],
-                recommendations_summary=formatted_analysis['recommendations_summary'],
-                user_requirements=user_requirements
+            return VisualElement(
+                element_type=element_type,
+                title=visual_data.get('title', ''),
+                description=visual_data.get('description', ''),
+                purpose=visual_data.get('purpose', ''),
+                data_suggestion=visual_data.get('data_suggestion', []),
+                chart_type=chart_type,
+                position_suggestion=visual_data.get('position_suggestion', 'center'),
+                size_suggestion=visual_data.get('size_suggestion', 'medium')
+            )
+        except (ValueError, KeyError) as e:
+            logger.warning(f"Error parsing visual element: {str(e)}")
+            # Return default visual element
+            return VisualElement(
+                element_type=VisualElementType.CHART,
+                title=visual_data.get('title', 'Диаграмма'),
+                description=visual_data.get('description', 'Визуальный элемент'),
+                purpose=visual_data.get('purpose', 'Иллюстрация данных')
+            )
+    
+    async def improve_slide_content(self, original_content: str, analysis_issues: str) -> Dict[str, Any]:
+        """Improve slide content using LLM with visual suggestions"""
+        try:
+            prompt = self.improvement_prompt.format(
+                original_content=original_content,
+                warnings_errors=analysis_issues
             )
             
-            logger.info("Generating presentation content with LLM...")
-            response_json = await self.openai_service.analyze_text(
+            logger.info("Improving presentation content with visual suggestions")
+            improved_json = await self.openai_service.analyze_text(
                 prompt=prompt,
-                text="Создай улучшенную презентацию",
+                text="",
                 expect_json=True
             )
             
-            response = json.loads(response_json)
-            
-            # Validate and structure response
-            if 'slides' not in response:
-                raise ValueError("Generated response missing slides")
-            
-            # Convert to our data structures
-            slides = []
-            for slide_data in response['slides']:
-                slide = SlideContent(
-                    title=slide_data.get('title', ''),
-                    content=slide_data.get('content', []),
-                    bullet_points=slide_data.get('bullet_points', []),
-                    speaker_notes=slide_data.get('speaker_notes')
-                )
-                slides.append(slide)
-            
-            presentation = GeneratedPresentation(
-                title=response.get('title', 'Улучшенная презентация'),
-                slides=slides,
-                theme=response.get('theme', 'modern'),
-                improvements_applied=response.get('improvements_applied', [])
-            )
-            
-            return {
-                'success': True,
-                'presentation': presentation,
-                'raw_response': response
-            }
+            improved_data = json.loads(improved_json)
+            return improved_data
             
         except Exception as e:
-            logger.error(f"Error generating presentation content: {str(e)}")
+            logger.error(f"Error improving slide content: {str(e)}")
             return {
-                'success': False,
-                'error': str(e),
-                'presentation': None
+                'improved_slides': [],
+                'improvements_summary': [f'Ошибка улучшения: {str(e)}'],
+                'overall_feedback': 'Не удалось улучшить презентацию'
             }
     
-    def create_pptx_file(self, presentation: GeneratedPresentation, output_path: str) -> bool:
-        """Create .pptx file from generated presentation"""
+    def create_improved_pptx(self, improved_data: Dict[str, Any], original_file_path: str, output_path: str) -> str:
+        """Create improved .pptx file with visual placeholders"""
         try:
             # Create new presentation
             prs = Presentation()
             
-            # Set slide size to widescreen
+            # Set slide size to standard (16:9)
             prs.slide_width = Inches(13.33)
             prs.slide_height = Inches(7.5)
             
-            # Create slides
-            for i, slide_content in enumerate(presentation.slides):
-                # Add slide layout
-                slide_layout = prs.slide_layouts[0]  # Title slide layout
+            improved_slides = improved_data.get('improved_slides', [])
+            
+            for slide_data in improved_slides:
+                # Add new slide
+                slide_layout = prs.slide_layouts[1]  # Title and Content layout
                 slide = prs.slides.add_slide(slide_layout)
                 
                 # Add title
                 title_shape = slide.shapes.title
-                title_shape.text = slide_content.title
+                title_shape.text = slide_data.get('title', 'Заголовок слайда')
                 
-                # Style title
-                title_paragraph = title_shape.text_frame.paragraphs[0]
-                title_paragraph.font.size = Pt(32)
-                title_paragraph.font.bold = True
-                title_paragraph.alignment = PP_ALIGN.CENTER
-                title_paragraph.font.color.rgb = RGBColor(51, 51, 51)
+                # Add content to content placeholder
+                content_shape = slide.placeholders[1]
+                tf = content_shape.text_frame
+                tf.clear()
                 
-                # Add content
-                if slide_content.content or slide_content.bullet_points:
-                    # Create text box for content
-                    left = Inches(1)
-                    top = Inches(2.5)
-                    width = Inches(11.33)
-                    height = Inches(4)
+                # Add main content
+                content_items = slide_data.get('content', [])
+                for i, content in enumerate(content_items):
+                    if i == 0:
+                        p = tf.paragraphs[0]
+                    else:
+                        p = tf.add_paragraph()
+                    p.text = content
+                    p.font.size = Pt(18)
+                    p.font.color.rgb = RGBColor(51, 51, 51)
+                
+                # Add bullet points
+                bullet_points = slide_data.get('bullet_points', [])
+                if bullet_points:
+                    if content_items:  # Add spacing if there's already content
+                        p = tf.add_paragraph()
+                        p.text = ""
                     
-                    textbox = slide.shapes.add_textbox(left, top, width, height)
-                    text_frame = textbox.text_frame
-                    text_frame.word_wrap = True
+                    for bullet in bullet_points:
+                        p = tf.add_paragraph()
+                        p.text = bullet
+                        p.font.size = Pt(16)
+                        p.font.color.rgb = RGBColor(51, 51, 51)
+                        p.level = 0
+                
+                # Add visual suggestions as text placeholders
+                suggested_visuals = slide_data.get('suggested_visuals', [])
+                if suggested_visuals:
+                    p = tf.add_paragraph()
+                    p.text = ""
                     
-                    # Add main content
-                    if slide_content.content:
-                        for j, content_item in enumerate(slide_content.content):
-                            if j == 0:
-                                p = text_frame.paragraphs[0]
-                            else:
-                                p = text_frame.add_paragraph()
-                            
-                            p.text = content_item
-                            p.font.size = Pt(18)
-                            p.font.color.rgb = RGBColor(68, 68, 68)
-                            p.space_after = Pt(12)
+                    p = tf.add_paragraph()
+                    p.text = "РЕКОМЕНДУЕМЫЕ ВИЗУАЛЬНЫЕ ЭЛЕМЕНТЫ:"
+                    p.font.size = Pt(14)
+                    p.font.color.rgb = RGBColor(0, 100, 0)
+                    p.font.bold = True
                     
-                    # Add bullet points
-                    if slide_content.bullet_points:
-                        for bullet in slide_content.bullet_points:
-                            p = text_frame.add_paragraph()
-                            p.text = bullet
-                            p.font.size = Pt(16)
-                            p.font.color.rgb = RGBColor(85, 85, 85)
-                            p.level = 0
-                            p.space_after = Pt(8)
+                    for visual in suggested_visuals:
+                        p = tf.add_paragraph()
+                        p.text = f"• {visual.get('title', '')}: {visual.get('description', '')}"
+                        p.font.size = Pt(12)
+                        p.font.color.rgb = RGBColor(0, 100, 0)
+                        p.level = 1
                 
                 # Add speaker notes if available
-                if slide_content.speaker_notes:
+                speaker_notes = slide_data.get('speaker_notes')
+                if speaker_notes:
                     notes_slide = slide.notes_slide
                     notes_text_frame = notes_slide.notes_text_frame
-                    notes_text_frame.text = slide_content.speaker_notes
+                    notes_text_frame.text = speaker_notes
             
             # Save presentation
             prs.save(output_path)
-            logger.info(f"Presentation saved to: {output_path}")
-            return True
+            logger.info(f"Improved presentation with visual suggestions saved to: {output_path}")
+            return output_path
             
         except Exception as e:
-            logger.error(f"Error creating PPTX file: {str(e)}")
-            return False
+            logger.error(f"Error creating improved .pptx: {str(e)}")
+            raise
     
-    async def generate_improved_presentation(
-        self, 
-        analysis: Dict[str, Any], 
-        output_path: str,
-        user_requirements: Optional[str] = None,
-        target_audience: Optional[str] = None,
-        presentation_style: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def generate_improved_presentation(self, original_file_path: str, analysis: Dict[str, Any], output_dir: str = None) -> ImprovedPresentation:
         """
-        Generate and save improved presentation
+        Generate improved presentation with visual suggestions
         
         Args:
-            analysis: Original presentation analysis results
-            output_path: Path to save the new .pptx file
-            user_requirements: Additional user requirements
-            target_audience: Target audience description
-            presentation_style: Preferred presentation style
+            original_file_path: Path to original .pptx file
+            analysis: Analysis results from presentation_summary
+            output_dir: Directory to save improved presentation
             
         Returns:
-            Dictionary with generation results
+            ImprovedPresentation object with visual suggestions
         """
         try:
-            # Create generation request
-            request = GenerationRequest(
-                original_analysis=analysis,
-                user_requirements=user_requirements,
-                target_audience=target_audience,
-                presentation_style=presentation_style
+            logger.info(f"Generating improved presentation with visual suggestions for: {original_file_path}")
+            
+            # Parse original presentation
+            original_content = self.summarizer.parse_presentation(original_file_path)
+            
+            # Format original content for LLM
+            formatted_content = self.summarizer.format_presentation_for_analysis(original_content)
+            
+            # Extract analysis issues
+            analysis_issues = self.extract_analysis_issues(analysis)
+            
+            # Improve content with LLM
+            improved_data = await self.improve_slide_content(formatted_content, analysis_issues)
+            
+            # Create improved slides objects with visual elements
+            improved_slides = []
+            for slide_data in improved_data.get('improved_slides', []):
+                # Parse visual elements
+                suggested_visuals = []
+                for visual_data in slide_data.get('suggested_visuals', []):
+                    visual_element = self.parse_visual_element(visual_data)
+                    suggested_visuals.append(visual_element)
+                
+                improved_slide = ImprovedSlide(
+                    slide_number=slide_data.get('slide_number', 0),
+                    title=slide_data.get('title', ''),
+                    content=slide_data.get('content', []),
+                    bullet_points=slide_data.get('bullet_points', []),
+                    speaker_notes=slide_data.get('speaker_notes'),
+                    improvements_applied=slide_data.get('improvements_applied', []),
+                    suggested_visuals=suggested_visuals
+                )
+                improved_slides.append(improved_slide)
+            
+            # Generate output filename
+            original_filename = os.path.basename(original_file_path)
+            name, ext = os.path.splitext(original_filename)
+            improved_filename = f"{name}_improved{ext}"
+            
+            # Set output directory
+            if output_dir is None:
+                output_dir = os.path.dirname(original_file_path)
+            
+            output_path = os.path.join(output_dir, improved_filename)
+            
+            # Create improved .pptx file
+            self.create_improved_pptx(improved_data, original_file_path, output_path)
+            
+            # Create improved presentation object
+            improved_presentation = ImprovedPresentation(
+                original_filename=original_filename,
+                improved_filename=improved_filename,
+                total_slides=len(improved_slides),
+                slides=improved_slides,
+                improvements_summary=improved_data.get('improvements_summary', []),
+                generation_timestamp=str(int(time.time()))
             )
             
-            # Generate content
-            generation_result = await self.generate_presentation_content(request)
-            
-            if not generation_result['success']:
-                return {
-                    'success': False,
-                    'error': generation_result['error'],
-                    'file_path': None
-                }
-            
-            presentation = generation_result['presentation']
-            
-            # Create PPTX file
-            file_created = self.create_pptx_file(presentation, output_path)
-            
-            if not file_created:
-                return {
-                    'success': False,
-                    'error': 'Failed to create PPTX file',
-                    'file_path': None
-                }
-            
-            return {
-                'success': True,
-                'file_path': output_path,
-                'presentation_title': presentation.title,
-                'slides_count': len(presentation.slides),
-                'improvements_applied': presentation.improvements_applied,
-                'theme': presentation.theme,
-                'slides_data': [
-                    {
-                        'title': slide.title,
-                        'content': slide.content,
-                        'bullet_points': slide.bullet_points,
-                        'speaker_notes': slide.speaker_notes
-                    }
-                    for slide in presentation.slides
-                ]
-            }
+            logger.info(f"Successfully generated improved presentation with visual suggestions: {improved_filename}")
+            return improved_presentation
             
         except Exception as e:
-            logger.error(f"Error in generate_improved_presentation: {str(e)}")
-            return {
-                'success': False,
-                'error': str(e),
-                'file_path': None
-            }
+            logger.error(f"Error generating improved presentation: {str(e)}")
+            raise
 
 
-async def generate_improved_presentation(
-    analysis: Dict[str, Any], 
-    output_path: str,
-    model: str = 'gpt-4o-mini',
-    user_requirements: Optional[str] = None,
-    target_audience: Optional[str] = None,
-    presentation_style: Optional[str] = None
-) -> Dict[str, Any]:
+async def generate_improved_presentation(original_file_path: str, analysis: Dict[str, Any], output_dir: str = None, model: str = 'anthropic/claude-3.5-haiku') -> ImprovedPresentation:
     """
-    Convenience function to generate improved presentation
+    Convenience function to generate improved presentation with visual suggestions
     
     Args:
-        analysis: Original presentation analysis results
-        output_path: Path to save the new .pptx file
+        original_file_path: Path to original .pptx file
+        analysis: Analysis results
+        output_dir: Output directory
         model: LLM model to use
-        user_requirements: Additional user requirements
-        target_audience: Target audience description
-        presentation_style: Preferred presentation style
         
     Returns:
-        Dictionary with generation results
+        ImprovedPresentation object with visual suggestions
     """
     try:
         generator = PresentationGenerator(model=model)
-        return await generator.generate_improved_presentation(
-            analysis=analysis,
-            output_path=output_path,
-            user_requirements=user_requirements,
-            target_audience=target_audience,
-            presentation_style=presentation_style
-        )
+        return await generator.generate_improved_presentation(original_file_path, analysis, output_dir)
     except Exception as e:
         logger.error(f"Presentation generation failed: {str(e)}")
-        return {
-            'success': False,
-            'error': str(e),
-            'file_path': None
-        }
+        raise

@@ -223,20 +223,7 @@ const PitchDetail = () => {
                         <span className='arrow-icon'>→</span>
                       </div>
                     </div>
-                    <div className='presentation-counters'>
-                      <div className='counter counter--success'>
-                        <span className='counter-icon'>✓</span>
-                        <span className='counter-number'>10</span>
-                      </div>
-                      <div className='counter counter--warning'>
-                        <span className='counter-icon'>⚠</span>
-                        <span className='counter-number'>2</span>
-                      </div>
-                      <div className='counter counter--error'>
-                        <span className='counter-icon'>✕</span>
-                        <span className='counter-number'>1</span>
-                      </div>
-                    </div>
+                    {/* Presentation counters will be added when backend provides the data */}
                   </div>
                   <div className='presentation-actions'>
                     <Button
@@ -380,20 +367,7 @@ const PitchDetail = () => {
                     <span className='arrow-icon'>→</span>
                   </div>
                 </div>
-                <div className='speech-counters'>
-                  <div className='counter counter--success'>
-                    <span className='counter-icon'>✓</span>
-                    <span className='counter-number'>6</span>
-                  </div>
-                  <div className='counter counter--warning'>
-                    <span className='counter-icon'>⚠</span>
-                    <span className='counter-number'>7</span>
-                  </div>
-                  <div className='counter counter--error'>
-                    <span className='counter-icon'>✕</span>
-                    <span className='counter-number'>1</span>
-                  </div>
-                </div>
+                {/* Speech analysis counters will be added when backend provides the data */}
               </div>
               {pitch.content.length > 500 && (
                 <Button

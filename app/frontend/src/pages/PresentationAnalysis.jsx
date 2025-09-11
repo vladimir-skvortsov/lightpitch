@@ -9,8 +9,7 @@ const PresentationAnalysis = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [generating, setGenerating] = useState(false)
-  const [generationResult, setGenerationResult] = useState(null)
-  const [showGeneratedPresentation, setShowGeneratedPresentation] = useState(false)
+  const [improvedPresentation, setImprovedPresentation] = useState(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -68,60 +67,32 @@ const PresentationAnalysis = () => {
     }
   }, [])
 
-  const generatePresentation = useCallback(async () => {
+  const generateImprovedPresentation = useCallback(async () => {
     try {
       setGenerating(true)
-      setGenerationResult(null)
+      setError(null)
 
-      const response = await fetch(`/api/v1/pitches/${id}/generate-presentation`, {
+      const response = await fetch(`/api/v1/pitches/${id}/generate-improved-presentation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          user_requirements: 'Создайте улучшенную версию презентации на основе найденных проблем',
-          target_audience: 'Общая аудитория',
-          presentation_style: 'modern'
-        })
       })
 
       if (!response.ok) {
-        throw new Error('Ошибка генерации презентации')
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Ошибка генерации презентации')
       }
 
       const result = await response.json()
-      setGenerationResult(result)
-      setShowGeneratedPresentation(true)
-      
-      // Refresh analysis to get updated data
-      await fetchData()
+      setImprovedPresentation(result)
     } catch (err) {
       setError(err.message)
     } finally {
       setGenerating(false)
     }
-  }, [id, fetchData])
+  }, [id])
 
-  const downloadPresentation = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/v1/pitches/${id}/presentation-download`)
-      if (!response.ok) {
-        throw new Error('Ошибка загрузки файла')
-      }
-      
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = generationResult.filename || 'improved_presentation.pptx'
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-    } catch (err) {
-      setError(err.message)
-    }
-  }, [id, generationResult])
 
   if (loading) {
     return (
@@ -156,29 +127,133 @@ const PresentationAnalysis = () => {
       <div className='container presentation-analysis'>
         <div className='content-header'>
           <h2 className='analysis-title'>Анализ презентации</h2>
-          <div className='header-actions'>
-            <Button 
-              variant='primary' 
-              onClick={generatePresentation}
-              disabled={generating}
-              className='generate-button'
-            >
-              {generating ? '🔄 Генерируем...' : '✨ Сгенерировать улучшенную презентацию'}
-            </Button>
-            {generationResult && (
-              <Button 
-                variant='success' 
-                onClick={downloadPresentation}
-                className='download-button'
-              >
-                📥 Скачать презентацию
-              </Button>
-            )}
-            <Button variant='outline' as={Link} to={`/pitch/${id}`} className='back-button'>
-              ← Назад к выступлению
-            </Button>
-          </div>
+           <div className='header-actions'>
+             {!improvedPresentation && (
+               <Button 
+                 variant='primary' 
+                 onClick={generateImprovedPresentation}
+                 disabled={generating}
+                 className='generate-button'
+               >
+                 {generating ? 'Генерируем...' : '✨ Сгенерировать улучшенную версию'}
+               </Button>
+             )}
+             <Button variant='outline' as={Link} to={`/pitch/${id}`} className='back-button'>
+               ← Назад к выступлению
+             </Button>
+           </div>
         </div>
+
+
+        {/* Generated Presentation Display */}
+        {improvedPresentation && (
+          <div className='block generated-presentation-section'>
+             <h2 className='section-title'>📋 Содержание улучшенной презентации</h2>
+            <div className='presentation-slides'>
+              {improvedPresentation.slides.map((slide, index) => (
+                <div key={index} className='slide-card'>
+                  <div className='slide-header'>
+                    <div className='slide-number'>{slide.slide_number}</div>
+                    <h3 className='slide-title'>{slide.title}</h3>
+                  </div>
+                  <div className='slide-content'>
+                    {slide.content.length > 0 && (
+                      <div className='content-section'>
+                        <h4>ОСНОВНОЕ СОДЕРЖИМОЕ:</h4>
+                        {slide.content.map((content, idx) => (
+                          <p key={idx} className='content-item'>{content}</p>
+                        ))}
+                      </div>
+                    )}
+                    {slide.bullet_points.length > 0 && (
+                      <div className='bullets-section'>
+                        <h4>КЛЮЧЕВЫЕ ПУНКТЫ:</h4>
+                        <ul className='bullet-list'>
+                          {slide.bullet_points.map((bullet, idx) => (
+                            <li key={idx} className='bullet-item'>{bullet}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {slide.speaker_notes && (
+                      <div className='speaker-notes-section'>
+                        <h4>ЗАМЕТКИ ДОКЛАДЧИКА:</h4>
+                        <p className='speaker-notes'>{slide.speaker_notes}</p>
+                      </div>
+                    )}
+                    {slide.improvements_applied.length > 0 && (
+                      <div className='improvements-section'>
+                        <h4>ПРИМЕНЕННЫЕ УЛУЧШЕНИЯ:</h4>
+                        <ul className='bullet-list'>
+                          {slide.improvements_applied.map((improvement, idx) => (
+                            <li key={idx} className='bullet-item'>✓ {improvement}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {slide.suggested_visuals && slide.suggested_visuals.length > 0 && (
+                      <div className='visual-suggestions-section'>
+                        <h4>РЕКОМЕНДУЕМЫЕ ВИЗУАЛЬНЫЕ ЭЛЕМЕНТЫ:</h4>
+                        <div className='visual-elements-grid'>
+                          {slide.suggested_visuals.map((visual, idx) => (
+                            <div key={idx} className='visual-element-card'>
+                              <div className='visual-element-header'>
+                                <div className={`visual-element-icon visual-element-icon--${visual.element_type}`}>
+                                  {visual.element_type === 'chart' && '📊'}
+                                  {visual.element_type === 'graph' && '📈'}
+                                  {visual.element_type === 'diagram' && '🔗'}
+                                  {visual.element_type === 'image' && '🖼️'}
+                                  {visual.element_type === 'table' && '📋'}
+                                  {visual.element_type === 'icon' && '🔸'}
+                                  {visual.element_type === 'infografic' && '📰'}
+                                  {visual.element_type === 'timeline' && '⏱️'}
+                                  {visual.element_type === 'flowchart' && '🔄'}
+                                </div>
+                                <div className='visual-element-info'>
+                                  <h5 className='visual-element-title'>{visual.title}</h5>
+                                  <span className={`visual-element-type visual-element-type--${visual.element_type}`}>
+                                    {visual.element_type === 'chart' && 'Диаграмма'}
+                                    {visual.element_type === 'graph' && 'График'}
+                                    {visual.element_type === 'diagram' && 'Схема'}
+                                    {visual.element_type === 'image' && 'Изображение'}
+                                    {visual.element_type === 'table' && 'Таблица'}
+                                    {visual.element_type === 'icon' && 'Иконка'}
+                                    {visual.element_type === 'infografic' && 'Инфографика'}
+                                    {visual.element_type === 'timeline' && 'Временная шкала'}
+                                    {visual.element_type === 'flowchart' && 'Блок-схема'}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className='visual-element-description'>{visual.description}</p>
+                              <div className='visual-element-purpose'>
+                                <strong>Цель:</strong> {visual.purpose}
+                              </div>
+                              {visual.data_suggestion && visual.data_suggestion.length > 0 && (
+                                <div className='visual-element-data'>
+                                  <strong>Рекомендуемые данные:</strong>
+                                  <ul className='bullet-list'>
+                                    {visual.data_suggestion.map((data, dataIdx) => (
+                                      <li key={dataIdx} className='bullet-item'>{data}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {visual.chart_type && (
+                                <div className='visual-element-chart-type'>
+                                  <strong>Тип диаграммы:</strong> {visual.chart_type}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className='content-container'>
           {/* Overall Score Section */}
@@ -204,95 +279,6 @@ const PresentationAnalysis = () => {
             </div>
           </div>
 
-          {/* Generation Result Section */}
-          {generationResult && (
-            <div className='block generation-result-section'>
-              <h2 className='section-title section-title--success'>✅ Презентация сгенерирована!</h2>
-              <div className='generation-summary'>
-                <div className='generation-message'>
-                  🎉 Улучшенная презентация готова к скачиванию!
-                </div>
-                <div className='generation-details'>
-                  <p><strong>Название:</strong> {generationResult.presentation_title}</p>
-                  <p><strong>Количество слайдов:</strong> {generationResult.slides_count}</p>
-                  <p><strong>Тема:</strong> {generationResult.theme}</p>
-                  {generationResult.improvements_applied && generationResult.improvements_applied.length > 0 && (
-                    <div className='improvements-applied'>
-                      <h3>Примененные улучшения:</h3>
-                      <ul>
-                        {generationResult.improvements_applied.map((improvement, index) => (
-                          <li key={index}>{improvement}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <div className='generation-actions'>
-                  <Button 
-                    variant='secondary' 
-                    onClick={() => setShowGeneratedPresentation(!showGeneratedPresentation)}
-                    className='view-presentation-button'
-                  >
-                    {showGeneratedPresentation ? '👁️ Скрыть презентацию' : '👁️ Показать презентацию'}
-                  </Button>
-                  <Button 
-                    variant='success' 
-                    onClick={downloadPresentation}
-                    className='download-button'
-                  >
-                    📥 Скачать презентацию
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Generated Presentation Display */}
-          {generationResult && showGeneratedPresentation && generationResult.slides_data && (
-            <div className='block generated-presentation-section'>
-              <h2 className='section-title'>📊 Сгенерированная презентация</h2>
-              <div className='presentation-slides'>
-                {generationResult.slides_data.map((slide, index) => (
-                  <div key={index} className='slide-card'>
-                    <div className='slide-header'>
-                      <div className='slide-number'>{index + 1}</div>
-                      <h3 className='slide-title'>{slide.title}</h3>
-                    </div>
-                    
-                    <div className='slide-content'>
-                      {slide.content && slide.content.length > 0 && (
-                        <div className='content-section'>
-                          <h4>Основное содержимое:</h4>
-                          {slide.content.map((contentItem, contentIndex) => (
-                            <p key={contentIndex} className='content-item'>{contentItem}</p>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {slide.bullet_points && slide.bullet_points.length > 0 && (
-                        <div className='bullets-section'>
-                          <h4>Ключевые пункты:</h4>
-                          <ul className='bullet-list'>
-                            {slide.bullet_points.map((bullet, bulletIndex) => (
-                              <li key={bulletIndex} className='bullet-item'>{bullet}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {slide.speaker_notes && (
-                        <div className='speaker-notes-section'>
-                          <h4>Заметки докладчика:</h4>
-                          <p className='speaker-notes'>{slide.speaker_notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Category Scores (if available) */}
           {analysis.category_scores && Object.keys(analysis.category_scores).length > 0 && (
             <div className='block category-scores'>
@@ -302,7 +288,7 @@ const PresentationAnalysis = () => {
                   <div key={category} className='category-card'>
                     <div className='category-score'>
                       <div className='score-circle' style={{ borderColor: getScoreColor(score / 10) }}>
-                        <span className='score-number'>{Math.round(score)}</span>
+                        <span className='score-number'>{Math.round(score * 10)}</span>
                       </div>
                     </div>
                     <h4 className='category-name'>

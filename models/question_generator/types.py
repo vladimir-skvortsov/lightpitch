@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from pydantic import BaseModel, Field
 
@@ -36,6 +36,7 @@ class QuestionGenerationRequest(BaseModel):
     question_count: int = Field(10, ge=1, le=50, description='Количество вопросов для генерации')
     include_categories: Optional[List[str]] = Field(None, description='Включить только определенные категории')
     exclude_categories: Optional[List[str]] = Field(None, description='Исключить определенные категории')
+    presentation_data: Optional[Dict[str, Any]] = Field(None, description='Данные презентации для дополнительного контекста')
 
 
 class QuestionGenerationResponse(BaseModel):

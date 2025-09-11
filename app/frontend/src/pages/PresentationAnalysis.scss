@@ -92,72 +92,6 @@
     }
   }
 
-  // Generation Result Section
-  .generation-result-section {
-    margin-bottom: 32px;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-    border: 1px solid #28a745;
-    border-radius: 16px;
-
-    .section-title--success {
-      color: #155724;
-      margin-bottom: 16px;
-    }
-
-    .generation-summary {
-      padding: 20px;
-
-      .generation-message {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #155724;
-        margin-bottom: 20px;
-      }
-
-      .generation-details {
-        p {
-          margin-bottom: 8px;
-          color: #155724;
-          font-size: 0.95rem;
-        }
-
-        .improvements-applied {
-          margin-top: 16px;
-
-          h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #155724;
-            margin-bottom: 8px;
-          }
-
-          ul {
-            margin: 0;
-            padding-left: 20px;
-
-            li {
-              margin-bottom: 4px;
-              color: #155724;
-              font-size: 0.9rem;
-            }
-          }
-        }
-      }
-
-      .generation-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px solid #28a745;
-
-        .view-presentation-button,
-        .download-button {
-          flex: 1;
-        }
-      }
-    }
-  }
 
   // Generated Presentation Display
   .generated-presentation-section {
@@ -216,7 +150,8 @@
         .slide-content {
           .content-section,
           .bullets-section,
-          .speaker-notes-section {
+          .speaker-notes-section,
+          .improvements-section {
             margin-bottom: 16px;
 
             &:last-child {
@@ -275,6 +210,201 @@
             padding: 12px;
             border-radius: 8px;
             border-left: 3px solid var(--alfa-red);
+          }
+
+          .improvements-section {
+            background: #e8f5e8;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #28a745;
+          }
+
+          .visual-suggestions-section {
+            background: #f0f8ff;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 3px solid #007bff;
+
+            .visual-elements-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              gap: 16px;
+              margin-top: 12px;
+
+              .visual-element-card {
+                background: white;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 16px;
+                transition: all 0.3s ease;
+
+                &:hover {
+                  border-color: #007bff;
+                  transform: translateY(-2px);
+                  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+                }
+
+                .visual-element-header {
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 12px;
+                  margin-bottom: 12px;
+
+                  .visual-element-icon {
+                    flex-shrink: 0;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.2rem;
+
+                    &--chart {
+                      background: #e3f2fd;
+                      color: #1976d2;
+                    }
+
+                    &--graph {
+                      background: #f3e5f5;
+                      color: #7b1fa2;
+                    }
+
+                    &--diagram {
+                      background: #e8f5e8;
+                      color: #388e3c;
+                    }
+
+                    &--image {
+                      background: #fff3e0;
+                      color: #f57c00;
+                    }
+
+                    &--table {
+                      background: #fce4ec;
+                      color: #c2185b;
+                    }
+
+                    &--icon {
+                      background: #f1f8e9;
+                      color: #689f38;
+                    }
+
+                    &--infografic {
+                      background: #e0f2f1;
+                      color: #00695c;
+                    }
+
+                    &--timeline {
+                      background: #fff8e1;
+                      color: #ff8f00;
+                    }
+
+                    &--flowchart {
+                      background: #e3f2fd;
+                      color: #1565c0;
+                    }
+                  }
+
+                  .visual-element-info {
+                    flex: 1;
+
+                    .visual-element-title {
+                      margin: 0 0 4px 0;
+                      font-size: 1rem;
+                      font-weight: 600;
+                      color: var(--text-primary);
+                    }
+
+                    .visual-element-type {
+                      font-size: 0.8rem;
+                      font-weight: 500;
+                      padding: 2px 8px;
+                      border-radius: 4px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+
+                      &--chart {
+                        background: #e3f2fd;
+                        color: #1976d2;
+                      }
+
+                      &--graph {
+                        background: #f3e5f5;
+                        color: #7b1fa2;
+                      }
+
+                      &--diagram {
+                        background: #e8f5e8;
+                        color: #388e3c;
+                      }
+
+                      &--image {
+                        background: #fff3e0;
+                        color: #f57c00;
+                      }
+
+                      &--table {
+                        background: #fce4ec;
+                        color: #c2185b;
+                      }
+
+                      &--icon {
+                        background: #f1f8e9;
+                        color: #689f38;
+                      }
+
+                      &--infografic {
+                        background: #e0f2f1;
+                        color: #00695c;
+                      }
+
+                      &--timeline {
+                        background: #fff8e1;
+                        color: #ff8f00;
+                      }
+
+                      &--flowchart {
+                        background: #e3f2fd;
+                        color: #1565c0;
+                      }
+                    }
+                  }
+                }
+
+                .visual-element-description {
+                  margin: 0 0 12px 0;
+                  font-size: 0.9rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                }
+
+                .visual-element-purpose {
+                  margin: 0 0 12px 0;
+                  font-size: 0.85rem;
+                  color: var(--text-primary);
+                  line-height: 1.4;
+                }
+
+                .visual-element-data,
+                .visual-element-chart-type {
+                  margin: 0 0 8px 0;
+                  font-size: 0.8rem;
+                  color: var(--text-secondary);
+
+                  .bullet-list {
+                    margin: 4px 0 0 0;
+                    padding-left: 16px;
+
+                    .bullet-item {
+                      margin-bottom: 2px;
+                      font-size: 0.8rem;
+                      line-height: 1.4;
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -646,6 +776,10 @@
       grid-template-columns: 1fr !important;
     }
 
+    .visual-elements-grid {
+      grid-template-columns: 1fr !important;
+    }
+
     .group-scores {
       grid-template-columns: 1fr !important;
     }
@@ -671,14 +805,6 @@
         }
       }
 
-      .generation-actions {
-        flex-direction: column;
-
-        .view-presentation-button,
-        .download-button {
-          width: 100%;
-        }
-      }
     }
   }
 }
