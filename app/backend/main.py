@@ -41,16 +41,8 @@ from db_models import (
     User,
     UserCreate,
 )
-from hypothetical_questions import create_hypothetical_question as create_hypothetical_question_service
-from hypothetical_questions import delete_hypothetical_question as delete_hypothetical_question_service
-from hypothetical_questions import (
-    generate_hypothetical_questions_for_pitch as generate_hypothetical_questions_for_pitch_service,
-)
-from hypothetical_questions import get_hypothetical_question as get_hypothetical_question_service
 from hypothetical_questions import get_hypothetical_questions_for_pitch as get_hypothetical_questions_for_pitch_service
 from hypothetical_questions import get_hypothetical_questions_stats as get_hypothetical_questions_stats_service
-from hypothetical_questions import list_hypothetical_questions as list_hypothetical_questions_service
-from hypothetical_questions import update_hypothetical_question as update_hypothetical_question_service
 from pitches import create_pitch as create_pitch_service
 from pitches import delete_pitch as delete_pitch_service
 from pitches import get_pitch as get_pitch_service
