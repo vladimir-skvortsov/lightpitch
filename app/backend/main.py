@@ -1222,28 +1222,6 @@ async def delete_training_session_endpoint(session_id: str):
     return {'message': 'Training session has been deleted successfully'}
 
 
-# Hypothetical Questions endpoints
-@app.post('/api/v1/hypothetical-questions/', response_model=HypotheticalQuestion)
-async def create_hypothetical_question_endpoint(question: HypotheticalQuestionCreate):
-    """Create a new hypothetical question"""
-    return create_hypothetical_question_service(question)
-
-
-@app.get('/api/v1/hypothetical-questions/', response_model=list[HypotheticalQuestion])
-async def get_all_hypothetical_questions():
-    """Get all hypothetical questions"""
-    return list_hypothetical_questions_service()
-
-
-@app.get('/api/v1/hypothetical-questions/{question_id}', response_model=HypotheticalQuestion)
-async def get_hypothetical_question_endpoint(question_id: str):
-    """Get a specific hypothetical question by ID"""
-    question = get_hypothetical_question_service(question_id)
-    if not question:
-        raise HTTPException(status_code=404, detail='Hypothetical question not found')
-    return question
-
-
 @app.get('/api/v1/pitches/{pitch_id}/hypothetical-questions', response_model=list[HypotheticalQuestion])
 async def get_hypothetical_questions_for_pitch_endpoint(pitch_id: str):
     """Get all hypothetical questions for a specific pitch"""
@@ -1260,38 +1238,6 @@ async def get_hypothetical_questions_stats_endpoint(pitch_id: str):
     if not pitch:
         raise HTTPException(status_code=404, detail='Pitch not found')
     return get_hypothetical_questions_stats_service(pitch_id)
-
-
-@app.post('/api/v1/pitches/{pitch_id}/hypothetical-questions/generate')
-async def generate_hypothetical_questions_endpoint(pitch_id: str, count: int = 5):
-    """Generate hypothetical questions for a specific pitch"""
-    pitch = get_pitch_service(pitch_id)
-    if not pitch:
-        raise HTTPException(status_code=404, detail='Pitch not found')
-
-    if count < 1 or count > 20:
-        raise HTTPException(status_code=400, detail='Count must be between 1 and 20')
-
-    questions = generate_hypothetical_questions_for_pitch_service(pitch_id, count)
-    return {'message': f'Generated {len(questions)} hypothetical questions', 'questions': questions}
-
-
-@app.put('/api/v1/hypothetical-questions/{question_id}', response_model=HypotheticalQuestion)
-async def update_hypothetical_question_endpoint(question_id: str, question_update: HypotheticalQuestionUpdate):
-    """Update an existing hypothetical question"""
-    updated_question = update_hypothetical_question_service(question_id, question_update)
-    if not updated_question:
-        raise HTTPException(status_code=404, detail='Hypothetical question not found')
-    return updated_question
-
-
-@app.delete('/api/v1/hypothetical-questions/{question_id}')
-async def delete_hypothetical_question_endpoint(question_id: str):
-    """Delete a hypothetical question"""
-    deleted_question = delete_hypothetical_question_service(question_id)
-    if not deleted_question:
-        raise HTTPException(status_code=404, detail='Hypothetical question not found')
-    return {'message': 'Hypothetical question has been deleted successfully'}
 
 
 # Question Generation endpoints
