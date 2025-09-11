@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 import uuid
+import random
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -864,12 +865,7 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
         report = grader.final_score(results)
 
         # Generate hardcoded scores for other groups (пока)
-        import random
-
         base_score = random.uniform(6.5, 9.0)
-        delivery_score = round((base_score + random.uniform(-0.4, 0.3)) / 10, 2)
-        engagement_score = round((base_score + random.uniform(-0.2, 0.5)) / 10, 2)
-        technical_score = round((base_score + random.uniform(-0.6, 0.2)) / 10, 2)
 
     finally:
         if os.path.exists(video_path):
@@ -1166,108 +1162,6 @@ async def get_text_recommendations(request: TextRecommendationsRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f'Recommendations failed: {str(e)}')
-
-
-@app.post('/api/v1/score/presentation')
-async def score_presentation():
-    return {}
-
-
-@app.post('/api/v1/score/audio')
-async def score_audio(
-    audio: UploadFile = File(...),
-    script: Optional[str] = Form(None),
-    planned_duration_sec: Optional[float] = Form(None),
-    pitch_id: Optional[str] = Form(None),
-):
-    content_type = audio.content_type or ''
-    allowed_audio_types = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-wav']
-
-    filename = audio.filename or ''
-    if not any(content_type.startswith(t) for t in ['audio/', 'video/']) and not filename.lower().endswith(
-        ('.wav', '.mp3', '.m4a', '.mp4', '.mpeg')
-    ):
-        raise HTTPException(status_code=400, detail='File must be an audio file (wav, mp3, m4a, etc.)')
-
-    max_size = 50 * 1024 * 1024  # 50MB
-    audio_content = await audio.read()
-    if len(audio_content) > max_size:
-        raise HTTPException(status_code=400, detail='Audio file size must be less than 50MB')
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        try:
-            audio_path = os.path.join(temp_dir, f'audio_{uuid.uuid4()}{os.path.splitext(audio.filename or ".wav")[1]}')
-            with open(audio_path, 'wb') as f:
-                f.write(audio_content)
-
-            script_path = None
-            if script and script.strip():
-                script_path = os.path.join(temp_dir, f'script_{uuid.uuid4()}.txt')
-                with open(script_path, 'w', encoding='utf-8') as f:
-                    f.write(script.strip())
-
-            duration_to_use = planned_duration_sec
-            if pitch_id and not duration_to_use:
-                pitch = get_pitch_service(pitch_id)
-                if pitch and hasattr(pitch, 'planned_duration_minutes') and pitch.planned_duration_minutes:
-                    duration_to_use = pitch.planned_duration_minutes * 60.0  # Конвертируем в секунды
-
-            from models.audio.analyzer import analyze_file
-
-            raw_result = analyze_file(
-                audio_path=audio_path,
-                script_path=script_path,
-                planned_duration_sec=duration_to_use,
-                language='ru',
-                whisper_size='small',
-            )
-
-            result = analyze_file_frontend_format(
-                audio_path=audio_path,
-                script_path=script_path,
-                planned_duration_sec=duration_to_use,
-                language='ru',
-                whisper_size='small',
-            )
-
-            output_dir = '../../models/audio/output'
-            os.makedirs(output_dir, exist_ok=True)
-
-            raw_path = os.path.join(output_dir, 'analysis_raw.json')
-            with open(raw_path, 'w', encoding='utf-8') as f:
-                json.dump(raw_result, f, ensure_ascii=False, indent=2)
-            logger.info(f'Raw analysis saved to {raw_path}')
-
-            frontend_path = os.path.join(output_dir, 'analysis_frontend.json')
-            with open(frontend_path, 'w', encoding='utf-8') as f:
-                json.dump(result, f, ensure_ascii=False, indent=2)
-            logger.info(f'Frontend analysis saved to {frontend_path}')
-
-            return result
-
-        except Exception as e:
-            logger.error(f'Audio analysis failed: {str(e)}')
-            raise HTTPException(status_code=500, detail=f'Audio analysis failed: {str(e)}')
-
-
-@app.get('/api/v1/audio/status')
-async def audio_analysis_status():
-    try:
-        from models.audio.analyzer import analyze_file_frontend_format
-
-        return {
-            'available': True,
-            'message': 'Audio analysis is ready',
-            'supported_formats': ['wav', 'mp3', 'm4a', 'mp4', 'mpeg'],
-            'max_file_size_mb': 50,
-            'default_planned_duration_sec': 120,
-        }
-    except ImportError as e:
-        return {
-            'available': False,
-            'message': f'Audio analysis not available: {str(e)}',
-            'error': 'Missing dependencies',
-        }
 
 
 # Training Sessions endpoints
