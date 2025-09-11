@@ -203,7 +203,7 @@ See [`LICENSE`](./LICENSE).
 ## Developers
 
 * [Lead — Vladimir Skvortsov](https://github.com/vladimir-skvortsov)
-* [ML Engineer — Name Surname](https://github.com/LuckyAm20)
+* [ML Engineer — Michail Aptukov](https://github.com/LuckyAm20)
 * [ML Engineer — Andrew Afanasev](https://github.com/afafos)
 * [ML Engineer — Mary Prohorova](https://github.com/tatar04k)
 
