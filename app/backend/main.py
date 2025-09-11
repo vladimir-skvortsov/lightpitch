@@ -492,19 +492,19 @@ async def generate_improved_presentation(pitch_id: str):
         from models.presentation_generator.presentation_generator import generate_improved_presentation
 
         logger.info(f'Generating improved presentation for: {pitch.presentation_file_name}')
-        
+
         # Get analysis
         analysis = await analyze_presentation(file_path)
-        
+
         if 'error' in analysis:
             raise HTTPException(status_code=500, detail=f'Analysis failed: {analysis["error"]}')
-        
+
         # Generate improved presentation
         improved_presentation = await generate_improved_presentation(file_path, analysis, PRESENTATIONS_DIR)
-        
+
         # Save improved presentation info to pitch (you might want to add this to your model)
         # For now, we'll return the result
-        
+
         return {
             'success': True,
             'original_filename': improved_presentation.original_filename,
@@ -528,15 +528,15 @@ async def generate_improved_presentation(pitch_id: str):
                             'data_suggestion': visual.data_suggestion,
                             'chart_type': visual.chart_type.value if visual.chart_type else None,
                             'position_suggestion': visual.position_suggestion,
-                            'size_suggestion': visual.size_suggestion
+                            'size_suggestion': visual.size_suggestion,
                         }
                         for visual in slide.suggested_visuals
-                    ]
+                    ],
                 }
                 for slide in improved_presentation.slides
             ],
             'generation_timestamp': improved_presentation.generation_timestamp,
-            'download_url': f'/api/v1/pitches/{pitch_id}/download-improved-presentation'
+            'download_url': f'/api/v1/pitches/{pitch_id}/download-improved-presentation',
         }
 
     except ImportError as e:
@@ -558,19 +558,20 @@ async def download_improved_presentation(pitch_id: str):
     original_filename = pitch.presentation_file_name
     if not original_filename:
         raise HTTPException(status_code=404, detail='No presentation found for this pitch')
-    
+
     name, ext = os.path.splitext(original_filename)
-    improved_filename = f"{name}_improved{ext}"
+    improved_filename = f'{name}_improved{ext}'
     improved_file_path = os.path.join(PRESENTATIONS_DIR, improved_filename)
-    
+
     if not os.path.exists(improved_file_path):
         raise HTTPException(status_code=404, detail='Improved presentation not found. Please generate it first.')
-    
+
     from fastapi.responses import FileResponse
+
     return FileResponse(
         path=improved_file_path,
         filename=improved_filename,
-        media_type='application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        media_type='application/vnd.openxmlformats-officedocument.presentationml.presentation',
     )
 
 
@@ -724,7 +725,6 @@ async def get_presentation_analysis(pitch_id: str):
     return analysis
 
 
-<<<<<<< Updated upstream
 @app.post('/api/v1/pitches/{pitch_id}/generate-presentation')
 async def generate_improved_presentation_endpoint(pitch_id: str, request_data: dict = None):
     """Generate improved presentation based on analysis"""
@@ -823,8 +823,6 @@ async def download_generated_presentation(pitch_id: str):
         raise HTTPException(status_code=500, detail=f'Download failed: {str(e)}')
 
 
-=======
->>>>>>> Stashed changes
 @app.get('/api/v1/pitches/{pitch_id}/text')
 async def get_speech_analysis(pitch_id: str):
     """Get speech analysis for a pitch with new format"""
@@ -1370,7 +1368,7 @@ async def generate_questions_for_pitch(pitch_id: str, request: QuestionGeneratio
         pitch = get_pitch_service(pitch_id)
         if not pitch:
             raise HTTPException(status_code=404, detail='Pitch not found')
-        
+
         # Check if pitch has presentation and get analysis
         presentation_data = None
         if pitch.presentation_file_name and pitch.presentation_file_path:
@@ -1378,25 +1376,28 @@ async def generate_questions_for_pitch(pitch_id: str, request: QuestionGeneratio
                 file_path = os.path.join(PRESENTATIONS_DIR, pitch.presentation_file_path)
                 if os.path.exists(file_path):
                     from models.presentation_summary.presentation_summarizer import analyze_presentation
+
                     ai_analysis = await analyze_presentation(file_path)
-                    
+
                     if 'error' not in ai_analysis and ai_analysis.get('overall_score', 0) > 0:
                         presentation_data = ai_analysis
-                        logger.info(f'Including presentation data for question generation: {pitch.presentation_file_name}')
+                        logger.info(
+                            f'Including presentation data for question generation: {pitch.presentation_file_name}'
+                        )
                     else:
                         logger.warning(f'Presentation analysis failed or returned no results')
                 else:
                     logger.warning(f'Presentation file not found: {file_path}')
             except Exception as e:
                 logger.warning(f'Failed to analyze presentation for question generation: {str(e)}')
-        
+
         # Update request with presentation data if available
         request.presentation_data = presentation_data
-        
+
         # Generate questions
         generator = QuestionGenerator()
         return await generator.generate_questions(request)
-        
+
     except HTTPException:
         raise
     except Exception as e:
