@@ -4,7 +4,6 @@ import Button from '../components/Button'
 import './RecordVideo.scss'
 import { FaceMesh } from '@mediapipe/face_mesh'
 
-// ---- ТОНКАЯ НАСТРОЙКА ----
 const EAR_THR = 0.12         // порог открытости века
 const FRAME_MARGIN = 0.1    // безопасная зона кадра (доли 0..1)
 const PATCH_SCALE = 0.035    // радиус патча (доля от min(W,H))
@@ -15,7 +14,7 @@ const DARK_P10_THR = 45      // 10-й перцентиль; высокий ⇒ �
 const BLINK_HOLD_MS = 260    // <= столько мс считаем «миганием» (не красним)
 const ALERT_ON_FRAMES = 2    // антидребезг: сколько плохих кадров подряд для включения
 const ALERT_OFF_FRAMES = 4   // антидребезг: сколько хороших кадров подряд для выключения
-// --------------------------
+
 
 const L_EYE = [33,160,158,133,153,144]
 const R_EYE = [362,385,387,263,373,380]
@@ -37,15 +36,12 @@ const RecordVideo = () => {
   const rafRef = useRef(null)
   const faceMeshRef = useRef(null)
 
-  // 🔴 лампа
   const [eyeOffCenter, setEyeOffCenter] = useState(false)
   const alertFramesRef = useRef(0)
   const safeFramesRef = useRef(0)
 
-  // отслеживание «короткого закрытия» (мигание)
   const closedSinceRef = useRef(null)
 
-  // оффскрин-канвас для анализа патчей
   const canvasRef = useRef(null)
   const ctxRef = useRef(null)
 

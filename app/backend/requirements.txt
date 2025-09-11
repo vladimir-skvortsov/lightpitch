@@ -23,8 +23,8 @@ mediapipe>=0.10.21
 opencv-python>=4.10
 moviepy>=1.0.3
 
-bcrypt>=4.0.1
-PyJWT>=2.8.0
+bcrypt
+PyJWT
 email-validator>=2.0.0
 google-generativeai>=0.3.2
 PyMuPDF>=1.23.0
