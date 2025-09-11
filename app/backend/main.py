@@ -138,7 +138,8 @@ def convert_ai_analysis_to_frontend_format(ai_analysis: dict, filename: str) -> 
         if not errors and ai_analysis.get('areas_for_improvement'):
             # Fallback: build critical issues from areas for improvement
             critical_issues = [
-                w for w in ai_analysis.get('areas_for_improvement', []) 
+                w
+                for w in ai_analysis.get('areas_for_improvement', [])
                 if any(keyword in w.lower() for keyword in ['критичес', 'ошибк', 'серьезн', 'важн'])
             ]
             for i, issue in enumerate(critical_issues[:3]):
@@ -499,7 +500,7 @@ async def get_presentation_analysis(pitch_id: str):
         from models.presentation_summary.presentation_summarizer import analyze_presentation
 
         logger.info(f'Starting AI analysis for presentation: {pitch.presentation_file_name}')
-        
+
         # Run async analysis directly (we're already in an async context)
         ai_analysis = await analyze_presentation(file_path)
 
@@ -641,40 +642,41 @@ async def generate_improved_presentation_endpoint(pitch_id: str, request_data: d
         analysis_response = await get_presentation_analysis(pitch_id)
         if not analysis_response:
             raise HTTPException(status_code=404, detail='No analysis available')
-        
+
         # Extract request parameters
         user_requirements = request_data.get('user_requirements', '') if request_data else ''
         target_audience = request_data.get('target_audience', '') if request_data else ''
         presentation_style = request_data.get('presentation_style', '') if request_data else ''
-        
+
         # Generate unique filename for new presentation
         import uuid
         import time
+
         timestamp = int(time.time())
         unique_id = str(uuid.uuid4())[:8]
         original_name = os.path.splitext(pitch.presentation_file_name)[0]
-        new_filename = f"{original_name}_improved_{timestamp}_{unique_id}.pptx"
-        
+        new_filename = f'{original_name}_improved_{timestamp}_{unique_id}.pptx'
+
         # Create output path
         output_path = os.path.join(PRESENTATIONS_DIR, new_filename)
-        
+
         # Generate presentation
         from models.presentation_generator.presentation_generator import generate_improved_presentation
-        
+
         logger.info(f'Starting presentation generation for pitch: {pitch_id}')
         result = await generate_improved_presentation(
             analysis=analysis_response,
             output_path=output_path,
             user_requirements=user_requirements,
             target_audience=target_audience,
-            presentation_style=presentation_style
+            presentation_style=presentation_style,
         )
-        
+
         if result['success']:
             # Update pitch with new presentation file
             pitch.presentation_file_name = new_filename
             pitch.presentation_file_path = new_filename
-            
+
             logger.info(f'Presentation generated successfully: {new_filename}')
             return {
                 'success': True,
@@ -685,15 +687,12 @@ async def generate_improved_presentation_endpoint(pitch_id: str, request_data: d
                 'improvements_applied': result.get('improvements_applied', []),
                 'theme': result.get('theme', 'modern'),
                 'slides_data': result.get('slides_data', []),
-                'download_url': f'/api/v1/pitches/{pitch_id}/presentation-download'
+                'download_url': f'/api/v1/pitches/{pitch_id}/presentation-download',
             }
         else:
             logger.error(f'Presentation generation failed: {result.get("error", "Unknown error")}')
-            raise HTTPException(
-                status_code=500, 
-                detail=f'Generation failed: {result.get("error", "Unknown error")}'
-            )
-            
+            raise HTTPException(status_code=500, detail=f'Generation failed: {result.get("error", "Unknown error")}')
+
     except Exception as e:
         logger.error(f'Presentation generation endpoint error: {str(e)}')
         raise HTTPException(status_code=500, detail=f'Generation failed: {str(e)}')
@@ -715,10 +714,11 @@ async def download_generated_presentation(pitch_id: str):
 
     try:
         from fastapi.responses import FileResponse
+
         return FileResponse(
             path=file_path,
             filename=pitch.presentation_file_name,
-            media_type='application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            media_type='application/vnd.openxmlformats-officedocument.presentationml.presentation',
         )
     except Exception as e:
         logger.error(f'Download error: {str(e)}')
@@ -921,121 +921,14 @@ async def score_pitch(video: UploadFile = File(...), pitch_id: Optional[str] = F
         }
 
     default = {
-        'groups': [
-            speech_group,
-            {
-                'name': 'Подача и презентация',
-                'value': delivery_score,
-                'metrics': [
-                    {
-                        'label': 'Уверенность',
-                        'value': round(base_score + random.uniform(-0.5, 0.3), 1),
-                    },
-                    {
-                        'label': 'Зрительный контакт',
-                        'value': round(base_score + random.uniform(-0.4, 0.6), 1),
-                    },
-                    {
-                        'label': 'Язык тела',
-                        'value': round(base_score + random.uniform(-0.6, 0.4), 1),
-                    },
-                ],
-                'diagnostics': [
-                    {
-                        'label': 'Зрительный контакт',
-                        'status': 'good',
-                        'comment': 'Хороший зрительный контакт с аудиторией',
-                    },
-                    {
-                        'label': 'Жестикуляция',
-                        'status': 'warning',
-                        'comment': 'Добавьте больше жестов для усиления эмоциональной составляющей',
-                    },
-                    {
-                        'label': 'Уверенность',
-                        'status': 'good',
-                        'comment': 'Уверенная подача материала',
-                    },
-                ],
-            },
-            {
-                'name': 'Вовлеченность аудитории',
-                'value': engagement_score,
-                'metrics': [
-                    {
-                        'label': 'Эмоциональность',
-                        'value': round(base_score + random.uniform(-0.2, 0.7), 1),
-                    },
-                    {
-                        'label': 'Интерактивность',
-                        'value': round(base_score + random.uniform(-0.8, 0.3), 1),
-                    },
-                    {
-                        'label': 'Использование пауз',
-                        'value': round(base_score + random.uniform(-0.5, 0.2), 1),
-                    },
-                ],
-                'diagnostics': [
-                    {
-                        'label': 'Структура выступления',
-                        'status': 'good',
-                        'comment': 'Хорошая структура выступления и логичное изложение',
-                    },
-                    {
-                        'label': 'Эмоциональная вовлеченность',
-                        'status': 'warning',
-                        'comment': 'Увеличьте эмоциональную вовлеченность для лучшего контакта с аудиторией',
-                    },
-                    {
-                        'label': 'Паузы',
-                        'status': 'warning',
-                        'comment': 'Используйте больше пауз для акцентирования важных моментов',
-                    },
-                ],
-            },
-            {
-                'name': 'Технические аспекты',
-                'value': technical_score,
-                'metrics': [
-                    {
-                        'label': 'Продолжительность (мин)',
-                        'value': round(random.randint(120, 300) / 60, 1),
-                    },
-                    {
-                        'label': 'Количество слов',
-                        'value': random.randint(150, 450),
-                    },
-                    {
-                        'label': 'Качество звука',
-                        'value': round(base_score + random.uniform(-0.3, 0.2), 1),
-                    },
-                ],
-                'diagnostics': [
-                    {
-                        'label': 'Качество записи',
-                        'status': 'good',
-                        'comment': 'Хорошее качество звука и видео',
-                    },
-                    {
-                        'label': 'Продолжительность',
-                        'status': 'good',
-                        'comment': 'Оптимальная продолжительность выступления',
-                    },
-                    {
-                        'label': 'Техническое исполнение',
-                        'status': 'good',
-                        'comment': 'Отличное техническое качество записи',
-                    },
-                ],
-            },
-        ],
+        'groups': [speech_group],
         'recommendations': [],
         'feedback': '',
         'strengths': [],
         'areas_for_improvement': [],
     }
 
-    default['groups'][2] = report
+    default['groups'].append(report)
 
     if not default['recommendations']:
         default['recommendations'] = [
