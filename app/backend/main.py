@@ -101,50 +101,59 @@ app.add_middleware(
 def convert_ai_analysis_to_frontend_format(ai_analysis: dict, filename: str) -> dict:
     """Convert AI analysis results to frontend-compatible format"""
     try:
-        # Extract overall score (should be 1-10, convert to 0-100 scale)
-        overall_score = int(ai_analysis.get('overall_score', 7) * 10)
+        # Extract overall score (should be 0-100 scale)
+        overall_score = ai_analysis.get('overall_score', 70)
+        if overall_score > 100:
+            overall_score = 70  # Fallback for invalid scores
 
-        # Build good practices from strengths
-        good_practices = []
-        for i, strength in enumerate(ai_analysis.get('strengths', [])[:12]):
-            good_practices.append(
-                {
-                    'title': f'Сильная сторона {i + 1}',
-                    'description': strength,
-                    'category': 'Качество',
-                }
-            )
+        # Use good_practices directly from analysis if available
+        good_practices = ai_analysis.get('good_practices', [])
+        if not good_practices and ai_analysis.get('strengths'):
+            # Fallback: build from strengths
+            for i, strength in enumerate(ai_analysis.get('strengths', [])[:12]):
+                good_practices.append(
+                    {
+                        'title': f'Сильная сторона {i + 1}',
+                        'description': strength,
+                        'category': 'Качество',
+                    }
+                )
 
-        # Build warnings from weaknesses
-        warnings = []
-        for i, weakness in enumerate(ai_analysis.get('weaknesses', [])[:5]):
-            warnings.append(
-                {
-                    'title': f'Область для улучшения {i + 1}',
-                    'description': weakness,
-                    'category': 'Дизайн',
-                    'slides': [i + 1],  # Placeholder slide numbers
-                }
-            )
+        # Use warnings directly from analysis if available
+        warnings = ai_analysis.get('warnings', [])
+        if not warnings and ai_analysis.get('areas_for_improvement'):
+            # Fallback: build from areas for improvement
+            for i, area in enumerate(ai_analysis.get('areas_for_improvement', [])[:5]):
+                warnings.append(
+                    {
+                        'title': f'Область для улучшения {i + 1}',
+                        'description': area,
+                        'category': 'Дизайн',
+                        'slides': [i + 1],  # Placeholder slide numbers
+                    }
+                )
 
-        # Build errors from critical issues (if any)
-        errors = []
-        critical_issues = [
-            w for w in ai_analysis.get('weaknesses', []) if 'критичес' in w.lower() or 'ошибк' in w.lower()
-        ]
-        for i, issue in enumerate(critical_issues[:3]):
-            errors.append(
-                {
-                    'title': f'Критическая проблема {i + 1}',
-                    'description': issue,
-                    'category': 'Качество',
-                    'slides': [i + 1],
-                    'severity': 'high',
-                }
-            )
+        # Use errors directly from analysis if available
+        errors = ai_analysis.get('errors', [])
+        if not errors and ai_analysis.get('areas_for_improvement'):
+            # Fallback: build critical issues from areas for improvement
+            critical_issues = [
+                w for w in ai_analysis.get('areas_for_improvement', []) 
+                if any(keyword in w.lower() for keyword in ['критичес', 'ошибк', 'серьезн', 'важн'])
+            ]
+            for i, issue in enumerate(critical_issues[:3]):
+                errors.append(
+                    {
+                        'title': f'Критическая проблема {i + 1}',
+                        'description': issue,
+                        'category': 'Качество',
+                        'slides': [i + 1],
+                        'severity': 'high',
+                    }
+                )
 
-        # Build recommendations
-        recommendations = ai_analysis.get('recommendations', [])[:5]
+        # Use recommendations directly from analysis
+        recommendations = ai_analysis.get('recommendations', [])
         if not recommendations:
             recommendations = [
                 'Проверьте читаемость всех текстовых элементов',
@@ -152,21 +161,30 @@ def convert_ai_analysis_to_frontend_format(ai_analysis: dict, filename: str) -> 
                 'Оптимизируйте количество информации на каждом слайде',
             ]
 
-        return {
+        # Prepare response
+        response = {
             'overall_score': overall_score,
             'filename': filename,
             'total_slides': ai_analysis.get('total_slides', 1),
-            'analysis_method': 'AI (Gemini Flash)',
+            'analysis_method': ai_analysis.get('analysis_method', 'LLM анализ'),
             'good_practices': good_practices,
             'warnings': warnings,
             'errors': errors,
             'recommendations': recommendations,
             'category_scores': ai_analysis.get('category_scores', {}),
-            'detailed_analysis': {
-                'slide_analyses': ai_analysis.get('slide_analyses', []),
-                'ai_raw_results': ai_analysis,
-            },
         }
+
+        # Add additional fields if available
+        if ai_analysis.get('strengths'):
+            response['strengths'] = ai_analysis['strengths']
+        if ai_analysis.get('areas_for_improvement'):
+            response['areas_for_improvement'] = ai_analysis['areas_for_improvement']
+        if ai_analysis.get('feedback'):
+            response['feedback'] = ai_analysis['feedback']
+        if ai_analysis.get('analysis_timestamp'):
+            response['analysis_timestamp'] = ai_analysis['analysis_timestamp']
+
+        return response
 
     except Exception as e:
         logger.error(f'Error converting AI analysis to frontend format: {str(e)}')
@@ -477,11 +495,13 @@ async def get_presentation_analysis(pitch_id: str):
         raise HTTPException(status_code=404, detail='Presentation file not found on disk')
 
     try:
-        # Try to use real AI analysis
-        from models.presentation_grader.presentation_analyzer import analyze_presentation_file
+        # Try to use real AI analysis with new presentation_summary module
+        from models.presentation_summary.presentation_summarizer import analyze_presentation
 
         logger.info(f'Starting AI analysis for presentation: {pitch.presentation_file_name}')
-        ai_analysis = analyze_presentation_file(file_path)
+        
+        # Run async analysis directly (we're already in an async context)
+        ai_analysis = await analyze_presentation(file_path)
 
         if 'error' not in ai_analysis and ai_analysis.get('overall_score', 0) > 0:
             # Convert AI analysis to frontend format
@@ -604,6 +624,105 @@ async def get_presentation_analysis(pitch_id: str):
     }
 
     return analysis
+
+
+@app.post('/api/v1/pitches/{pitch_id}/generate-presentation')
+async def generate_improved_presentation_endpoint(pitch_id: str, request_data: dict = None):
+    """Generate improved presentation based on analysis"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+
+    if not pitch.presentation_file_name:
+        raise HTTPException(status_code=404, detail='No presentation found for this pitch')
+
+    try:
+        # Get current analysis
+        analysis_response = await get_presentation_analysis(pitch_id)
+        if not analysis_response:
+            raise HTTPException(status_code=404, detail='No analysis available')
+        
+        # Extract request parameters
+        user_requirements = request_data.get('user_requirements', '') if request_data else ''
+        target_audience = request_data.get('target_audience', '') if request_data else ''
+        presentation_style = request_data.get('presentation_style', '') if request_data else ''
+        
+        # Generate unique filename for new presentation
+        import uuid
+        import time
+        timestamp = int(time.time())
+        unique_id = str(uuid.uuid4())[:8]
+        original_name = os.path.splitext(pitch.presentation_file_name)[0]
+        new_filename = f"{original_name}_improved_{timestamp}_{unique_id}.pptx"
+        
+        # Create output path
+        output_path = os.path.join(PRESENTATIONS_DIR, new_filename)
+        
+        # Generate presentation
+        from models.presentation_generator.presentation_generator import generate_improved_presentation
+        
+        logger.info(f'Starting presentation generation for pitch: {pitch_id}')
+        result = await generate_improved_presentation(
+            analysis=analysis_response,
+            output_path=output_path,
+            user_requirements=user_requirements,
+            target_audience=target_audience,
+            presentation_style=presentation_style
+        )
+        
+        if result['success']:
+            # Update pitch with new presentation file
+            pitch.presentation_file_name = new_filename
+            pitch.presentation_file_path = new_filename
+            
+            logger.info(f'Presentation generated successfully: {new_filename}')
+            return {
+                'success': True,
+                'message': 'Презентация успешно сгенерирована',
+                'filename': new_filename,
+                'presentation_title': result.get('presentation_title', 'Улучшенная презентация'),
+                'slides_count': result.get('slides_count', 0),
+                'improvements_applied': result.get('improvements_applied', []),
+                'theme': result.get('theme', 'modern'),
+                'slides_data': result.get('slides_data', []),
+                'download_url': f'/api/v1/pitches/{pitch_id}/presentation-download'
+            }
+        else:
+            logger.error(f'Presentation generation failed: {result.get("error", "Unknown error")}')
+            raise HTTPException(
+                status_code=500, 
+                detail=f'Generation failed: {result.get("error", "Unknown error")}'
+            )
+            
+    except Exception as e:
+        logger.error(f'Presentation generation endpoint error: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Generation failed: {str(e)}')
+
+
+@app.get('/api/v1/pitches/{pitch_id}/presentation-download')
+async def download_generated_presentation(pitch_id: str):
+    """Download the generated presentation file"""
+    pitch = get_pitch_service(pitch_id)
+    if not pitch:
+        raise HTTPException(status_code=404, detail='Pitch not found')
+
+    if not pitch.presentation_file_name or not pitch.presentation_file_path:
+        raise HTTPException(status_code=404, detail='No presentation file available')
+
+    file_path = os.path.join(PRESENTATIONS_DIR, pitch.presentation_file_path)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail='Presentation file not found on disk')
+
+    try:
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=file_path,
+            filename=pitch.presentation_file_name,
+            media_type='application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        )
+    except Exception as e:
+        logger.error(f'Download error: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Download failed: {str(e)}')
 
 
 @app.get('/api/v1/pitches/{pitch_id}/text')

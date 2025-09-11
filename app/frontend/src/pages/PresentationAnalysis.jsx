@@ -8,6 +8,9 @@ const PresentationAnalysis = () => {
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [generating, setGenerating] = useState(false)
+  const [generationResult, setGenerationResult] = useState(null)
+  const [showGeneratedPresentation, setShowGeneratedPresentation] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -65,6 +68,61 @@ const PresentationAnalysis = () => {
     }
   }, [])
 
+  const generatePresentation = useCallback(async () => {
+    try {
+      setGenerating(true)
+      setGenerationResult(null)
+
+      const response = await fetch(`/api/v1/pitches/${id}/generate-presentation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_requirements: 'Создайте улучшенную версию презентации на основе найденных проблем',
+          target_audience: 'Общая аудитория',
+          presentation_style: 'modern'
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Ошибка генерации презентации')
+      }
+
+      const result = await response.json()
+      setGenerationResult(result)
+      setShowGeneratedPresentation(true)
+      
+      // Refresh analysis to get updated data
+      await fetchData()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGenerating(false)
+    }
+  }, [id, fetchData])
+
+  const downloadPresentation = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/v1/pitches/${id}/presentation-download`)
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки файла')
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = generationResult.filename || 'improved_presentation.pptx'
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [id, generationResult])
+
   if (loading) {
     return (
       <main className='main'>
@@ -98,9 +156,28 @@ const PresentationAnalysis = () => {
       <div className='container presentation-analysis'>
         <div className='content-header'>
           <h2 className='analysis-title'>Анализ презентации</h2>
-          <Button variant='outline' as={Link} to={`/pitch/${id}`} className='back-button'>
-            ← Назад к выступлению
-          </Button>
+          <div className='header-actions'>
+            <Button 
+              variant='primary' 
+              onClick={generatePresentation}
+              disabled={generating}
+              className='generate-button'
+            >
+              {generating ? '🔄 Генерируем...' : '✨ Сгенерировать улучшенную презентацию'}
+            </Button>
+            {generationResult && (
+              <Button 
+                variant='success' 
+                onClick={downloadPresentation}
+                className='download-button'
+              >
+                📥 Скачать презентацию
+              </Button>
+            )}
+            <Button variant='outline' as={Link} to={`/pitch/${id}`} className='back-button'>
+              ← Назад к выступлению
+            </Button>
+          </div>
         </div>
 
         <div className='content-container'>
@@ -127,6 +204,95 @@ const PresentationAnalysis = () => {
             </div>
           </div>
 
+          {/* Generation Result Section */}
+          {generationResult && (
+            <div className='block generation-result-section'>
+              <h2 className='section-title section-title--success'>✅ Презентация сгенерирована!</h2>
+              <div className='generation-summary'>
+                <div className='generation-message'>
+                  🎉 Улучшенная презентация готова к скачиванию!
+                </div>
+                <div className='generation-details'>
+                  <p><strong>Название:</strong> {generationResult.presentation_title}</p>
+                  <p><strong>Количество слайдов:</strong> {generationResult.slides_count}</p>
+                  <p><strong>Тема:</strong> {generationResult.theme}</p>
+                  {generationResult.improvements_applied && generationResult.improvements_applied.length > 0 && (
+                    <div className='improvements-applied'>
+                      <h3>Примененные улучшения:</h3>
+                      <ul>
+                        {generationResult.improvements_applied.map((improvement, index) => (
+                          <li key={index}>{improvement}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div className='generation-actions'>
+                  <Button 
+                    variant='secondary' 
+                    onClick={() => setShowGeneratedPresentation(!showGeneratedPresentation)}
+                    className='view-presentation-button'
+                  >
+                    {showGeneratedPresentation ? '👁️ Скрыть презентацию' : '👁️ Показать презентацию'}
+                  </Button>
+                  <Button 
+                    variant='success' 
+                    onClick={downloadPresentation}
+                    className='download-button'
+                  >
+                    📥 Скачать презентацию
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Generated Presentation Display */}
+          {generationResult && showGeneratedPresentation && generationResult.slides_data && (
+            <div className='block generated-presentation-section'>
+              <h2 className='section-title'>📊 Сгенерированная презентация</h2>
+              <div className='presentation-slides'>
+                {generationResult.slides_data.map((slide, index) => (
+                  <div key={index} className='slide-card'>
+                    <div className='slide-header'>
+                      <div className='slide-number'>{index + 1}</div>
+                      <h3 className='slide-title'>{slide.title}</h3>
+                    </div>
+                    
+                    <div className='slide-content'>
+                      {slide.content && slide.content.length > 0 && (
+                        <div className='content-section'>
+                          <h4>Основное содержимое:</h4>
+                          {slide.content.map((contentItem, contentIndex) => (
+                            <p key={contentIndex} className='content-item'>{contentItem}</p>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {slide.bullet_points && slide.bullet_points.length > 0 && (
+                        <div className='bullets-section'>
+                          <h4>Ключевые пункты:</h4>
+                          <ul className='bullet-list'>
+                            {slide.bullet_points.map((bullet, bulletIndex) => (
+                              <li key={bulletIndex} className='bullet-item'>{bullet}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {slide.speaker_notes && (
+                        <div className='speaker-notes-section'>
+                          <h4>Заметки докладчика:</h4>
+                          <p className='speaker-notes'>{slide.speaker_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Category Scores (if available) */}
           {analysis.category_scores && Object.keys(analysis.category_scores).length > 0 && (
             <div className='block category-scores'>
@@ -136,15 +302,15 @@ const PresentationAnalysis = () => {
                   <div key={category} className='category-card'>
                     <div className='category-score'>
                       <div className='score-circle' style={{ borderColor: getScoreColor(score / 10) }}>
-                        <span className='score-number'>{Math.round(score * 10)}</span>
+                        <span className='score-number'>{Math.round(score)}</span>
                       </div>
                     </div>
                     <h4 className='category-name'>
                       {category === 'design' && 'Дизайн'}
                       {category === 'structure' && 'Структура'}
-                      {category === 'readability' && 'Читаемость'}
+                      {category === 'content' && 'Контент'}
                       {category === 'professionalism' && 'Профессионализм'}
-                      {!['design', 'structure', 'readability', 'professionalism'].includes(category) && category}
+                      {!['design', 'structure', 'content', 'professionalism'].includes(category) && category}
                     </h4>
                   </div>
                 ))}
